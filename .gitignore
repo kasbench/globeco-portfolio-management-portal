@@ -75,3 +75,140 @@ sketch
 
 # Custom rules (everything added below won't be overriden by 'Generate .gitignore File' if you use 'Update' option)
 
+### Next.js ###
+# Next.js build output
+.next/
+out/
+
+# Next.js cache
+.next/cache/
+
+# Vercel deployment files
+.vercel
+
+### TypeScript ###
+# TypeScript build info
+*.tsbuildinfo
+next-env.d.ts
+
+### Environment Variables ###
+# Local env files
+.env*.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Environment files (keep .env.example for reference)
+.env
+.env.development
+.env.production
+.env.test
+!.env.example
+
+### Testing ###
+# Jest coverage reports
+coverage/
+*.lcov
+
+# Test results
+test-results/
+junit.xml
+
+### Storybook ###
+# Storybook build outputs
+storybook-static/
+.out
+
+### Package Managers ###
+# npm
+npm-debug.log*
+.npm
+
+# Yarn
+yarn-debug.log*
+yarn-error.log*
+.yarn-integrity
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+# pnpm
+.pnpm-debug.log*
+
+### Build Artifacts ###
+# Build directories
+build/
+dist/
+
+### IDE & Editor ###
+# JetBrains IDEs
+.idea/
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# Vim
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-rt-v][a-z]
+[._]ss[a-gi-z]
+[._]sw[a-p]
+
+### Docker ###
+# Docker override files (keep docker-compose.yml for reference)
+docker-compose.override.yml
+
+# Docker volumes and networks (if any get created locally)
+docker-volumes/
+
+### Temporary Files ###
+# Temporary directories
+tmp/
+temp/
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+### Logs ###
+# Log files
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+### Cache ###
+# Cache directories
+.cache/
+.parcel-cache/
+
+### Generated Files ###
+# Auto-generated files
+generated/
+auto-generated/
+
+# OpenAPI generated clients (if we generate any)
+generated-api/
+
+### Benchmarking ###
+# Benchmark results and reports
+benchmark-results/
+performance-reports/
+load-test-results/
+
