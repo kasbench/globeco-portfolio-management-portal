@@ -1,0 +1,53 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+This document provides context for this application.
+
+Application Name: The GlobeCo Portfolio Management Portal
+GitHub URL: https://github.com/kasbench/globeco-portfolio-management-portal
+
+Author: Noah Krieger (noah@kasbench.org)
+Organization: KASBench (kasbench.org)
+
+License: Apache 2.0
+
+KASBench is a new benchmark for Kubernetes autoscaling that is currently under development.  GlobeCo a fictitous bank and also the name used for a suite of applications designed to expose autoscalers to real-world conditions reflecting various Kubernetes usage patterns.  The GlobeCo Portfolio Management suite is an online and batch application simulating a type of application used by financial services firms and their clients.  It consists of microservices, command line applications, and web user interfaces.  
+
+This application is the primary web user interface for the GlobeCo Portfolio Management Suite.  The backend microservices already exist.  We will start by running the UI and microservices locally (Docker Hub) and then port to Kubernetes.  The Docker network for all services is "my-network".
+
+This application will only be used for benchmarking.  It will never contain production data.  Security is not a concern.  However, the benchmark will subject all parts of the suite to significant load.  Consequently, resilience and reliability are important.
+
+There are four categories of users:
+- **Admin**.  Admin users have access to all functions within this application
+- **Internal**.  Internal users will have access to all functions except those identified as "Admin-only"
+- **Partner**. Partners are external users who perform services for GlobeCo.  Partners only have access to features identified as "Partner-enabled"
+- **Customers**.  Customers are external users who invest through GlobeCo.  Customers only have access to features identified as "Customer-enabled"
+
+This application is for employees and institutional investors.  It is not for propsective customers.  It should look modern but does not need to be fancy or cutting edge.  It should look professional, be easy to use, and work the way an average user would expect it to work.
+
+Incorporate the GlobeCo logo into the design: [globeco-logo.png](mdc:documentation/images/globeco-logo.png)
+
+
+## Integrations
+
+| Service | Host | Port | OpenAPI Spec |
+| --- | --- | --- | --- |
+| Portfolio Accounting Service | globeco-portfolio-accounting-service | 8087 | [globeco-portfolio-accounting-service-openapi.yaml](mdc:documentation/globeco-portfolio-accounting-service-openapi.yaml) |
+| Execution Service | globeco-execution-service | 8084 | [globeco-execution-service-openapi.yaml](mdc:documentation/globeco-execution-service-openapi.yaml)
+| Trade Service | globeco-trade-service | 8082 | [globeco-trade-service-openapi.yaml](mdc:documentation/globeco-trade-service-openapi.yaml)
+| Pricing Service | globeco-pricing-service | 8083 | [globeco-pricing-service-openapi.yaml](mdc:documentation/globeco-pricing-service-openapi.yaml)
+| Security Service | globeco-security-service | 8000 | [globeco-security-service-openapi.yaml](mdc:documentation/globeco-security-service-openapi.yaml)
+| Order Service | globeco-order-service | 8081 | [globeco-order-service-openapi.yaml](mdc:documentation/globeco-order-service-openapi.yaml)
+| Portfolio Service | globeco-portfolio-service | 8001 | [globeco-portfolio-service-openapi.yaml](mdc:documentation/globeco-portfolio-service-openapi.yaml)
+
+Do not use `localhost` in any configuration.  This will be running in Docker for development and in Kubernetes for production.  There is no need to create a Docker Compose file.  The dependent resources are already running.  Use mocks for testing dependent services.
+
+
+
+
+
+
+
+

@@ -1,0 +1,14 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+- Please log all prompts and actions in [cursor-logs.md](mdc:cursor-logs/cursor-logs.md)
+- Never delete or overwrite an item in [cursor-logs.md](mdc:cursor-logs/cursor-logs.md).  Append all entries at the end of the file.
+- The user will periodically archive [cursor-logs.md](mdc:cursor-logs/cursor-logs.md) so that it does not grow too large.  If you need to reference older logs, please search for files using the following regular expression "cursor-logs-history-\d\d\d.md".  The historical logs will be name "cursor-logs-history-001.md", "cursor-logs-history-002.md", etc.
+- The user will provide OpenAPI specifications for all API calls.  If an API call is not documented, it does not exist.  Do not create calls to APIs that do not exist.  You may suggest new APIs.
+- This UI will be run in the latest version of Kubernetes.
+- The Kubernetes namespace is `globeco`.  You do not need to create it.
+- Configure a GitHub action to build and deploy to Docker Hub as kasbench/globeco-portfolio-management-portal.  It must be a multi-architecture build for AMD64 and ARM64, both for Linux.
+- Thoroughly document the application in README.md
+- When developing a plan in @execution-plan.md, include checkboxes for each step.
