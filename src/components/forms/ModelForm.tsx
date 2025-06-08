@@ -13,13 +13,15 @@ import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 import { Model, ModelCreateRequest, ModelUpdateRequest } from '@/types/model'
+import { usePortfolios } from '@/lib/hooks/usePortfolios'
 
 // Form validation schema
 const modelFormSchema = z.object({
   name: z.string().min(1, 'Model name is required').max(255, 'Name must be less than 255 characters'),
-  portfolios: z.array(z.string().min(1, 'Portfolio ID is required')).min(1, 'At least one portfolio is required'),
+  portfolios: z.array(z.string().min(1, 'Portfolio name is required')).min(1, 'At least one portfolio is required'),
   positions: z.array(z.object({
     security_id: z.string().length(24, 'Security ID must be exactly 24 characters'),
     target: z.number().min(0, 'Target must be >= 0').max(0.95, 'Target must be <= 0.95'),
@@ -39,13 +41,19 @@ interface ModelFormProps {
 }
 
 export default function ModelForm({ model, isOpen, onClose, onSubmit, isLoading = false }: ModelFormProps) {
-  const [portfolioInput, setPortfolioInput] = useState('')
+  const [selectedPortfolio, setSelectedPortfolio] = useState('')
+  
+  // Get portfolios for name mapping
+  const { portfolioOptions, getPortfolioNames, getPortfolioIds, isLoading: portfoliosLoading } = usePortfolios()
 
+  // Convert portfolio IDs to names for form display
+  const portfolioNamesFromModel = model?.portfolios ? getPortfolioNames(model.portfolios) : []
+  
   const form = useForm<ModelFormData>({
     resolver: zodResolver(modelFormSchema),
     defaultValues: {
       name: model?.name || '',
-      portfolios: model?.portfolios || [],
+      portfolios: portfolioNamesFromModel,
       positions: model?.positions?.map(p => ({
         security_id: p.security_id,
         target: parseFloat(p.target),
@@ -63,11 +71,14 @@ export default function ModelForm({ model, isOpen, onClose, onSubmit, isLoading 
   const portfolios = form.watch('portfolios')
 
   const handleSubmit = (data: ModelFormData) => {
+    // Convert portfolio names back to IDs for API submission
+    const portfolioIds = getPortfolioIds(data.portfolios)
+    
     if (model) {
       // Update existing model
       const updateData: ModelUpdateRequest = {
         name: data.name,
-        portfolios: data.portfolios,
+        portfolios: portfolioIds,
         positions: data.positions,
         version: model.version,
         last_rebalance_date: model.last_rebalance_date,
@@ -77,7 +88,7 @@ export default function ModelForm({ model, isOpen, onClose, onSubmit, isLoading 
       // Create new model
       const createData: ModelCreateRequest = {
         name: data.name,
-        portfolios: data.portfolios,
+        portfolios: portfolioIds,
         positions: data.positions,
       }
       onSubmit(createData)
@@ -85,10 +96,10 @@ export default function ModelForm({ model, isOpen, onClose, onSubmit, isLoading 
   }
 
   const addPortfolio = () => {
-    if (portfolioInput.trim() && !portfolios.includes(portfolioInput.trim())) {
+    if (selectedPortfolio && !portfolios.includes(selectedPortfolio)) {
       const currentPortfolios = form.getValues('portfolios')
-      form.setValue('portfolios', [...currentPortfolios, portfolioInput.trim()])
-      setPortfolioInput('')
+      form.setValue('portfolios', [...currentPortfolios, selectedPortfolio])
+      setSelectedPortfolio('')
     }
   }
 
@@ -157,19 +168,26 @@ export default function ModelForm({ model, isOpen, onClose, onSubmit, isLoading 
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex gap-2">
-                <Input
-                  value={portfolioInput}
-                  onChange={(e) => setPortfolioInput(e.target.value)}
-                  placeholder="Enter portfolio ID"
-                  className="flex-1"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault()
-                      addPortfolio()
-                    }
-                  }}
-                />
-                <Button type="button" onClick={addPortfolio} size="sm">
+                <Select value={selectedPortfolio} onValueChange={setSelectedPortfolio} disabled={portfoliosLoading}>
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder={portfoliosLoading ? "Loading portfolios..." : "Select a portfolio"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {portfolioOptions
+                      .filter(option => !portfolios.includes(option.label))
+                      .map((option) => (
+                        <SelectItem key={option.value} value={option.label}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+                <Button 
+                  type="button" 
+                  onClick={addPortfolio} 
+                  size="sm"
+                  disabled={!selectedPortfolio || portfoliosLoading}
+                >
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>

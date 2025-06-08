@@ -601,3 +601,121 @@ NEXT_PUBLIC_ORDER_GENERATION_SERVICE_PORT=8088
 4. **API Testing**: Test all CRUD operations once service connectivity is established
 
 ---
+
+## 2025-01-07 - Portfolio Name Mapping Implementation
+
+### User Request: Replace Portfolio IDs with Names
+**Problem**: Portfolio IDs are meaningless to users and difficult to understand
+**Requirement**: Use Portfolio Service API to map portfolio IDs to names throughout the application
+
+### Technical Implementation
+
+#### 1. Portfolio Service Integration
+Created comprehensive Portfolio Service integration:
+- **Types**: `src/types/portfolio.ts` - Complete TypeScript definitions from OpenAPI spec
+- **API Client**: `src/lib/api/portfolioService.ts` - Full CRUD operations for Portfolio Service
+- **Custom Hook**: `src/lib/hooks/usePortfolios.ts` - React Query hook with caching and utility functions
+
+#### 2. Portfolio Service Configuration
+```javascript
+// Portfolio Service API Configuration
+const PORTFOLIO_SERVICE_HOST = process.env.NEXT_PUBLIC_PORTFOLIO_SERVICE_HOST || 'localhost'
+const PORTFOLIO_SERVICE_PORT = process.env.NEXT_PUBLIC_PORTFOLIO_SERVICE_PORT || '8001'
+```
+
+#### 3. Files Created/Modified
+```
+src/
+├── types/portfolio.ts                  # Portfolio type definitions
+├── lib/
+│   ├── api/portfolioService.ts         # Portfolio Service API client
+│   └── hooks/usePortfolios.ts          # Portfolio mapping hooks
+├── components/
+│   ├── forms/ModelForm.tsx             # Updated to use portfolio names
+│   └── tables/ModelsTable.tsx          # Updated to display portfolio names
+```
+
+#### 4. Key Features Implemented
+
+**Portfolio Name Mapping Hook**:
+- `getPortfolioName(id)`: Convert portfolio ID to name
+- `getPortfolioId(name)`: Convert portfolio name to ID
+- `getPortfolioNames(ids[])`: Batch convert IDs to names
+- `getPortfolioIds(names[])`: Batch convert names to IDs
+- `portfolioOptions`: Select dropdown options
+- `isValidPortfolioName()`: Name validation
+- Automatic caching with React Query (5min stale, 10min GC)
+
+**ModelForm Updates**:
+- Portfolio selection via dropdown (not text input)
+- Portfolio names displayed in badges instead of IDs
+- Automatic ID/name conversion for API submissions
+- Form validation updated for portfolio names
+- Real-time portfolio filtering (exclude already selected)
+
+**ModelsTable Updates**:
+- Portfolio names displayed in table instead of truncated IDs
+- Full portfolio names visible (no more "abc123...")
+- Maintains existing badge UI with readable names
+
+#### 5. API Integration Pattern
+```javascript
+// Form submission converts names back to IDs
+const handleSubmit = (data) => {
+  const portfolioIds = getPortfolioIds(data.portfolios)
+  const apiData = { ...data, portfolios: portfolioIds }
+  // Submit to API with IDs
+}
+
+// Form initialization converts IDs to names
+const portfolioNamesFromModel = model?.portfolios ? 
+  getPortfolioNames(model.portfolios) : []
+```
+
+#### 6. User Experience Improvements
+- **Better Usability**: Users select portfolios by meaningful names
+- **Clearer Display**: Portfolio names shown instead of cryptic IDs
+- **Consistent Mapping**: Fallback to ID if name not found
+- **Real-time Loading**: Loading states while fetching portfolios
+- **Error Handling**: Graceful degradation if Portfolio Service unavailable
+
+#### 7. Environment Configuration Updated
+```bash
+# Portfolio Service Configuration
+NEXT_PUBLIC_PORTFOLIO_SERVICE_HOST=localhost
+NEXT_PUBLIC_PORTFOLIO_SERVICE_PORT=8001
+```
+
+### Technical Details
+
+#### Type System
+```typescript
+export interface PortfolioMap {
+  [portfolioId: string]: string // portfolioId -> name
+}
+
+export interface PortfolioOption {
+  value: string  // portfolioId
+  label: string  // portfolioName
+}
+```
+
+#### Caching Strategy
+- React Query with 5-minute stale time
+- 10-minute garbage collection
+- Automatic background refetch
+- Shared cache across components
+
+#### Error Handling
+- Network error logging with detailed context
+- Fallback to portfolio ID if name mapping fails
+- Loading states during portfolio fetch
+- Graceful degradation if Portfolio Service unavailable
+
+### Next Steps
+1. **Service Dependencies**: Ensure Portfolio Service runs on localhost:8001
+2. **Testing**: Verify portfolio name mapping works end-to-end
+3. **Performance**: Monitor portfolio cache effectiveness
+4. **Extension**: Apply same pattern to other ID-based entities (securities, etc.)
+
+---

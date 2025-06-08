@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/alert-dialog'
 
 import { Model, ModelSortField, SortConfig } from '@/types/model'
+import { usePortfolios } from '@/lib/hooks/usePortfolios'
 
 interface ModelsTableProps {
   models: Model[]
@@ -60,6 +61,9 @@ export default function ModelsTable({
 }: ModelsTableProps) {
   const [rebalanceModelId, setRebalanceModelId] = useState<string | null>(null)
   const loadingRef = useRef<HTMLDivElement>(null)
+  
+  // Get portfolio name mapping
+  const { getPortfolioName } = usePortfolios()
 
   // Infinite scroll observer
   useEffect(() => {
@@ -195,9 +199,9 @@ export default function ModelsTable({
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
-                      {model.portfolios.slice(0, 2).map((portfolio, index) => (
+                      {model.portfolios.slice(0, 2).map((portfolioId, index) => (
                         <Badge key={index} variant="secondary" className="text-xs">
-                          {portfolio.slice(0, 8)}...
+                          {getPortfolioName(portfolioId)}
                         </Badge>
                       ))}
                       {model.portfolios.length > 2 && (
