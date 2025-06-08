@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import Header from "@/components/layout/Header"
+import QueryProvider from "@/lib/providers/QueryProvider"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -25,10 +26,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <div className="min-h-screen bg-background font-sans antialiased">
-          <Header />
-          {children}
-        </div>
+        <QueryProvider>
+          <div className="min-h-screen bg-background font-sans antialiased">
+            <Header />
+            {children}
+          </div>
+        </QueryProvider>
       </body>
     </html>
   )

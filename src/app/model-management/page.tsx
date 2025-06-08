@@ -1,80 +1,215 @@
-import Image from "next/image"
-import Link from "next/link"
-import { Home, TrendingUp } from "lucide-react"
+'use client'
+
+import { useState } from 'react'
+import { Plus, TrendingUp, AlertCircle } from 'lucide-react'
+
+import { Button } from '@/components/ui/button'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+
+import { useModels } from '@/lib/hooks/useModels'
+import ModelsTable from '@/components/tables/ModelsTable'
+import ModelForm from '@/components/forms/ModelForm'
+import { Model, ModelCreateRequest, ModelUpdateRequest } from '@/types/model'
 
 export default function ModelManagementPage() {
+  const [isFormOpen, setIsFormOpen] = useState(false)
+  const [editingModel, setEditingModel] = useState<Model | null>(null)
+
+  const {
+    models,
+    isLoading,
+    isError,
+    error,
+    hasNextPage,
+    isFetchingNextPage,
+    loadMore,
+    sortConfig,
+    handleSort,
+    createModel,
+    updateModel,
+    rebalanceModel,
+    isCreating,
+    isUpdating,
+    isRebalancing,
+    createError,
+    updateError,
+    rebalanceError,
+    refetch,
+  } = useModels()
+
+  const handleCreate = () => {
+    setEditingModel(null)
+    setIsFormOpen(true)
+  }
+
+  const handleEdit = (model: Model) => {
+    setEditingModel(model)
+    setIsFormOpen(true)
+  }
+
+  const handleFormSubmit = (data: ModelCreateRequest | ModelUpdateRequest) => {
+    if (editingModel) {
+      updateModel(
+        { modelId: editingModel.model_id, model: data as ModelUpdateRequest },
+        {
+          onSuccess: () => {
+            setIsFormOpen(false)
+            setEditingModel(null)
+          },
+        }
+      )
+    } else {
+      createModel(data as ModelCreateRequest, {
+        onSuccess: () => {
+          setIsFormOpen(false)
+        },
+      })
+    }
+  }
+
+  const handleRebalance = (modelId: string) => {
+    rebalanceModel(modelId)
+  }
+
+  const handleFormClose = () => {
+    setIsFormOpen(false)
+    setEditingModel(null)
+  }
+
   return (
     <div className="min-h-screen bg-slate-50">
-      <div className="container mx-auto px-4 py-16 pt-24">
-        <div className="text-center max-w-4xl mx-auto">
-          <div className="mb-8">
-            <div className="w-16 h-16 mx-auto mb-4 bg-teal-100 rounded-full flex items-center justify-center">
-              <TrendingUp className="h-8 w-8 text-teal-600" />
-            </div>
-            <Image
-              src="/images/globeco-logo.png"
-              alt="GlobeCo"
-              width={100}
-              height={100}
-              className="mx-auto mb-6 opacity-20"
-            />
-          </div>
-          
-          <h1 className="text-4xl font-bold text-slate-900 mb-4">
-            Model Management
-          </h1>
-          
-          <p className="text-xl text-slate-600 mb-8 max-w-2xl mx-auto">
-            Create, configure, and manage investment models and strategies. 
-            Define risk parameters, asset allocation rules, and performance benchmarks.
-          </p>
-
-          <div className="bg-white rounded-lg shadow-sm border p-8 mb-8">
-            <h2 className="text-2xl font-semibold text-slate-900 mb-4">Coming Soon</h2>
-            <p className="text-slate-600 mb-6">
-              This module will provide comprehensive tools for:
-            </p>
-            
-            <div className="grid md:grid-cols-2 gap-6 text-left">
-              <div className="space-y-3">
-                <h3 className="font-semibold text-slate-900">Model Creation</h3>
-                <ul className="space-y-2 text-sm text-slate-600">
-                  <li>• Investment strategy definition</li>
-                  <li>• Asset allocation models</li>
-                  <li>• Risk parameter configuration</li>
-                  <li>• Performance benchmarks</li>
-                </ul>
-              </div>
-              
-              <div className="space-y-3">
-                <h3 className="font-semibold text-slate-900">Model Management</h3>
-                <ul className="space-y-2 text-sm text-slate-600">
-                  <li>• Model versioning and history</li>
-                  <li>• Backtesting and simulation</li>
-                  <li>• Compliance validation</li>
-                  <li>• Performance monitoring</li>
-                </ul>
+      <div className="container mx-auto px-4 py-8 pt-24">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="flex items-center space-x-3 mb-2">
+                <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center">
+                  <TrendingUp className="h-6 w-6 text-teal-600" />
+                </div>
+                <div>
+                  <h1 className="text-3xl font-bold text-slate-900">Investment Models</h1>
+                  <p className="text-slate-600">
+                    Create and manage investment models with portfolio allocations and rebalancing rules
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              href="/"
-              className="inline-flex items-center rounded-lg bg-teal-600 px-6 py-3 text-white font-semibold hover:bg-teal-700 transition-colors"
-            >
-              <Home className="mr-2 h-5 w-5" />
-              Back to Home
-            </Link>
-            
-            <Link
-              href="/dashboard"
-              className="inline-flex items-center rounded-lg border border-slate-300 px-6 py-3 text-slate-700 font-semibold hover:bg-slate-50 transition-colors"
-            >
-              Go to Dashboard
-            </Link>
+            <Button onClick={handleCreate} className="bg-teal-600 hover:bg-teal-700">
+              <Plus className="h-4 w-4 mr-2" />
+              Create Model
+            </Button>
           </div>
         </div>
+
+        {/* Error Alerts */}
+        {createError && (
+          <Alert className="mb-6 border-red-200 bg-red-50">
+            <AlertCircle className="h-4 w-4 text-red-600" />
+            <AlertDescription className="text-red-800">
+              Failed to create model: {createError.message}
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {updateError && (
+          <Alert className="mb-6 border-red-200 bg-red-50">
+            <AlertCircle className="h-4 w-4 text-red-600" />
+            <AlertDescription className="text-red-800">
+              Failed to update model: {updateError.message}
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {rebalanceError && (
+          <Alert className="mb-6 border-red-200 bg-red-50">
+            <AlertCircle className="h-4 w-4 text-red-600" />
+            <AlertDescription className="text-red-800">
+              Failed to rebalance model: {rebalanceError.message}
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Summary Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-slate-600">
+                Total Models
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-slate-900">
+                {models.length}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-slate-600">
+                Active Portfolios
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-slate-900">
+                {new Set(models.flatMap(m => m.portfolios)).size}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-slate-600">
+                Total Positions
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-slate-900">
+                {models.reduce((sum, model) => sum + (model.positions?.length || 0), 0)}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Models Table */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <span>Investment Models</span>
+              <div className="text-sm font-normal text-slate-600">
+                {models.length} models loaded
+                {hasNextPage && ' (scroll for more)'}
+              </div>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <ModelsTable
+              models={models}
+              isLoading={isLoading}
+              isError={isError}
+              error={error}
+              hasNextPage={hasNextPage}
+              isFetchingNextPage={isFetchingNextPage}
+              loadMore={loadMore}
+              sortConfig={sortConfig}
+              onSort={handleSort}
+              onEdit={handleEdit}
+              onRebalance={handleRebalance}
+              isRebalancing={isRebalancing}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Model Form Dialog */}
+        <ModelForm
+          model={editingModel}
+          isOpen={isFormOpen}
+          onClose={handleFormClose}
+          onSubmit={handleFormSubmit}
+          isLoading={isCreating || isUpdating}
+        />
       </div>
     </div>
   )
