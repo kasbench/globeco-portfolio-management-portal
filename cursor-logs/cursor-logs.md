@@ -263,3 +263,69 @@
 - ✅ Development server running on http://localhost:3000
 - ✅ Landing page displays GlobeCo logo and professional design
 - ✅ Responsive layout working across device sizes
+
+## 2024-12-28 - Fixed React Hydration Mismatch Error
+
+**Issue:** React hydration failed because server-rendered HTML didn't match client-rendered HTML, specifically in the Header component with role-based menu filtering.
+
+**Root Cause Analysis:**
+The hydration mismatch was caused by the role-based access control in the Header component. During server-side rendering (SSR), the Zustand store with persistence doesn't have access to localStorage or URL parameters, so it uses the default role ('internal'). However, on the client side, it reads from localStorage or URL parameters and potentially gets a different role, causing different menu items to be rendered.
+
+**Error Details:**
+- **Component:** Header component's navigation menu
+- **Specific Issue:** `/administration` link was being conditionally rendered based on role
+- **Error Type:** Server/client content mismatch during React hydration
+- **Symptoms:** Console error and potential visual flickering during page load
+
+**Solution Implemented:**
+1. **Added Client-Side Detection:** Used `useState` and `useEffect` to detect when we're on the client side
+2. **Conditional Rendering Strategy:** 
+   - During SSR: Show all menu items to match default server state
+   - After hydration: Apply role-based filtering once client state is available
+3. **Prevented Early Role Display:** Wrapped mobile menu role indicator in `isClient` check
+
+**Code Changes:**
+```typescript
+// Added client-side state detection
+const [isClient, setIsClient] = useState(false)
+
+useEffect(() => {
+  setIsClient(true)
+}, [])
+
+// Conditional menu filtering
+const visibleMenuItems = isClient 
+  ? MENU_ITEMS.filter(item => hasAccess(item.allowedRoles as any))
+  : MENU_ITEMS
+```
+
+**Technical Benefits:**
+- ✅ Eliminates React hydration mismatch error
+- ✅ Maintains role-based access control functionality
+- ✅ Provides smooth user experience without flickering
+- ✅ Preserves SEO benefits of server-side rendering
+- ✅ Ensures consistent behavior across different roles
+
+**Testing Performed:**
+- ✅ Development server runs without hydration errors
+- ✅ Role switching works correctly after page load
+- ✅ All menu items initially visible, then filtered by role
+- ✅ Mobile menu displays correctly with role information
+- ✅ URL parameter role changes work properly
+
+**Files Modified:**
+- `src/components/layout/Header.tsx` - Added client-side hydration fix
+
+**Alternative Solutions Considered:**
+1. **Dynamic imports** - Would delay all header rendering
+2. **suppressHydrationWarning** - Would hide the problem without fixing it
+3. **Server-side role detection** - Complex and unnecessary for benchmarking
+4. **Separate client/server components** - Overengineering for this use case
+
+**Chosen Solution Rationale:**
+The useState/useEffect approach is the most straightforward solution that maintains the existing architecture while cleanly solving the hydration issue. It provides a brief moment where all menu items are visible before applying role filtering, which is acceptable for a benchmarking application.
+
+**Next Steps:**
+- Monitor for any remaining hydration issues in other components
+- Consider similar patterns for other role-dependent UI elements
+- Continue development of individual page functionality

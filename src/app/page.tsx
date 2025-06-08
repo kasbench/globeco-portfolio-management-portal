@@ -6,7 +6,7 @@ export default function LandingPage() {
   return (
     <div className="flex min-h-screen flex-col">
       {/* Hero Section */}
-      <section className="globeco-gradient relative flex-1">
+      <section className="globeco-gradient relative flex-1 -mt-16 pt-16">
         <div className="absolute inset-0 bg-black/20" />
         <div className="relative z-10 flex h-full flex-col items-center justify-center px-4 text-center">
           {/* Logo */}

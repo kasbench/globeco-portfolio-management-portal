@@ -1,0 +1,1306 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "GlobeCo Order Generation Service",
+    "description": "Portfolio optimization and order generation microservice for the GlobeCo Suite",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/metrics": {
+      "get": {
+        "summary": "Metrics Endpoint",
+        "description": "Prometheus metrics endpoint.\n\nReturns:\n    Prometheus metrics in text format",
+        "operationId": "metrics_endpoint_metrics_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/live": {
+      "get": {
+        "tags": [
+          "health",
+          "health"
+        ],
+        "summary": "Liveness Probe",
+        "description": "Kubernetes liveness probe endpoint.\n\nThis endpoint performs basic health checks to determine if the service\nis alive and should not be restarted. It only checks essential components\nand avoids external dependencies that might cause false failures.\n\nReturns:\n    Health status focused on service liveness",
+        "operationId": "liveness_probe_health_live_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Liveness Probe Health Live Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "tags": [
+          "health",
+          "health"
+        ],
+        "summary": "Readiness Probe",
+        "description": "Kubernetes readiness probe endpoint.\n\nThis endpoint performs comprehensive health checks to determine if the\nservice is ready to serve traffic. It checks all dependencies including\nexternal services.\n\nReturns:\n    Health status focused on service readiness",
+        "operationId": "readiness_probe_health_ready_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Readiness Probe Health Ready Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/health": {
+      "get": {
+        "tags": [
+          "health",
+          "health"
+        ],
+        "summary": "Health Check Endpoint",
+        "description": "Comprehensive health check endpoint.\n\nThis endpoint provides detailed health information about all service\ncomponents and dependencies. It can be used for monitoring and debugging.\n\nArgs:\n    include_external: Whether to check external services\n    include_optimization: Whether to check optimization engine\n\nReturns:\n    Detailed health status",
+        "operationId": "health_check_endpoint_health_health_get",
+        "parameters": [
+          {
+            "name": "include_external",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true,
+              "title": "Include External"
+            }
+          },
+          {
+            "name": "include_optimization",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true,
+              "title": "Include Optimization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthStatus"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/": {
+      "get": {
+        "tags": [
+          "health",
+          "health"
+        ],
+        "summary": "Health Check Root",
+        "description": "Root health check endpoint (alias for /health).\n\nThis endpoint provides detailed health information about all service\ncomponents and dependencies. It can be used for monitoring and debugging.\n\nArgs:\n    include_external: Whether to check external services\n    include_optimization: Whether to check optimization engine\n\nReturns:\n    Detailed health status",
+        "operationId": "health_check_root_health__get",
+        "parameters": [
+          {
+            "name": "include_external",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true,
+              "title": "Include External"
+            }
+          },
+          {
+            "name": "include_optimization",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true,
+              "title": "Include Optimization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthStatus"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/models": {
+      "get": {
+        "tags": [
+          "models",
+          "models"
+        ],
+        "summary": "Get All Models",
+        "description": "Get all investment models with optional pagination and sorting.",
+        "operationId": "get_all_models_api_v1_models_get",
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Number of models to skip (0-based)",
+              "title": "Offset"
+            },
+            "description": "Number of models to skip (0-based)"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Maximum number of models to return",
+              "title": "Limit"
+            },
+            "description": "Maximum number of models to return"
+          },
+          {
+            "name": "sort_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Comma-separated list of fields to sort by (model_id, name, last_rebalance_date)",
+              "title": "Sort By"
+            },
+            "description": "Comma-separated list of fields to sort by (model_id, name, last_rebalance_date)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ModelDTO"
+                  },
+                  "title": "Response Get All Models Api V1 Models Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "models",
+          "models"
+        ],
+        "summary": "Create Model",
+        "description": "Create a new investment model.",
+        "operationId": "create_model_api_v1_models_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModelPostDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelDTO"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/model/{model_id}": {
+      "get": {
+        "tags": [
+          "models",
+          "models"
+        ],
+        "summary": "Get Model By Id",
+        "description": "Get investment model by ID.",
+        "operationId": "get_model_by_id_api_v1_model__model_id__get",
+        "parameters": [
+          {
+            "name": "model_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Model ID",
+              "title": "Model Id"
+            },
+            "description": "Model ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelDTO"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "models",
+          "models"
+        ],
+        "summary": "Update Model",
+        "description": "Update an existing investment model.",
+        "operationId": "update_model_api_v1_model__model_id__put",
+        "parameters": [
+          {
+            "name": "model_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Model ID",
+              "title": "Model Id"
+            },
+            "description": "Model ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModelPutDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelDTO"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/model/{model_id}/position": {
+      "post": {
+        "tags": [
+          "models",
+          "models"
+        ],
+        "summary": "Add Position",
+        "description": "Add a position to an investment model.",
+        "operationId": "add_position_api_v1_model__model_id__position_post",
+        "parameters": [
+          {
+            "name": "model_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Model ID",
+              "title": "Model Id"
+            },
+            "description": "Model ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModelPositionDTO-Input"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelDTO"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "models",
+          "models"
+        ],
+        "summary": "Update Position",
+        "description": "Update a position in an investment model.",
+        "operationId": "update_position_api_v1_model__model_id__position_put",
+        "parameters": [
+          {
+            "name": "model_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Model ID",
+              "title": "Model Id"
+            },
+            "description": "Model ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModelPositionDTO-Input"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelDTO"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "models",
+          "models"
+        ],
+        "summary": "Remove Position",
+        "description": "Remove a position from an investment model.",
+        "operationId": "remove_position_api_v1_model__model_id__position_delete",
+        "parameters": [
+          {
+            "name": "model_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Model ID",
+              "title": "Model Id"
+            },
+            "description": "Model ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModelPositionDTO-Input"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelDTO"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/model/{model_id}/portfolio": {
+      "post": {
+        "tags": [
+          "models",
+          "models"
+        ],
+        "summary": "Add Portfolios",
+        "description": "Add portfolios to an investment model.",
+        "operationId": "add_portfolios_api_v1_model__model_id__portfolio_post",
+        "parameters": [
+          {
+            "name": "model_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Model ID",
+              "title": "Model Id"
+            },
+            "description": "Model ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModelPortfolioDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelDTO"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "models",
+          "models"
+        ],
+        "summary": "Remove Portfolios",
+        "description": "Remove portfolios from an investment model.",
+        "operationId": "remove_portfolios_api_v1_model__model_id__portfolio_delete",
+        "parameters": [
+          {
+            "name": "model_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Model ID",
+              "title": "Model Id"
+            },
+            "description": "Model ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModelPortfolioDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelDTO"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/model/{model_id}/rebalance": {
+      "post": {
+        "tags": [
+          "rebalance"
+        ],
+        "summary": "Rebalance Model Portfolios",
+        "description": "Rebalance all portfolios associated with an investment model.",
+        "operationId": "rebalance_model_portfolios_api_v1_model__model_id__rebalance_post",
+        "parameters": [
+          {
+            "name": "model_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Model ID",
+              "title": "Model Id"
+            },
+            "description": "Model ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RebalanceDTO"
+                  },
+                  "title": "Response Rebalance Model Portfolios Api V1 Model  Model Id  Rebalance Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/portfolio/{portfolio_id}/rebalance": {
+      "post": {
+        "tags": [
+          "rebalance"
+        ],
+        "summary": "Rebalance Portfolio",
+        "description": "Rebalance a single portfolio using its associated investment model.",
+        "operationId": "rebalance_portfolio_api_v1_portfolio__portfolio_id__rebalance_post",
+        "parameters": [
+          {
+            "name": "portfolio_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Portfolio ID",
+              "title": "Portfolio Id"
+            },
+            "description": "Portfolio ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RebalanceDTO"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "DriftDTO": {
+        "properties": {
+          "security_id": {
+            "type": "string",
+            "maxLength": 24,
+            "minLength": 24,
+            "title": "Security Id",
+            "description": "24-character alphanumeric security identifier"
+          },
+          "original_quantity": {
+            "type": "string",
+            "title": "Original Quantity",
+            "description": "Original quantity before rebalancing"
+          },
+          "adjusted_quantity": {
+            "type": "string",
+            "title": "Adjusted Quantity",
+            "description": "Adjusted quantity after rebalancing"
+          },
+          "target": {
+            "type": "string",
+            "title": "Target",
+            "description": "Target allocation percentage (0-0.95)"
+          },
+          "high_drift": {
+            "type": "string",
+            "title": "High Drift",
+            "description": "Maximum allowable drift above target (0-1)"
+          },
+          "low_drift": {
+            "type": "string",
+            "title": "Low Drift",
+            "description": "Maximum allowable drift below target (0-1)"
+          },
+          "actual": {
+            "type": "string",
+            "title": "Actual",
+            "description": "Actual allocation percentage after rebalancing (4 decimal places)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "security_id",
+          "original_quantity",
+          "adjusted_quantity",
+          "target",
+          "high_drift",
+          "low_drift",
+          "actual"
+        ],
+        "title": "DriftDTO",
+        "description": "Position drift analysis.\n\nRepresents the analysis of a security position's drift from target allocation,\nincluding original and adjusted quantities, target percentages, and actual\nallocation after rebalancing."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HealthStatus": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp"
+          },
+          "service": {
+            "type": "string",
+            "title": "Service"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "correlation_id": {
+            "type": "string",
+            "title": "Correlation Id"
+          },
+          "checks": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Checks"
+          },
+          "uptime_seconds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Uptime Seconds"
+          },
+          "dependencies": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dependencies"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "timestamp",
+          "service",
+          "version",
+          "correlation_id",
+          "checks"
+        ],
+        "title": "HealthStatus",
+        "description": "Health status response model."
+      },
+      "ModelDTO": {
+        "properties": {
+          "model_id": {
+            "type": "string",
+            "title": "Model Id",
+            "description": "Unique model identifier (24-character hex string)"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Model name"
+          },
+          "positions": {
+            "items": {
+              "$ref": "#/components/schemas/ModelPositionDTO-Output"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "title": "Positions",
+            "description": "Security positions in the model"
+          },
+          "portfolios": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Portfolios",
+            "description": "Associated portfolio IDs"
+          },
+          "last_rebalance_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Rebalance Date",
+            "description": "Last rebalancing timestamp (UTC)"
+          },
+          "version": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "title": "Version",
+            "description": "Optimistic locking version"
+          }
+        },
+        "type": "object",
+        "required": [
+          "model_id",
+          "name",
+          "portfolios",
+          "version"
+        ],
+        "title": "ModelDTO",
+        "description": "Complete investment model representation.\n\nUsed for GET responses and complete model data transfer."
+      },
+      "ModelPortfolioDTO": {
+        "properties": {
+          "portfolios": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Portfolios",
+            "description": "Portfolio IDs to add/remove"
+          }
+        },
+        "type": "object",
+        "required": [
+          "portfolios"
+        ],
+        "title": "ModelPortfolioDTO",
+        "description": "Schema for portfolio association operations.\n\nUsed for POST/DELETE /model/{model_id}/portfolio endpoints."
+      },
+      "ModelPositionDTO-Input": {
+        "properties": {
+          "security_id": {
+            "type": "string",
+            "maxLength": 24,
+            "minLength": 24,
+            "title": "Security Id",
+            "description": "24-character alphanumeric security identifier"
+          },
+          "target": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 0.95,
+                "minimum": 0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Target",
+            "description": "Target allocation percentage (0-0.95)"
+          },
+          "high_drift": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1,
+                "minimum": 0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "High Drift",
+            "description": "Maximum allowable drift above target (0-1)"
+          },
+          "low_drift": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1,
+                "minimum": 0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Low Drift",
+            "description": "Maximum allowable drift below target (0-1)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "security_id",
+          "target",
+          "high_drift",
+          "low_drift"
+        ],
+        "title": "ModelPositionDTO",
+        "description": "Position within an investment model.\n\nRepresents a security position with target allocation and drift tolerances."
+      },
+      "ModelPositionDTO-Output": {
+        "properties": {
+          "security_id": {
+            "type": "string",
+            "maxLength": 24,
+            "minLength": 24,
+            "title": "Security Id",
+            "description": "24-character alphanumeric security identifier"
+          },
+          "target": {
+            "type": "string",
+            "title": "Target",
+            "description": "Target allocation percentage (0-0.95)"
+          },
+          "high_drift": {
+            "type": "string",
+            "title": "High Drift",
+            "description": "Maximum allowable drift above target (0-1)"
+          },
+          "low_drift": {
+            "type": "string",
+            "title": "Low Drift",
+            "description": "Maximum allowable drift below target (0-1)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "security_id",
+          "target",
+          "high_drift",
+          "low_drift"
+        ],
+        "title": "ModelPositionDTO",
+        "description": "Position within an investment model.\n\nRepresents a security position with target allocation and drift tolerances."
+      },
+      "ModelPostDTO": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Model name"
+          },
+          "positions": {
+            "items": {
+              "$ref": "#/components/schemas/ModelPositionDTO-Input"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "title": "Positions",
+            "description": "Initial security positions"
+          },
+          "portfolios": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Portfolios",
+            "description": "Portfolio IDs to associate with model"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "portfolios"
+        ],
+        "title": "ModelPostDTO",
+        "description": "Schema for investment model creation requests.\n\nUsed for POST /models endpoint."
+      },
+      "ModelPutDTO": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Model name"
+          },
+          "positions": {
+            "items": {
+              "$ref": "#/components/schemas/ModelPositionDTO-Input"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "title": "Positions",
+            "description": "Updated security positions"
+          },
+          "portfolios": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Portfolios",
+            "description": "Updated portfolio associations"
+          },
+          "last_rebalance_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Rebalance Date",
+            "description": "Last rebalancing timestamp (UTC)"
+          },
+          "version": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "title": "Version",
+            "description": "Current version for optimistic locking"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "portfolios",
+          "version"
+        ],
+        "title": "ModelPutDTO",
+        "description": "Schema for investment model update requests.\n\nUsed for PUT /model/{model_id} endpoint."
+      },
+      "RebalanceDTO": {
+        "properties": {
+          "portfolio_id": {
+            "type": "string",
+            "maxLength": 24,
+            "minLength": 24,
+            "title": "Portfolio Id",
+            "description": "24-character alphanumeric portfolio identifier"
+          },
+          "transactions": {
+            "items": {
+              "$ref": "#/components/schemas/TransactionDTO"
+            },
+            "type": "array",
+            "title": "Transactions",
+            "description": "List of transactions to execute for rebalancing"
+          },
+          "drifts": {
+            "items": {
+              "$ref": "#/components/schemas/DriftDTO"
+            },
+            "type": "array",
+            "title": "Drifts",
+            "description": "Drift analysis for all positions in the portfolio"
+          }
+        },
+        "type": "object",
+        "required": [
+          "portfolio_id"
+        ],
+        "title": "RebalanceDTO",
+        "description": "Complete rebalancing results.\n\nContains the full results of a portfolio rebalancing operation, including\nthe list of transactions to execute and drift analysis for all positions."
+      },
+      "TransactionDTO": {
+        "properties": {
+          "transaction_type": {
+            "$ref": "#/components/schemas/TransactionType",
+            "description": "Type of transaction (BUY or SELL)"
+          },
+          "security_id": {
+            "type": "string",
+            "maxLength": 24,
+            "minLength": 24,
+            "title": "Security Id",
+            "description": "24-character alphanumeric security identifier"
+          },
+          "quantity": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "title": "Quantity",
+            "description": "Number of shares/units to trade"
+          },
+          "trade_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Trade Date",
+            "description": "Date when the transaction should be executed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "transaction_type",
+          "security_id",
+          "quantity",
+          "trade_date"
+        ],
+        "title": "TransactionDTO",
+        "description": "Buy/sell order representation.\n\nRepresents a transaction to buy or sell a specific quantity of a security\non a given trade date."
+      },
+      "TransactionType": {
+        "type": "string",
+        "enum": [
+          "BUY",
+          "SELL"
+        ],
+        "title": "TransactionType",
+        "description": "Transaction type enumeration.\n\nDefines the types of transactions that can be created:\n- BUY: Purchase of securities\n- SELL: Sale of securities"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}
