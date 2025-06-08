@@ -462,3 +462,142 @@ The Model Management page now provides a complete, professional interface for in
 - Trigger rebalancing operations with confirmation
 - All operations provide clear feedback and error handling
 - Interface is responsive and accessible
+
+## 2025-01-07 - Initial Model Management Implementation
+
+### User Request: Complete Model Management Implementation
+- Implement complete Model Management page with CRUD operations
+- Integration with Order Generation Service API
+- Infinite scrolling, sorting, form management
+- Reference OpenAPI specification for API contract
+
+### Technical Implementation Plan
+1. ✅ Create TypeScript type definitions from OpenAPI spec
+2. ✅ Build API client with full CRUD operations
+3. ✅ Implement React Query hooks for data management
+4. ✅ Create reusable form components with validation
+5. ✅ Build data table with infinite scroll and sorting
+6. ✅ Complete page integration with error handling
+
+### File Structure Created
+```
+src/
+├── types/model.ts                      # Model type definitions
+├── lib/
+│   ├── api/orderGenerationService.ts   # API client
+│   ├── hooks/useModels.ts             # React Query hooks
+│   └── providers/QueryProvider.tsx     # React Query provider
+├── components/
+│   ├── forms/ModelForm.tsx            # Model creation/editing form
+│   └── tables/ModelsTable.tsx         # Models data table
+└── app/model-management/page.tsx       # Complete page implementation
+```
+
+### Key Features Implemented
+- **TypeScript Type Safety**: Complete type definitions from OpenAPI spec
+- **CRUD Operations**: Create, read, update, delete models with API integration
+- **Position Management**: Add/edit/remove security positions within models
+- **Portfolio Assignment**: Dynamic portfolio association with badge UI
+- **Infinite Scrolling**: Load 10 models initially, expand on scroll/click
+- **Multi-column Sorting**: Sort by model_id, name, last_rebalance_date
+- **Form Validation**: React Hook Form + Zod schema validation
+- **Error Handling**: Comprehensive error states and user feedback
+- **Loading States**: Progressive loading with skeleton states
+- **Optimistic Updates**: Immediate UI updates with rollback on failure
+
+### Technical Challenges Resolved
+
+#### 1. React Query DevTools Build Issue
+**Problem**: `@tanstack/react-query-devtools` causing server-side import errors during build
+**Solution**: Removed devtools import from QueryProvider to ensure clean production builds
+
+#### 2. TypeScript Compilation Errors
+**Problem**: Model form props not accepting `Model | null` type
+**Solution**: Adjusted ModelForm component props to handle nullable model properly
+
+#### 3. Zustand Module Resolution
+**Problem**: Cannot find module './vendor-chunks/zustand.js' in server build
+**Solution**: Issue resolved by removing React Query devtools dependency
+
+### Build Status
+✅ **Production Build Success**: 191kB bundle size for model-management page
+✅ **TypeScript Compilation**: All type errors resolved
+✅ **Static Generation**: Optimized build with proper code splitting
+
+### Dependencies Added
+```json
+{
+  "@tanstack/react-query": "^5.0.0",
+  "react-hook-form": "^7.48.2",
+  "@hookform/resolvers": "^3.3.2",
+  "zod": "^3.22.4",
+  "date-fns": "^2.30.0",
+  "axios": "^1.6.0"
+}
+```
+
+### shadcn/ui Components Installed
+- table, button, input, dialog, form, select, textarea
+- badge, alert, alert-dialog, card, label
+
+### Environment Configuration
+- Added comprehensive `.env.example` with all 7 backend service configurations
+- Environment variables for host/port configuration
+- Development vs production service discovery patterns
+
+### Next Steps
+1. **Testing**: Add unit tests for components and API integration
+2. **Performance**: Implement virtual scrolling for very large datasets
+3. **Real-time Updates**: WebSocket integration for live model updates
+4. **Bulk Operations**: Multi-select for batch model operations
+5. **Export/Import**: Model data export and import functionality
+6. **Audit Trail**: Model change history and version tracking
+
+---
+
+## 2025-01-07 - API Configuration Fix for Browser Accessibility
+
+### Issue: API Response Error
+**Problem**: Getting "Error: API Response Error: {}" when trying to access Order Generation Service
+**Root Cause**: Using Docker service hostname `globeco-order-generation-service:8088` which is not accessible from browser
+
+### Technical Details
+- Browser cannot resolve Docker internal hostnames like `globeco-order-generation-service`
+- Docker service names only work within the Docker network, not from host browser
+- API calls failing with network errors due to hostname resolution
+
+### Solution Implemented
+1. **Updated API Configuration**: Changed default host from `globeco-order-generation-service` to `localhost`
+2. **Enhanced Error Logging**: Improved error interceptor to show detailed error information
+3. **Environment Files**: Updated `.env.example` and created `.env.local` with localhost configuration
+4. **Development vs Production**: Clear separation of development (localhost) and production (Docker hostnames) configuration
+
+### Files Modified
+- `src/lib/api/orderGenerationService.ts`: Updated default host and error handling
+- `.env.example`: Changed all service hosts to localhost for development  
+- `.env.local`: Created with localhost configuration for development
+
+### Configuration Changes
+```javascript
+// Before
+const ORDER_GENERATION_SERVICE_HOST = process.env.NEXT_PUBLIC_ORDER_GENERATION_SERVICE_HOST || 'globeco-order-generation-service'
+
+// After  
+const ORDER_GENERATION_SERVICE_HOST = process.env.NEXT_PUBLIC_ORDER_GENERATION_SERVICE_HOST || 'localhost'
+```
+
+### Environment Variables Updated
+```bash
+# Development Configuration
+NEXT_PUBLIC_ORDER_GENERATION_SERVICE_HOST=localhost
+NEXT_PUBLIC_ORDER_GENERATION_SERVICE_PORT=8088
+# ... (all other services updated to localhost)
+```
+
+### Next Steps
+1. **Service Health Check**: Verify Order Generation Service is running on localhost:8088
+2. **Docker Setup**: Document how to run backend services locally
+3. **Production Config**: Ensure production deployment uses correct Docker hostnames
+4. **API Testing**: Test all CRUD operations once service connectivity is established
+
+---

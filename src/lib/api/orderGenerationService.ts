@@ -10,7 +10,8 @@ import {
 } from '@/types/model'
 
 // Order Generation Service configuration
-const ORDER_GENERATION_SERVICE_HOST = process.env.NEXT_PUBLIC_ORDER_GENERATION_SERVICE_HOST || 'globeco-order-generation-service'
+// Use localhost for development since Docker service names are not accessible from browser
+const ORDER_GENERATION_SERVICE_HOST = process.env.NEXT_PUBLIC_ORDER_GENERATION_SERVICE_HOST || 'localhost'
 const ORDER_GENERATION_SERVICE_PORT = process.env.NEXT_PUBLIC_ORDER_GENERATION_SERVICE_PORT || '8088'
 const BASE_URL = `http://${ORDER_GENERATION_SERVICE_HOST}:${ORDER_GENERATION_SERVICE_PORT}`
 
@@ -41,7 +42,25 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    console.error('API Response Error:', error.response?.data || error.message)
+    if (error.response) {
+      // Server responded with error status
+      console.error('API Response Error:', {
+        status: error.response.status,
+        statusText: error.response.statusText,
+        data: error.response.data,
+        url: error.config?.url,
+      })
+    } else if (error.request) {
+      // Request was made but no response received
+      console.error('API Network Error:', {
+        message: error.message,
+        url: error.config?.url,
+        baseURL: error.config?.baseURL,
+      })
+    } else {
+      // Something else happened
+      console.error('API Configuration Error:', error.message)
+    }
     return Promise.reject(error)
   }
 )
