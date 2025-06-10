@@ -1444,3 +1444,177 @@ The expandable row foundation is now complete and ready for Phase 3 implementati
 **Quality Assurance**: All expandable row functionality tested and working. Ready for Phase 3, Step 5 - Portfolio Level Integration.
 
 ---
+
+## 2025-01-27 - Phase 3, Step 5: Portfolio Level Integration Implementation ✅
+
+**Task**: Complete Phase 3, Step 5 of requirement-2.md - Implement lazy loading for portfolio data when rebalance is expanded, create portfolio-level table with proper columns, add expand/collapse for individual portfolios, and implement portfolio data formatting and display.
+
+### Implementation Completed
+
+**1. PortfolioTable Component Created**
+- **📁 New File**: `src/components/tables/PortfolioTable.tsx`
+- **Professional Table Design**:
+  - ✅ Portfolio ID with abbreviated display (8 chars) + full ID tooltip
+  - ✅ Market Value with currency formatting ($XXX,XXX.XX)
+  - ✅ Cash Before/After Rebalance values  
+  - ✅ Cash Change with visual indicators (green/red arrows + percentages)
+  - ✅ Expandable rows for individual portfolios (ready for position data)
+  - ✅ Summary footer with portfolio count and total market value
+
+**2. Lazy Loading Portfolio Data**
+- **Enhanced RebalanceTable Integration**:
+  - ✅ `useRebalancePortfolios()` hook integration for lazy loading
+  - ✅ Portfolio data only fetched when rebalance is expanded
+  - ✅ Loading states during portfolio data fetching
+  - ✅ Error handling with retry options
+  - ✅ Real-time portfolio count updates in header
+
+**3. Portfolio Table Features**
+- **Data Formatting**:
+  - ✅ Currency values: `$1,234,567.89` (2 decimal places)
+  - ✅ Percentage changes: `+45.91%` / `-17.82%` with color coding
+  - ✅ Portfolio ID display: `437038a8...` with full ID tooltip
+  - ✅ Professional typography and spacing
+
+- **Visual Indicators**:
+  - ✅ Green arrows (↗) for cash increases with green text
+  - ✅ Red arrows (↘) for cash decreases with red text  
+  - ✅ Percentage calculations with proper +/- indicators
+  - ✅ Market value highlighting with bold formatting
+
+**4. Expandable Portfolio Rows**
+- **Position Level Preparation**:
+  - ✅ Each portfolio row has expand/collapse button
+  - ✅ Chevron animation (rotate-90) when expanded
+  - ✅ Portfolio summary cards showing market value and cash impact
+  - ✅ Position data placeholder with Phase 3 Step 6 preview
+  - ✅ Professional placeholder design with implementation roadmap
+
+**5. User Experience Enhancements**
+- **Loading States**:
+  - ✅ Spinner with descriptive text during portfolio data fetch
+  - ✅ Portfolio count updates: "Loading portfolios..." → "19 portfolios loaded"
+  - ✅ Smooth transitions between states
+
+- **Error Handling**:
+  - ✅ User-friendly error messages for failed portfolio data loads
+  - ✅ Retry button functionality
+  - ✅ Graceful degradation if portfolio data unavailable
+
+- **Empty States**:
+  - ✅ Professional "No Portfolios Found" message with icon
+  - ✅ Helpful explanatory text for empty rebalances
+
+### Technical Implementation Details
+
+**PortfolioTable Props Interface**:
+```tsx
+interface PortfolioTableProps {
+  portfolios: RebalancePortfolio[]
+  isLoading: boolean
+  isError: boolean
+  error: Error | null
+  rebalanceId: string
+}
+```
+
+**Currency Formatting**:
+```tsx
+const formatCurrency = (value: number): string => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value)
+}
+```
+
+**Cash Change Calculation**:
+```tsx
+const getCashChange = (portfolio: RebalancePortfolio) => {
+  const change = portfolio.cash_after_rebalance - portfolio.cash_before_rebalance
+  return {
+    amount: change,
+    isPositive: change >= 0,
+    percentage: portfolio.cash_before_rebalance !== 0 
+      ? (change / portfolio.cash_before_rebalance) * 100 
+      : 0
+  }
+}
+```
+
+### Testing Results
+
+**✅ Functional Testing**:
+- ✅ Portfolio data loads when rebalance is expanded  
+- ✅ Portfolio table displays correctly with all columns
+- ✅ Currency formatting works properly ($XXX,XXX.XX)
+- ✅ Cash change calculations accurate with proper +/- indicators
+- ✅ Portfolio expansion buttons work (chevron rotation)
+- ✅ Loading states display during data fetching
+- ✅ Error states show when portfolio data fails to load
+- ✅ Summary footer calculates total value correctly
+
+**✅ Visual Testing**:
+- ✅ Professional table styling with proper spacing
+- ✅ Color-coded cash change indicators (green/red)
+- ✅ Responsive design works on different screen sizes
+- ✅ Typography hierarchy clear and readable
+- ✅ Portfolio ID truncation with tooltip functionality
+- ✅ Hover effects and transitions smooth
+
+**✅ Performance Testing**:
+- ✅ Lazy loading only triggers when rebalance expanded
+- ✅ Portfolio data fetching efficient (React Query caching)
+- ✅ Smooth animations without performance issues
+- ✅ Proper state management (no unnecessary re-renders)
+
+### Browser Testing Validation
+
+**Live Testing Results** (http://localhost:3001/model-management/rebalance-results):
+- ✅ **Rebalance Expansion**: Successfully expands to show "19 portfolios loaded"
+- ✅ **Portfolio Table**: Professional table with all required columns
+- ✅ **Data Display**: 
+  - Portfolio IDs: `437038a8...` format with tooltips
+  - Market Values: `$912,068.76`, `$1,805,510.41`, etc.
+  - Cash Before/After: Properly formatted currency
+  - Cash Changes: `+20.38%`, `-17.82%` with color indicators
+- ✅ **Portfolio Expansion**: Each portfolio has working expand button
+- ✅ **Position Placeholder**: Shows Phase 3 Step 6 preview content
+- ✅ **Summary Footer**: "19 portfolios in this rebalance • Total Value: $22,564,710.71"
+
+### Phase 3 Progress Status
+- [x] **Phase 1.1**: API Integration Setup ✅ COMPLETED
+- [x] **Phase 1.2**: Basic Page Structure ✅ COMPLETED  
+- [x] **Phase 2.3**: Rebalance Level Table ✅ COMPLETED
+- [x] **Phase 2.4**: Expandable Row Foundation ✅ COMPLETED
+- [x] **Phase 3.5**: Portfolio Level Integration ✅ **COMPLETED**
+- [ ] **Phase 3.6**: Position Level Implementation (NEXT)
+
+### Files Modified/Created
+1. **NEW**: `src/components/tables/PortfolioTable.tsx` - Complete portfolio table component
+2. `src/components/tables/RebalanceTable.tsx` - Enhanced with portfolio data integration
+3. `src/lib/api/mockRebalanceData.ts` - Enhanced mock data generation
+4. `documentation/requirement-2.md` - Updated progress checkboxes
+
+### Phase 3 Step 6 Preparation
+
+The portfolio level integration is now complete and ready for position implementation:
+
+**Ready for Phase 3.6 - Position Level Implementation**:
+- ✅ Portfolio expandable rows foundation in place
+- ✅ Position data placeholder with clear implementation roadmap  
+- ✅ Mock data generation ready for position-level data
+- ✅ Component structure prepared for nested position tables
+- ✅ State management ready for position-level lazy loading
+
+**Technical Architecture Notes**:
+- PortfolioTable component designed for easy position table integration
+- Position data hooks ready for implementation
+- Performance optimizations in place for nested data structures
+- Professional UX patterns established for 3-level hierarchy
+
+**Quality Assurance**: All portfolio-level functionality tested and working perfectly. Ready for Phase 3, Step 6 - Position Level Implementation.
+
+---
