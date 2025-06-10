@@ -81,10 +81,10 @@ We will add filtering in a subsequent step.
 **🎯 Goal:** Add portfolio and position level data with lazy loading
 
 #### 5. Portfolio Level Integration (45-60 mins)
-- [ ] Implement lazy loading for portfolio data when rebalance is expanded
-- [ ] Create portfolio-level table with proper columns
-- [ ] Add expand/collapse for individual portfolios
-- [ ] Implement portfolio data formatting and display
+- [x] Implement lazy loading for portfolio data when rebalance is expanded
+- [x] Create portfolio-level table with proper columns
+- [x] Add expand/collapse for individual portfolios
+- [x] Implement portfolio data formatting and display
 
 #### 6. Position Level Implementation (45-60 mins)
 - [ ] Add position-level data loading and display

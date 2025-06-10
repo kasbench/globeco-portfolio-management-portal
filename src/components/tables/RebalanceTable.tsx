@@ -14,8 +14,10 @@ import {
   TableRow 
 } from '@/components/ui/table'
 import { Card } from '@/components/ui/card'
+import PortfolioTable from '@/components/tables/PortfolioTable'
 
 import { Rebalance, RebalanceSortField, RebalanceSortConfig } from '@/types/rebalance'
+import { useRebalancePortfolios } from '@/lib/hooks/useRebalances'
 
 interface RebalanceTableProps {
   rebalances: Rebalance[]
@@ -118,17 +120,25 @@ export default function RebalanceTable({
     }
   }, [handleIntersection])
 
-  // Render expanded row content with nested portfolio information
-  const renderExpandedContent = (rebalance: Rebalance) => {
+  // Component for handling portfolio data within expanded rebalance
+  const ExpandedRebalanceContent = ({ rebalance }: { rebalance: Rebalance }) => {
     const details = getRebalanceDetails(rebalance)
     const isExpanded = expandedRows.has(rebalance.rebalance_id)
     
+    // Use the portfolio data hook for lazy loading
+    const {
+      data: portfolios,
+      isLoading: portfoliosLoading,
+      isError: portfoliosError,
+      error: portfoliosErrorData,
+    } = useRebalancePortfolios(rebalance.rebalance_id, isExpanded)
+
     return (
       <TableRow key={`${rebalance.rebalance_id}-expanded`}>
         <TableCell colSpan={5} className="p-0">
           <div 
             className={`overflow-hidden transition-all duration-300 ease-in-out ${
-              isExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+              isExpanded ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'
             }`}
           >
             <div className="p-6 bg-slate-25 border-t border-slate-100">
@@ -169,27 +179,22 @@ export default function RebalanceTable({
                   <div className="flex items-center justify-between">
                     <h5 className="font-medium text-slate-900">Portfolio Details</h5>
                     <div className="text-sm text-slate-600">
-                      {details.portfolios} portfolios • Loading in Phase 3
+                      {portfoliosLoading 
+                        ? 'Loading portfolios...' 
+                        : `${portfolios?.length || 0} portfolios loaded`
+                      }
                     </div>
                   </div>
                 </div>
                 
-                {/* Placeholder for Portfolio Table (Phase 3) */}
-                <div className="p-6">
-                  <div className="text-center py-8 border-2 border-dashed border-slate-200 rounded-lg">
-                    <Loader2 className="h-8 w-8 animate-spin text-slate-400 mx-auto mb-3" />
-                    <h6 className="text-lg font-medium text-slate-900 mb-2">
-                      Portfolio Data Loading...
-                    </h6>
-                    <p className="text-slate-600 max-w-md mx-auto mb-4">
-                      Nested portfolio table with expandable position details will be implemented in 
-                      <strong className="text-blue-600"> Phase 3: Portfolio Level Integration</strong>.
-                    </p>
-                    <div className="text-sm text-slate-500">
-                      <strong>Preview:</strong> Portfolio ID • Market Value • Cash Before/After • Expand for Positions
-                    </div>
-                  </div>
-                </div>
+                {/* Portfolio Table - Real Data */}
+                <PortfolioTable
+                  portfolios={portfolios || []}
+                  isLoading={portfoliosLoading}
+                  isError={portfoliosError}
+                  error={portfoliosErrorData}
+                  rebalanceId={rebalance.rebalance_id}
+                />
               </div>
 
               {/* Action Buttons */}
@@ -202,9 +207,22 @@ export default function RebalanceTable({
                   <ChevronUp className="h-4 w-4 mr-1" />
                   Collapse
                 </Button>
-                <Button variant="outline" size="sm" disabled>
-                  <Loader2 className="h-4 w-4 mr-1" />
-                  Load Portfolio Data (Phase 3)
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  disabled={portfoliosLoading}
+                >
+                  {portfoliosLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    <>
+                      <ChevronUp className="h-4 w-4 mr-1" />
+                      Refresh Portfolios
+                    </>
+                  )}
                 </Button>
               </div>
             </div>
@@ -212,6 +230,11 @@ export default function RebalanceTable({
         </TableCell>
       </TableRow>
     )
+  }
+
+  // Render expanded row content with nested portfolio information
+  const renderExpandedContent = (rebalance: Rebalance) => {
+    return <ExpandedRebalanceContent rebalance={rebalance} />
   }
 
   // Show skeleton loading rows
