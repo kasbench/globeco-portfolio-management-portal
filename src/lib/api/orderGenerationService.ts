@@ -192,28 +192,70 @@ export const orderGenerationApi = {
   // Rebalance Results API Functions
   // Get all rebalances with pagination and sorting
   getRebalances: async (params: RebalancesQueryParams = {}): Promise<Rebalance[]> => {
-    const response: AxiosResponse<Rebalance[]> = await apiClient.get('/api/v1/rebalances', {
-      params: {
-        offset: params.offset,
-        limit: params.limit,
-        sort_by: params.sort_by,
-      },
-    })
-    return response.data
+    // Use mock data in development when service is not available
+    if (process.env.NODE_ENV === 'development') {
+      try {
+        const response: AxiosResponse<Rebalance[]> = await apiClient.get('/api/v1/rebalances', {
+          params: {
+            offset: params.offset,
+            limit: params.limit,
+            sort_by: params.sort_by,
+          },
+        })
+        return response.data
+      } catch (error) {
+        console.warn('Order Generation Service not available, using mock data:', error)
+        const { getMockRebalancesPage } = await import('./mockRebalanceData')
+        return getMockRebalancesPage(params.offset, params.limit)
+      }
+    } else {
+      const response: AxiosResponse<Rebalance[]> = await apiClient.get('/api/v1/rebalances', {
+        params: {
+          offset: params.offset,
+          limit: params.limit,
+          sort_by: params.sort_by,
+        },
+      })
+      return response.data
+    }
   },
 
   // Get rebalance by ID with full nested data
   getRebalance: async (rebalanceId: string): Promise<Rebalance> => {
-    const response: AxiosResponse<Rebalance> = await apiClient.get(`/api/v1/rebalance/${rebalanceId}`)
-    return response.data
+    if (process.env.NODE_ENV === 'development') {
+      try {
+        const response: AxiosResponse<Rebalance> = await apiClient.get(`/api/v1/rebalance/${rebalanceId}`)
+        return response.data
+      } catch (error) {
+        console.warn('Order Generation Service not available, using mock data:', error)
+        const { getMockRebalance } = await import('./mockRebalanceData')
+        return getMockRebalance(rebalanceId)
+      }
+    } else {
+      const response: AxiosResponse<Rebalance> = await apiClient.get(`/api/v1/rebalance/${rebalanceId}`)
+      return response.data
+    }
   },
 
   // Get portfolios for a specific rebalance (for lazy loading)
   getRebalancePortfolios: async (rebalanceId: string): Promise<RebalancePortfolio[]> => {
-    const response: AxiosResponse<RebalancePortfolio[]> = await apiClient.get(
-      `/api/v1/rebalance/${rebalanceId}/portfolios`
-    )
-    return response.data
+    if (process.env.NODE_ENV === 'development') {
+      try {
+        const response: AxiosResponse<RebalancePortfolio[]> = await apiClient.get(
+          `/api/v1/rebalance/${rebalanceId}/portfolios`
+        )
+        return response.data
+      } catch (error) {
+        console.warn('Order Generation Service not available, using mock data:', error)
+        const { getMockRebalancePortfolios } = await import('./mockRebalanceData')
+        return getMockRebalancePortfolios(rebalanceId)
+      }
+    } else {
+      const response: AxiosResponse<RebalancePortfolio[]> = await apiClient.get(
+        `/api/v1/rebalance/${rebalanceId}/portfolios`
+      )
+      return response.data
+    }
   },
 
   // Get positions for a specific portfolio in a rebalance (for lazy loading)
@@ -221,10 +263,23 @@ export const orderGenerationApi = {
     rebalanceId: string, 
     portfolioId: string
   ): Promise<RebalancePosition[]> => {
-    const response: AxiosResponse<RebalancePosition[]> = await apiClient.get(
-      `/api/v1/rebalance/${rebalanceId}/portfolio/${portfolioId}/positions`
-    )
-    return response.data
+    if (process.env.NODE_ENV === 'development') {
+      try {
+        const response: AxiosResponse<RebalancePosition[]> = await apiClient.get(
+          `/api/v1/rebalance/${rebalanceId}/portfolio/${portfolioId}/positions`
+        )
+        return response.data
+      } catch (error) {
+        console.warn('Order Generation Service not available, using mock data:', error)
+        const { getMockRebalancePortfolioPositions } = await import('./mockRebalanceData')
+        return getMockRebalancePortfolioPositions(rebalanceId, portfolioId)
+      }
+    } else {
+      const response: AxiosResponse<RebalancePosition[]> = await apiClient.get(
+        `/api/v1/rebalance/${rebalanceId}/portfolio/${portfolioId}/positions`
+      )
+      return response.data
+    }
   },
 }
 
