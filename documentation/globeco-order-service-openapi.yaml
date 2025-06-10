@@ -1,884 +1,972 @@
-{
-  "openapi": "3.0.1",
-  "info": {
-    "title": "OpenAPI definition",
-    "version": "v0"
-  },
-  "servers": [
-    {
-      "url": "http://globeco-order-service:8081",
-      "description": "Generated server url"
-    }
-  ],
-  "paths": {
-    "/api/v1/status/{id}": {
-      "get": {
-        "tags": [
-          "status-controller"
-        ],
-        "operationId": "getStatusById",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/StatusDTO"
-                }
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "status-controller"
-        ],
-        "operationId": "updateStatus",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/StatusDTO"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/StatusDTO"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "status-controller"
-        ],
-        "operationId": "deleteStatus",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "version",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/v1/orderType/{id}": {
-      "put": {
-        "tags": [
-          "order-type-controller"
-        ],
-        "operationId": "updateOrderType",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/OrderTypeDTO"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/OrderTypeDTO"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "order-type-controller"
-        ],
-        "operationId": "deleteOrderType",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "version",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/v1/order/{id}": {
-      "get": {
-        "tags": [
-          "order-controller"
-        ],
-        "operationId": "getOrderById",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/OrderWithDetailsDTO"
-                }
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "order-controller"
-        ],
-        "operationId": "updateOrder",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/OrderDTO"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/OrderWithDetailsDTO"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "order-controller"
-        ],
-        "operationId": "deleteOrder",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "version",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/v1/blotter/{id}": {
-      "get": {
-        "tags": [
-          "blotter-controller"
-        ],
-        "operationId": "getBlotterById",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/BlotterDTO"
-                }
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "blotter-controller"
-        ],
-        "operationId": "updateBlotter",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/BlotterDTO"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/BlotterDTO"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "blotter-controller"
-        ],
-        "operationId": "deleteBlotter",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "version",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/v1/statuses": {
-      "get": {
-        "tags": [
-          "status-controller"
-        ],
-        "operationId": "getAllStatuses",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/StatusDTO"
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "status-controller"
-        ],
-        "operationId": "createStatus",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/StatusPostDTO"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/StatusDTO"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/orders": {
-      "get": {
-        "tags": [
-          "order-controller"
-        ],
-        "operationId": "getAllOrders",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/OrderWithDetailsDTO"
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "order-controller"
-        ],
-        "operationId": "createOrder",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/OrderPostDTO"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/OrderWithDetailsDTO"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/orders/{id}/submit": {
-      "post": {
-        "tags": [
-          "order-controller"
-        ],
-        "operationId": "submitOrder",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/orderTypes": {
-      "get": {
-        "tags": [
-          "order-type-controller"
-        ],
-        "operationId": "getAllOrderTypes",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/OrderTypeDTO"
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "order-type-controller"
-        ],
-        "operationId": "createOrderType",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/OrderTypePostDTO"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/OrderTypeDTO"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/blotters": {
-      "get": {
-        "tags": [
-          "blotter-controller"
-        ],
-        "operationId": "getAllBlotters",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/BlotterDTO"
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "blotter-controller"
-        ],
-        "operationId": "createBlotter",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/BlotterPostDTO"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/BlotterDTO"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/orderTypes/{id}": {
-      "get": {
-        "tags": [
-          "order-type-controller"
-        ],
-        "operationId": "getOrderTypeById",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/OrderTypeDTO"
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  },
-  "components": {
-    "schemas": {
-      "StatusDTO": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "abbreviation": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          },
-          "version": {
-            "type": "integer",
-            "format": "int32"
-          }
-        }
-      },
-      "OrderTypeDTO": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "abbreviation": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          },
-          "version": {
-            "type": "integer",
-            "format": "int32"
-          }
-        }
-      },
-      "OrderDTO": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "blotterId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "statusId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "portfolioId": {
-            "type": "string"
-          },
-          "orderTypeId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "securityId": {
-            "type": "string"
-          },
-          "quantity": {
-            "type": "number"
-          },
-          "limitPrice": {
-            "type": "number"
-          },
-          "tradeOrderId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "orderTimestamp": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "version": {
-            "type": "integer",
-            "format": "int32"
-          }
-        }
-      },
-      "BlotterDTO": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "name": {
-            "type": "string"
-          },
-          "version": {
-            "type": "integer",
-            "format": "int32"
-          }
-        }
-      },
-      "OrderWithDetailsDTO": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "blotter": {
-            "$ref": "#/components/schemas/BlotterDTO"
-          },
-          "status": {
-            "$ref": "#/components/schemas/StatusDTO"
-          },
-          "portfolioId": {
-            "type": "string"
-          },
-          "orderType": {
-            "$ref": "#/components/schemas/OrderTypeDTO"
-          },
-          "securityId": {
-            "type": "string"
-          },
-          "quantity": {
-            "type": "number"
-          },
-          "limitPrice": {
-            "type": "number"
-          },
-          "tradeOrderId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "orderTimestamp": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "version": {
-            "type": "integer",
-            "format": "int32"
-          }
-        }
-      },
-      "StatusPostDTO": {
-        "type": "object",
-        "properties": {
-          "abbreviation": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          },
-          "version": {
-            "type": "integer",
-            "format": "int32"
-          }
-        }
-      },
-      "OrderPostDTO": {
-        "type": "object",
-        "properties": {
-          "blotterId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "statusId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "portfolioId": {
-            "type": "string"
-          },
-          "orderTypeId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "securityId": {
-            "type": "string"
-          },
-          "quantity": {
-            "type": "number"
-          },
-          "limitPrice": {
-            "type": "number"
-          },
-          "tradeOrderId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "orderTimestamp": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "version": {
-            "type": "integer",
-            "format": "int32"
-          }
-        }
-      },
-      "OrderTypePostDTO": {
-        "type": "object",
-        "properties": {
-          "abbreviation": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          },
-          "version": {
-            "type": "integer",
-            "format": "int32"
-          }
-        }
-      },
-      "BlotterPostDTO": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "version": {
-            "type": "integer",
-            "format": "int32"
-          }
-        }
-      }
-    }
-  }
-}
+openapi: 3.0.3
+info:
+  title: GlobeCo Order Service API
+  version: 2.0.0
+  description: |
+    OpenAPI specification for the GlobeCo Order Service.
+    Provides comprehensive endpoints to manage orders, statuses, order types, and blotters.
+    
+    **Key Features:**
+    - **Batch Order Processing**: Create up to 1000 orders in a single request with detailed success/failure reporting
+    - **Non-atomic Processing**: Individual order failures don't affect other orders in the batch
+    - **Comprehensive Error Handling**: Detailed validation and error messages for each order
+    - **RESTful HTTP Status Codes**: Proper use of 200, 207, 400, 413, and 500 status codes
+    
+    **Breaking Changes in v2.0.0:**
+    - `/orders` POST endpoint now accepts arrays of orders instead of single orders
+    - Response format changed from `OrderWithDetailsDTO` to `OrderListResponseDTO`
+servers:
+  - url: /api/v1
+paths:
+  /statuses:
+    get:
+      summary: List all statuses
+      operationId: listStatuses
+      tags: [Status]
+      responses:
+        '200':
+          description: List of all statuses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StatusDTO'
+    post:
+      summary: Create a new status
+      operationId: createStatus
+      tags: [Status]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StatusPostDTO'
+      responses:
+        '200':
+          description: The created status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusDTO'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /status/{id}:
+    get:
+      summary: Get a status by ID
+      operationId: getStatusById
+      tags: [Status]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: The status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusDTO'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      summary: Update an existing status
+      operationId: updateStatus
+      tags: [Status]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StatusDTO'
+      responses:
+        '200':
+          description: The updated status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusDTO'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      summary: Delete a status by ID
+      operationId: deleteStatus
+      tags: [Status]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: version
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Status deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /orderTypes:
+    get:
+      summary: List all order types
+      operationId: listOrderTypes
+      tags: [OrderType]
+      responses:
+        '200':
+          description: List of all order types
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OrderTypeDTO'
+    post:
+      summary: Create a new order type
+      operationId: createOrderType
+      tags: [OrderType]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderTypePostDTO'
+      responses:
+        '200':
+          description: The created order type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderTypeDTO'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /orderType/{id}:
+    get:
+      summary: Get an order type by ID
+      operationId: getOrderTypeById
+      tags: [OrderType]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: The order type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderTypeDTO'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      summary: Update an existing order type
+      operationId: updateOrderType
+      tags: [OrderType]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderTypeDTO'
+      responses:
+        '200':
+          description: The updated order type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderTypeDTO'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      summary: Delete an order type by ID
+      operationId: deleteOrderType
+      tags: [OrderType]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: version
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Order type deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /blotters:
+    get:
+      summary: List all blotters
+      operationId: listBlotters
+      tags: [Blotter]
+      responses:
+        '200':
+          description: List of all blotters
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BlotterDTO'
+    post:
+      summary: Create a new blotter
+      operationId: createBlotter
+      tags: [Blotter]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BlotterPostDTO'
+      responses:
+        '200':
+          description: The created blotter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BlotterDTO'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /blotter/{id}:
+    get:
+      summary: Get a blotter by ID
+      operationId: getBlotterById
+      tags: [Blotter]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: The blotter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BlotterDTO'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      summary: Update an existing blotter
+      operationId: updateBlotter
+      tags: [Blotter]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BlotterDTO'
+      responses:
+        '200':
+          description: The updated blotter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BlotterDTO'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      summary: Delete a blotter by ID
+      operationId: deleteBlotter
+      tags: [Blotter]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: version
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Blotter deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /orders:
+    get:
+      summary: List all orders
+      operationId: listOrders
+      tags: [Order]
+      responses:
+        '200':
+          description: List of all orders (with details)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OrderWithDetailsDTO'
+    post:
+      summary: Create orders in batch
+      operationId: createOrdersBatch
+      tags: [Order]
+      description: |
+        Create multiple orders in a single batch request. Supports up to 1000 orders per batch.
+        Returns comprehensive results including success/failure status for each order.
+        
+        **HTTP Status Codes:**
+        - `200` - All orders processed successfully
+        - `207` - Partial success (some orders succeeded, others failed) 
+        - `400` - Request validation failed
+        - `413` - Batch size exceeds maximum allowed (1000 orders)
+        - `500` - Unexpected server error
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/OrderPostDTO'
+              minItems: 1
+              maxItems: 1000
+              example:
+                - blotterId: 1
+                  statusId: 1
+                  portfolioId: "PORT123456789012345678"
+                  orderTypeId: 2
+                  securityId: "SEC123456789012345678901"
+                  quantity: 100.00000000
+                  limitPrice: 50.25000000
+                  orderTimestamp: "2024-06-01T12:00:00Z"
+                  version: 1
+                - blotterId: 1
+                  statusId: 1
+                  portfolioId: "PORT987654321098765432"
+                  orderTypeId: 3
+                  securityId: "SEC987654321098765432109"
+                  quantity: 200.00000000
+                  limitPrice: 75.50000000
+                  orderTimestamp: "2024-06-01T12:01:00Z"
+                  version: 1
+      responses:
+        '200':
+          description: All orders processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderListResponseDTO'
+              example:
+                status: "SUCCESS"
+                message: "All orders processed successfully"
+                totalReceived: 2
+                successful: 2
+                failed: 0
+                orders:
+                  - status: "SUCCESS"
+                    message: "Order created successfully"
+                    orderDetails:
+                      id: 101
+                      blotter:
+                        id: 1
+                        name: "Default"
+                        version: 1
+                      status:
+                        id: 1
+                        abbreviation: "NEW"
+                        description: "New"
+                        version: 1
+                      portfolioId: "PORT123456789012345678"
+                      orderType:
+                        id: 2
+                        abbreviation: "BUY"
+                        description: "Buy"
+                        version: 1
+                      securityId: "SEC123456789012345678901"
+                      quantity: 100.00000000
+                      limitPrice: 50.25000000
+                      orderTimestamp: "2024-06-01T12:00:00Z"
+                      version: 1
+                    orderId: 101
+                    requestIndex: 0
+                  - status: "SUCCESS"
+                    message: "Order created successfully"
+                    orderDetails:
+                      id: 102
+                      blotter:
+                        id: 1
+                        name: "Default"
+                        version: 1
+                      status:
+                        id: 1
+                        abbreviation: "NEW"
+                        description: "New"
+                        version: 1
+                      portfolioId: "PORT987654321098765432"
+                      orderType:
+                        id: 3
+                        abbreviation: "SELL"
+                        description: "Sell"
+                        version: 1
+                      securityId: "SEC987654321098765432109"
+                      quantity: 200.00000000
+                      limitPrice: 75.50000000
+                      orderTimestamp: "2024-06-01T12:01:00Z"
+                      version: 1
+                    orderId: 102
+                    requestIndex: 1
+        '207':
+          description: Partial success or all orders failed during processing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderListResponseDTO'
+              example:
+                status: "PARTIAL"
+                message: "Some orders processed successfully, others failed"
+                totalReceived: 2
+                successful: 1
+                failed: 1
+                orders:
+                  - status: "SUCCESS"
+                    message: "Order created successfully"
+                    orderDetails:
+                      id: 101
+                      blotter:
+                        id: 1
+                        name: "Default"
+                        version: 1
+                      status:
+                        id: 1
+                        abbreviation: "NEW"
+                        description: "New"
+                        version: 1
+                      portfolioId: "PORT123456789012345678"
+                      orderType:
+                        id: 2
+                        abbreviation: "BUY"
+                        description: "Buy"
+                        version: 1
+                      securityId: "SEC123456789012345678901"
+                      quantity: 100.00000000
+                      limitPrice: 50.25000000
+                      orderTimestamp: "2024-06-01T12:00:00Z"
+                      version: 1
+                    orderId: 101
+                    requestIndex: 0
+                  - status: "FAILURE"
+                    message: "Blotter with ID 999 not found"
+                    orderDetails: null
+                    orderId: null
+                    requestIndex: 1
+        '400':
+          description: Request validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderListResponseDTO'
+              example:
+                status: "FAILURE"
+                message: "Request validation failed: Invalid request data"
+                totalReceived: 0
+                successful: 0
+                failed: 0
+                orders: []
+        '413':
+          description: Batch size exceeds maximum allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderListResponseDTO'
+              example:
+                status: "FAILURE"
+                message: "Batch size 1001 exceeds maximum allowed size of 1000"
+                totalReceived: 0
+                successful: 0
+                failed: 0
+                orders: []
+        '500':
+          description: Unexpected server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderListResponseDTO'
+              example:
+                status: "FAILURE"
+                message: "Internal server error processing batch request"
+                totalReceived: 0
+                successful: 0
+                failed: 0
+                orders: []
+  /order/{id}:
+    get:
+      summary: Get an order by ID
+      operationId: getOrderById
+      tags: [Order]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: The order (with details)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderWithDetailsDTO'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      summary: Update an existing order
+      operationId: updateOrder
+      tags: [Order]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderDTO'
+      responses:
+        '200':
+          description: The updated order (with details)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderWithDetailsDTO'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      summary: Delete an order by ID
+      operationId: deleteOrder
+      tags: [Order]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: version
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Order deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /actuator/health/liveness:
+    get:
+      summary: Liveness probe
+      description: Returns 200 if the application is alive. Used for Kubernetes livenessProbe.
+      tags: [Health]
+      responses:
+        '200':
+          description: Application is alive
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+  /actuator/health/readiness:
+    get:
+      summary: Readiness probe
+      description: Returns 200 if the application is ready to serve traffic. Used for Kubernetes readinessProbe.
+      tags: [Health]
+      responses:
+        '200':
+          description: Application is ready
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+  /actuator/health/startup:
+    get:
+      summary: Startup probe
+      description: Returns 200 if the application has started successfully. Used for Kubernetes startupProbe.
+      tags: [Health]
+      responses:
+        '200':
+          description: Application has started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+  /api/v1/orders/{id}/submit:
+    post:
+      summary: Submit an order to the trade service
+      description: >
+        Submits the order with the given ID to the GlobeCo Trade Service (calls POST /api/v1/tradeOrders on the trade service).
+        If successful, updates the order status from "NEW" to "SENT" and returns the updated OrderDTO.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Order submitted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderDTO'
+        '400':
+          description: Order could not be submitted (not NEW or trade service error)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: not submitted
+components:
+  schemas:
+    StatusDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        abbreviation:
+          type: string
+          example: NEW
+        description:
+          type: string
+          example: New
+        version:
+          type: integer
+          example: 1
+      required: [id, abbreviation, description, version]
+    StatusPostDTO:
+      type: object
+      properties:
+        abbreviation:
+          type: string
+          example: NEW
+        description:
+          type: string
+          example: New
+        version:
+          type: integer
+          example: 1
+      required: [abbreviation, description, version]
+    OrderTypeDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        abbreviation:
+          type: string
+          example: MKT
+        description:
+          type: string
+          example: Market
+        version:
+          type: integer
+          example: 1
+      required: [id, abbreviation, description, version]
+    OrderTypePostDTO:
+      type: object
+      properties:
+        abbreviation:
+          type: string
+          example: MKT
+        description:
+          type: string
+          example: Market
+        version:
+          type: integer
+          example: 1
+      required: [abbreviation, description, version]
+    BlotterDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: Default
+        version:
+          type: integer
+          example: 1
+      required: [id, name, version]
+    BlotterPostDTO:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Default
+        version:
+          type: integer
+          example: 1
+      required: [name, version]
+    OrderDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 42
+        blotterId:
+          type: integer
+          nullable: true
+          example: 1
+        statusId:
+          type: integer
+          example: 2
+        portfolioId:
+          type: string
+          example: 5f47ac10b8e4e53b8cfa9b1a
+        orderTypeId:
+          type: integer
+          example: 3
+        securityId:
+          type: string
+          example: 5f47ac10b8e4e53b8cfa9b1b
+        quantity:
+          type: number
+          format: double
+          example: 100.00000000
+        limitPrice:
+          type: number
+          format: double
+          nullable: true
+          example: 50.25000000
+        tradeOrderId:
+          type: integer
+          nullable: true
+          example: 99999
+        orderTimestamp:
+          type: string
+          format: date-time
+          example: 2024-06-01T12:00:00Z
+        version:
+          type: integer
+          example: 1
+      required: [id, blotterId, statusId, portfolioId, orderTypeId, securityId, quantity, orderTimestamp, version]
+    OrderPostDTO:
+      type: object
+      properties:
+        blotterId:
+          type: integer
+          nullable: true
+          example: 1
+        statusId:
+          type: integer
+          example: 2
+        portfolioId:
+          type: string
+          example: 5f47ac10b8e4e53b8cfa9b1a
+        orderTypeId:
+          type: integer
+          example: 3
+        securityId:
+          type: string
+          example: 5f47ac10b8e4e53b8cfa9b1b
+        quantity:
+          type: number
+          format: double
+          example: 100.00000000
+        limitPrice:
+          type: number
+          format: double
+          nullable: true
+          example: 50.25000000
+        tradeOrderId:
+          type: integer
+          nullable: true
+          example: 99999
+        orderTimestamp:
+          type: string
+          format: date-time
+          example: 2024-06-01T12:00:00Z
+        version:
+          type: integer
+          example: 1
+      required: [blotterId, statusId, portfolioId, orderTypeId, securityId, quantity, orderTimestamp, version]
+    OrderWithDetailsDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 42
+        blotter:
+          $ref: '#/components/schemas/BlotterDTO'
+        status:
+          $ref: '#/components/schemas/StatusDTO'
+        portfolioId:
+          type: string
+          example: 5f47ac10b8e4e53b8cfa9b1a
+        orderType:
+          $ref: '#/components/schemas/OrderTypeDTO'
+        securityId:
+          type: string
+          example: 5f47ac10b8e4e53b8cfa9b1b
+        quantity:
+          type: number
+          format: double
+          example: 100.00000000
+        limitPrice:
+          type: number
+          format: double
+          nullable: true
+          example: 50.25000000
+        tradeOrderId:
+          type: integer
+          nullable: true
+          example: 99999
+        orderTimestamp:
+          type: string
+          format: date-time
+          example: 2024-06-01T12:00:00Z
+        version:
+          type: integer
+          example: 1
+      required: [id, blotter, status, portfolioId, orderType, securityId, quantity, orderTimestamp, version]
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          example: UP
+      required: [status]
+    OrderPostResponseDTO:
+      type: object
+      description: Response DTO for individual order processing results in batch operations
+      properties:
+        status:
+          type: string
+          enum: [SUCCESS, FAILURE]
+          description: Status of the individual order processing
+          example: "SUCCESS"
+        message:
+          type: string
+          description: Human-readable message describing the result
+          example: "Order created successfully"
+        orderDetails:
+          allOf:
+            - $ref: '#/components/schemas/OrderWithDetailsDTO'
+          nullable: true
+          description: Complete order details if processing was successful, null if failed
+        orderId:
+          type: integer
+          nullable: true
+          description: The ID of the created order if successful, null if failed
+          example: 101
+        requestIndex:
+          type: integer
+          description: Zero-based index of this order in the original request array
+          example: 0
+      required: [status, message, requestIndex]
+    OrderListResponseDTO:
+      type: object
+      description: Response DTO for batch order processing operations
+      properties:
+        status:
+          type: string
+          enum: [SUCCESS, PARTIAL, FAILURE]
+          description: |
+            Overall status of the batch operation:
+            - SUCCESS: All orders processed successfully
+            - PARTIAL: Some orders succeeded, some failed
+            - FAILURE: All orders failed or validation error
+          example: "SUCCESS"
+        message:
+          type: string
+          description: Human-readable message describing the overall result
+          example: "All orders processed successfully"
+        totalReceived:
+          type: integer
+          description: Total number of orders received in the request
+          example: 2
+        successful:
+          type: integer
+          description: Number of orders processed successfully
+          example: 2
+        failed:
+          type: integer
+          description: Number of orders that failed processing
+          example: 0
+        orders:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderPostResponseDTO'
+          description: Array of individual order processing results
+      required: [status, message, totalReceived, successful, failed, orders]
+  responses:
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: Not found
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: Bad request
+    Conflict:
+      description: Conflict (e.g., version mismatch)
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: Version mismatch or resource in use 

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { format } from 'date-fns'
-import { ChevronRight, Loader2, DollarSign, TrendingUp } from 'lucide-react'
+import { ChevronRight, Loader2, DollarSign, TrendingUp, AlertTriangle, RefreshCw } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { 
@@ -25,6 +25,7 @@ interface PortfolioTableProps {
   isError: boolean
   error: Error | null
   rebalanceId: string
+  onRetry?: () => void
 }
 
 // Component for handling position data within expanded portfolio
@@ -116,12 +117,13 @@ const ExpandedPortfolioContent = ({
   )
 }
 
-export default function PortfolioTable({
+const PortfolioTable = React.memo(function PortfolioTable({
   portfolios,
   isLoading,
   isError,
   error,
   rebalanceId,
+  onRetry,
 }: PortfolioTableProps) {
   const [expandedPortfolios, setExpandedPortfolios] = useState<Set<string>>(new Set())
 
@@ -184,13 +186,22 @@ export default function PortfolioTable({
     return (
       <div className="p-6">
         <Card className="p-6 text-center border-red-200 bg-red-50">
+          <AlertTriangle className="h-8 w-8 text-red-600 mx-auto mb-3" />
           <p className="text-red-800 mb-4">
             Failed to load portfolio data: {error?.message}
           </p>
-          <Button variant="outline" size="sm">
-            <Loader2 className="h-4 w-4 mr-1" />
-            Retry Loading
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-2 justify-center">
+            {onRetry && (
+              <Button variant="outline" size="sm" onClick={onRetry}>
+                <RefreshCw className="h-4 w-4 mr-1" />
+                Retry Loading
+              </Button>
+            )}
+            <Button variant="ghost" size="sm" onClick={() => window.location.reload()}>
+              <Loader2 className="h-4 w-4 mr-1" />
+              Refresh Page
+            </Button>
+          </div>
         </Card>
       </div>
     )
@@ -373,4 +384,6 @@ export default function PortfolioTable({
       </div>
     </div>
   )
-} 
+})
+
+export default PortfolioTable 

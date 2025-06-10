@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback, Fragment } from 'react'
+import React, { useState, useEffect, useRef, useCallback, Fragment } from 'react'
 import { format } from 'date-fns'
 import { ChevronUp, ChevronDown, ChevronRight, Loader2 } from 'lucide-react'
 
@@ -14,6 +14,8 @@ import {
   TableRow 
 } from '@/components/ui/table'
 import { Card } from '@/components/ui/card'
+import { TableSkeleton, ExpandedContentSkeleton } from '@/components/ui/skeleton'
+import { TooltipProvider, HelpTooltip } from '@/components/ui/tooltip'
 import PortfolioTable from '@/components/tables/PortfolioTable'
 
 import { Rebalance, RebalanceSortField, RebalanceSortConfig } from '@/types/rebalance'
@@ -31,7 +33,7 @@ interface RebalanceTableProps {
   onSort: (field: RebalanceSortField) => void
 }
 
-export default function RebalanceTable({
+const RebalanceTable = React.memo(function RebalanceTable({
   rebalances,
   isLoading,
   isError,
@@ -187,14 +189,19 @@ export default function RebalanceTable({
                   </div>
                 </div>
                 
-                {/* Portfolio Table - Real Data */}
+                              {/* Portfolio Table - Real Data or Loading Skeleton */}
+              {portfoliosLoading ? (
+                <ExpandedContentSkeleton />
+              ) : (
                 <PortfolioTable
                   portfolios={portfolios || []}
                   isLoading={portfoliosLoading}
                   isError={portfoliosError}
                   error={portfoliosErrorData}
                   rebalanceId={rebalance.rebalance_id}
+                  onRetry={() => window.location.reload()}
                 />
+              )}
               </div>
 
               {/* Action Buttons */}
@@ -237,27 +244,9 @@ export default function RebalanceTable({
     return <ExpandedRebalanceContent rebalance={rebalance} />
   }
 
-  // Show skeleton loading rows
+  // Show enhanced skeleton loading rows
   const renderSkeletonRows = () => {
-    return Array.from({ length: 5 }).map((_, index) => (
-      <TableRow key={`skeleton-${index}`} className="animate-pulse">
-        <TableCell>
-          <div className="h-4 bg-slate-200 rounded w-16"></div>
-        </TableCell>
-        <TableCell>
-          <div className="h-4 bg-slate-200 rounded w-32"></div>
-        </TableCell>
-        <TableCell>
-          <div className="h-4 bg-slate-200 rounded w-24"></div>
-        </TableCell>
-        <TableCell>
-          <div className="h-4 bg-slate-200 rounded w-20"></div>
-        </TableCell>
-        <TableCell>
-          <div className="h-4 bg-slate-200 rounded w-12"></div>
-        </TableCell>
-      </TableRow>
-    ))
+    return <TableSkeleton rows={8} />
   }
 
   // Show error state
@@ -274,6 +263,8 @@ export default function RebalanceTable({
   return (
     <div className="space-y-4">
       <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+        {/* Mobile-optimized table container */}
+        <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100">
         <Table>
           <TableHeader>
             <TableRow className="bg-slate-50">
@@ -404,6 +395,7 @@ export default function RebalanceTable({
             )}
           </TableBody>
         </Table>
+        </div>
         
         {/* Loading More Indicator */}
         {isFetchingNextPage && (
@@ -429,12 +421,24 @@ export default function RebalanceTable({
       <div ref={loadMoreRef} className="h-4" />
       
       {/* Mobile-Responsive Notice */}
-      <div className="block md:hidden bg-blue-50 border border-blue-200 rounded-lg p-3">
-        <p className="text-sm text-blue-800">
-          <strong>Mobile View:</strong> Scroll horizontally to see all columns. 
-          Tap the arrow to expand portfolio details (coming in Phase 3).
-        </p>
+      <div className="block lg:hidden bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="flex items-start space-x-3">
+          <div className="w-5 h-5 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+            <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+          </div>
+          <div>
+            <h4 className="text-sm font-medium text-blue-900 mb-1">Mobile View Tips</h4>
+            <ul className="text-sm text-blue-800 space-y-1">
+              <li>• Swipe horizontally to see all columns</li>
+              <li>• Tap ▶ to expand rebalance details</li>
+              <li>• Tap portfolio rows to see positions</li>
+              <li>• Use two fingers to zoom for better readability</li>
+            </ul>
+          </div>
+        </div>
       </div>
     </div>
   )
-} 
+})
+
+export default RebalanceTable 

@@ -60,6 +60,10 @@ export function useRebalances() {
     initialPageParam: 0,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false, // Prevent unnecessary refetches
+    refetchOnMount: false, // Use cached data if available
+    retry: 3, // Retry failed requests
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
   })
 
   // Flatten all pages into a single array
@@ -111,6 +115,9 @@ export function useRebalance(rebalanceId: string, enabled: boolean = true) {
     enabled: enabled && !!rebalanceId,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   })
 }
 
@@ -122,6 +129,9 @@ export function useRebalancePortfolios(rebalanceId: string, enabled: boolean = f
     enabled: enabled && !!rebalanceId,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   })
 }
 
@@ -137,6 +147,9 @@ export function useRebalancePortfolioPositions(
     enabled: enabled && !!rebalanceId && !!portfolioId,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   })
 }
 

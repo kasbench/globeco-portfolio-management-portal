@@ -1,11 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { BarChart3, AlertCircle, RefreshCw, Loader2 } from 'lucide-react'
+import { BarChart3, AlertCircle, RefreshCw, Loader2, HelpCircle, Info } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { TooltipProvider, HelpTooltip } from '@/components/ui/tooltip'
+import { ErrorBoundary, ErrorDisplay } from '@/components/ui/error-boundary'
 
 import { useRebalances } from '@/lib/hooks/useRebalances'
 import RebalanceTable from '@/components/tables/RebalanceTable'
@@ -29,8 +31,13 @@ export default function RebalanceResultsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="container mx-auto px-4 py-8 pt-24">
+    <TooltipProvider>
+      <ErrorBoundary 
+        maxRetries={3}
+        onRetry={handleRetry}
+      >
+        <div className="min-h-screen bg-slate-50">
+          <div className="container mx-auto px-4 py-8 pt-24">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
@@ -39,7 +46,21 @@ export default function RebalanceResultsPage() {
                 <BarChart3 className="h-6 w-6 text-blue-600" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-slate-900">Rebalance Results</h1>
+                <div className="flex items-center space-x-2">
+                  <h1 className="text-3xl font-bold text-slate-900">Rebalance Results</h1>
+                  <HelpTooltip
+                    content={
+                      <div className="max-w-sm">
+                        <p className="font-medium mb-1">About Rebalance Results</p>
+                        <p className="text-sm">This page shows portfolio rebalancing operations performed by the investment models. Each rebalance contains multiple portfolios with their position-level details.</p>
+                      </div>
+                    }
+                  >
+                    <button className="text-slate-400 hover:text-slate-600 transition-colors">
+                      <HelpCircle className="h-5 w-5" />
+                    </button>
+                  </HelpTooltip>
+                </div>
                 <p className="text-slate-600">
                   View and analyze portfolio rebalancing results and performance
                 </p>
@@ -61,23 +82,16 @@ export default function RebalanceResultsPage() {
 
         {/* Error State */}
         {isError && (
-          <Alert className="mb-6 border-red-200 bg-red-50">
-            <AlertCircle className="h-4 w-4 text-red-600" />
-            <AlertDescription className="text-red-800">
-              <div className="flex items-center justify-between">
-                <span>Failed to load rebalance results: {error?.message}</span>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleRetry}
-                  className="ml-4"
-                >
-                  <RefreshCw className="h-3 w-3 mr-1" />
-                  Retry
-                </Button>
-              </div>
-            </AlertDescription>
-          </Alert>
+          <div className="mb-6">
+            <ErrorDisplay
+              title="Failed to Load Rebalance Results"
+              message={error?.message || "Unable to connect to the Order Generation Service"}
+              error={error}
+              onRetry={handleRetry}
+              retryCount={0}
+              maxRetries={3}
+            />
+          </div>
         )}
 
         {/* Loading State */}
@@ -128,8 +142,11 @@ export default function RebalanceResultsPage() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-slate-600">
-                    Total Rebalances
+                  <CardTitle className="text-sm font-medium text-slate-600 flex items-center space-x-1">
+                    <span>Total Rebalances</span>
+                    <HelpTooltip content="Number of rebalancing operations performed. Click the arrow next to each rebalance to see portfolio details.">
+                      <Info className="h-3 w-3 text-slate-400" />
+                    </HelpTooltip>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -144,8 +161,11 @@ export default function RebalanceResultsPage() {
 
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-slate-600">
-                    Total Portfolios
+                  <CardTitle className="text-sm font-medium text-slate-600 flex items-center space-x-1">
+                    <span>Total Portfolios</span>
+                    <HelpTooltip content="Total number of portfolios across all rebalances. Each portfolio contains multiple security positions.">
+                      <Info className="h-3 w-3 text-slate-400" />
+                    </HelpTooltip>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -244,5 +264,7 @@ export default function RebalanceResultsPage() {
         </div>
       </div>
     </div>
+      </ErrorBoundary>
+    </TooltipProvider>
   )
 } 
