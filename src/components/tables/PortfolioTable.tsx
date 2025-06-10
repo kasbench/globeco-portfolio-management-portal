@@ -14,8 +14,10 @@ import {
   TableRow 
 } from '@/components/ui/table'
 import { Card } from '@/components/ui/card'
+import PositionTable from '@/components/tables/PositionTable'
 
 import { RebalancePortfolio } from '@/types/rebalance'
+import { useRebalancePortfolioPositions } from '@/lib/hooks/useRebalances'
 
 interface PortfolioTableProps {
   portfolios: RebalancePortfolio[]
@@ -23,6 +25,95 @@ interface PortfolioTableProps {
   isError: boolean
   error: Error | null
   rebalanceId: string
+}
+
+// Component for handling position data within expanded portfolio
+const ExpandedPortfolioContent = ({ 
+  portfolio, 
+  rebalanceId, 
+  cashChange 
+}: { 
+  portfolio: RebalancePortfolio
+  rebalanceId: string
+  cashChange: { amount: number; isPositive: boolean; percentage: number }
+}) => {
+  // Format currency values to 2 decimal places
+  const formatCurrency = (value: number): string => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value)
+  }
+
+  // Use the position data hook for lazy loading
+  const {
+    data: positions,
+    isLoading: positionsLoading,
+    isError: positionsError,
+    error: positionsErrorData,
+  } = useRebalancePortfolioPositions(rebalanceId, portfolio.portfolio_id, true)
+
+  return (
+    <TableRow key={`${portfolio.portfolio_id}-expanded`}>
+      <TableCell colSpan={6} className="p-0">
+        <div className="p-6 bg-slate-25 border-t border-slate-100">
+          <div className="flex items-center justify-between mb-4">
+            <h6 className="text-lg font-semibold text-slate-900">
+              Position Details
+            </h6>
+            <div className="text-sm text-slate-500">
+              Portfolio: {portfolio.portfolio_id.slice(0, 12)}...
+            </div>
+          </div>
+          
+          {/* Position Metadata */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div className="bg-white p-4 rounded-lg border border-slate-200">
+              <div className="text-sm font-medium text-slate-600 mb-1">Portfolio Summary</div>
+              <div className="text-lg font-bold text-slate-900">
+                {formatCurrency(portfolio.market_value)}
+              </div>
+              <div className="text-xs text-slate-500">Total market value</div>
+            </div>
+            
+            <div className="bg-white p-4 rounded-lg border border-slate-200">
+              <div className="text-sm font-medium text-slate-600 mb-1">Cash Impact</div>
+              <div className={`text-lg font-bold ${
+                cashChange.isPositive ? 'text-green-600' : 'text-red-600'
+              }`}>
+                {cashChange.isPositive ? '+' : ''}{formatCurrency(cashChange.amount)}
+              </div>
+              <div className="text-xs text-slate-500">
+                {cashChange.percentage.toFixed(2)}% change
+              </div>
+            </div>
+
+            <div className="bg-white p-4 rounded-lg border border-slate-200">
+              <div className="text-sm font-medium text-slate-600 mb-1">Position Count</div>
+              <div className="text-lg font-bold text-slate-900">
+                {positionsLoading ? '...' : positions?.length || 0}
+              </div>
+              <div className="text-xs text-slate-500">
+                {positionsLoading ? 'Loading...' : 'Security positions'}
+              </div>
+            </div>
+          </div>
+          
+          {/* Position Table - Real Data */}
+          <PositionTable
+            positions={positions || []}
+            isLoading={positionsLoading}
+            isError={positionsError}
+            error={positionsErrorData}
+            portfolioId={portfolio.portfolio_id}
+            rebalanceId={rebalanceId}
+          />
+        </div>
+      </TableCell>
+    </TableRow>
+  )
 }
 
 export default function PortfolioTable({
@@ -256,58 +347,11 @@ export default function PortfolioTable({
                 
                 {/* Expanded Content Row - Position Table (Phase 3, Step 6) */}
                 {isExpanded && (
-                  <TableRow key={`${portfolio.portfolio_id}-expanded`}>
-                    <TableCell colSpan={6} className="p-0">
-                      <div className="p-6 bg-slate-25 border-t border-slate-100">
-                        <div className="flex items-center justify-between mb-4">
-                          <h6 className="text-lg font-semibold text-slate-900">
-                            Position Details
-                          </h6>
-                          <div className="text-sm text-slate-500">
-                            Portfolio: {portfolio.portfolio_id}
-                          </div>
-                        </div>
-                        
-                        {/* Position Metadata */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                          <div className="bg-white p-4 rounded-lg border border-slate-200">
-                            <div className="text-sm font-medium text-slate-600 mb-1">Portfolio Summary</div>
-                            <div className="text-lg font-bold text-slate-900">
-                              {formatCurrency(portfolio.market_value)}
-                            </div>
-                            <div className="text-xs text-slate-500">Total market value</div>
-                          </div>
-                          
-                          <div className="bg-white p-4 rounded-lg border border-slate-200">
-                            <div className="text-sm font-medium text-slate-600 mb-1">Cash Impact</div>
-                            <div className={`text-lg font-bold ${
-                              cashChange.isPositive ? 'text-green-600' : 'text-red-600'
-                            }`}>
-                              {cashChange.isPositive ? '+' : ''}{formatCurrency(cashChange.amount)}
-                            </div>
-                            <div className="text-xs text-slate-500">
-                              {cashChange.percentage.toFixed(2)}% change
-                            </div>
-                          </div>
-                        </div>
-                        
-                        {/* Placeholder for Position Table (Phase 3, Step 6) */}
-                        <div className="text-center py-8 border-2 border-dashed border-slate-200 rounded-lg">
-                          <Loader2 className="h-8 w-8 animate-spin text-slate-400 mx-auto mb-3" />
-                          <h6 className="text-lg font-medium text-slate-900 mb-2">
-                            Position Data Loading...
-                          </h6>
-                          <p className="text-slate-600 max-w-md mx-auto mb-4">
-                            Individual position details with security data will be implemented in 
-                            <strong className="text-blue-600"> Phase 3, Step 6: Position Level Implementation</strong>.
-                          </p>
-                          <div className="text-sm text-slate-500">
-                            <strong>Preview:</strong> Security ID • Price • Quantities • Target/Actual • Drift Analysis
-                          </div>
-                        </div>
-                      </div>
-                    </TableCell>
-                  </TableRow>
+                  <ExpandedPortfolioContent 
+                    portfolio={portfolio} 
+                    rebalanceId={rebalanceId}
+                    cashChange={cashChange}
+                  />
                 )}
               </>
             )
