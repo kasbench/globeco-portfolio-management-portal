@@ -229,14 +229,14 @@ export default function RebalanceResultsPage() {
             </div>
             <div>
               <h4 className="text-sm font-medium text-blue-900 mb-1">
-                Development Progress - Phase 2, Step 3 Complete
+                Development Progress - Phase 2, Step 4 Complete
               </h4>
               <p className="text-sm text-blue-800">
-                Rebalance-level table implemented with sorting, infinite scrolling, and responsive design. 
-                Next up: <strong>Phase 2, Step 4: Expandable Row Foundation</strong> for nested portfolio and position data.
+                Expandable row foundation implemented with smooth animations and nested table structure. 
+                Next up: <strong>Phase 3, Step 5: Portfolio Level Integration</strong> with real portfolio data loading.
               </p>
               <div className="mt-2 text-xs text-blue-700">
-                <strong>Table Features:</strong> Sorting • Infinite Scroll • Professional Formatting • Row Expansion (Phase 3) <br/>
+                <strong>New Features:</strong> Row Expansion • Smooth Animations • Nested Content • Action Buttons <br/>
                 <strong>API Status:</strong> {isLoading ? 'Loading...' : isError ? 'Error' : `${rebalances.length} rebalances loaded`}
               </div>
             </div>

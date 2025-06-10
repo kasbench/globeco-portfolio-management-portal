@@ -72,10 +72,10 @@ We will add filtering in a subsequent step.
 - [x] Apply proper styling and responsive design
 
 #### 4. Expandable Row Foundation (30-45 mins)
-- [ ] Add expand/collapse functionality to rebalance rows
-- [ ] Create nested table structure
-- [ ] Implement smooth animations for expansion
-- [ ] Add loading states for expanded content
+- [x] Add expand/collapse functionality to rebalance rows
+- [x] Create nested table structure
+- [x] Implement smooth animations for expansion
+- [x] Add loading states for expanded content
 
 ### **Phase 3: Nested Data Implementation**
 **🎯 Goal:** Add portfolio and position level data with lazy loading

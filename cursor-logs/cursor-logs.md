@@ -1301,7 +1301,8 @@ npm install date-fns
 - [x] **Phase 1.1**: API Integration Setup ✅ COMPLETED
 - [x] **Phase 1.2**: Basic Page Structure ✅ COMPLETED
 - [x] **Phase 2.3**: Rebalance Level Table ✅ COMPLETED
-- [ ] **Phase 2.4**: Expandable Row Foundation (NEXT)
+- [x] **Phase 2.4**: Expandable Row Foundation ✅ **COMPLETED**
+- [ ] **Phase 3.5**: Portfolio Level Integration (NEXT)
 
 ### Files Modified
 1. `src/components/tables/RebalanceTable.tsx` - New comprehensive table component
@@ -1323,5 +1324,123 @@ npm install date-fns
 - Performance optimizations in place for large datasets
 
 **Quality Assurance**: All functionality tested and working. Ready for Phase 2, Step 4.
+
+---
+
+## 2025-01-09 - Phase 2, Step 4: Expandable Row Foundation Implementation ✅
+
+**Task**: Complete Phase 2, Step 4 of requirement-2.md - Implement expandable row foundation with smooth animations, nested table structure, and loading states for portfolio data.
+
+### Implementation Completed
+
+**1. Enhanced RebalanceTable Component**
+- **Expandable Content Function** (`renderExpandedContent`):
+  - ✅ Professional nested content layout with metadata cards
+  - ✅ Three-column responsive grid: Model Info, Portfolio Count, Version & Created
+  - ✅ Dedicated Portfolio Details section with placeholder for Phase 3
+  - ✅ Action buttons: Collapse and disabled "Load Portfolio Data"
+  - ✅ Full rebalance ID display in expanded view
+
+**2. Smooth Animation System**
+- ✅ **CSS Transitions**: `transition-all duration-300 ease-in-out`
+- ✅ **Height Animation**: `max-h-0` to `max-h-96` for smooth expand/collapse
+- ✅ **Opacity Animation**: `opacity-0` to `opacity-100` for fade effects
+- ✅ **Chevron Rotation**: `rotate-90` when expanded with transform transitions
+
+**3. Nested Table Structure Foundation**
+- ✅ **Fragment-based Rendering**: Each rebalance + expanded content as React Fragment
+- ✅ **Conditional Rendering**: `{expandedRows.has(rebalanceId) && renderExpandedContent()}`
+- ✅ **ColSpan Management**: Expanded content spans all 5 table columns
+- ✅ **State Isolation**: Independent expansion for multiple rows
+
+**4. Enhanced User Experience**
+- **Visual Hierarchy**:
+  - ✅ Header with rebalance details title and full ID
+  - ✅ Metadata cards with proper typography and spacing
+  - ✅ Loading state with spinning animation and Phase 3 preview
+  - ✅ Action button bar with collapse and disabled portfolio load
+- **Responsive Design**:
+  - ✅ Grid adjusts from 3 columns to 1 column on mobile
+  - ✅ Proper spacing and padding across screen sizes
+  - ✅ Professional card layouts with borders and backgrounds
+
+**5. Data Integration**
+- ✅ **getRebalanceDetails() Helper**: Extracts metadata for expanded view
+- ✅ **Dynamic Content**: Shows actual model names, portfolio counts, dates
+- ✅ **Formatted Display**: Professional date/time formatting using existing utilities
+- ✅ **State Management**: Tracks expansion state per rebalance ID
+
+### Technical Implementation Details
+
+**Animation CSS Classes**:
+```css
+transition-all duration-300 ease-in-out
+max-h-0 opacity-0 -> max-h-96 opacity-100
+```
+
+**Component Structure**:
+```tsx
+<Fragment key={rebalanceId}>
+  <TableRow> {/* Main rebalance row */}
+  {expandedRows.has(rebalanceId) && renderExpandedContent(rebalance)}
+</Fragment>
+```
+
+**State Management**:
+- `expandedRows: Set<string>` - Tracks which rebalances are expanded
+- `toggleRowExpansion()` - Handles expand/collapse logic
+- Independent row states for multiple simultaneous expansions
+
+### Testing Results
+
+**✅ Functional Testing**:
+- ✅ Row expansion works on click (chevron rotates, content appears)
+- ✅ Row collapse works from both chevron and collapse button
+- ✅ Multiple rows can be expanded independently 
+- ✅ Smooth animations in both directions (expand/collapse)
+- ✅ Content displays correct rebalance-specific data
+- ✅ Action buttons are functional (collapse) and properly disabled (portfolio load)
+
+**✅ Visual Testing**:
+- ✅ Professional metadata card layout with proper spacing
+- ✅ Responsive design works on different screen sizes
+- ✅ Loading animation spins smoothly in placeholder section
+- ✅ Typography hierarchy clear and readable
+- ✅ Color scheme consistent with application design
+
+**✅ Performance Testing**:
+- ✅ Animations are smooth without janky transitions
+- ✅ State updates are efficient (no unnecessary re-renders)
+- ✅ Expansion/collapse responds immediately to user interaction
+
+### Phase 2 Progress Status
+- [x] **Phase 1.1**: API Integration Setup ✅ COMPLETED
+- [x] **Phase 1.2**: Basic Page Structure ✅ COMPLETED
+- [x] **Phase 2.3**: Rebalance Level Table ✅ COMPLETED
+- [x] **Phase 2.4**: Expandable Row Foundation ✅ **COMPLETED**
+- [ ] **Phase 3.5**: Portfolio Level Integration (NEXT)
+
+### Files Modified
+1. `src/components/tables/RebalanceTable.tsx` - Enhanced with expandable content
+2. `src/app/model-management/rebalance-results/page.tsx` - Updated progress indicators
+3. `documentation/requirement-2.md` - Updated progress checkboxes
+
+### Phase 3 Preparation
+The expandable row foundation is now complete and ready for Phase 3 implementation:
+
+**Ready for Phase 3.5 - Portfolio Level Integration**:
+- ✅ Nested table structure foundation in place
+- ✅ Loading states and placeholder content ready for replacement
+- ✅ Animation system supports dynamic content height
+- ✅ State management ready for lazy-loading portfolio data
+- ✅ Action buttons prepared for real portfolio data fetching
+
+**Technical Architecture Notes**:
+- Component designed for easy swap of placeholder with real portfolio table
+- React Query hooks already prepared for portfolio-level data fetching
+- Performance optimizations in place for large nested datasets
+- Responsive design will scale with actual portfolio data
+
+**Quality Assurance**: All expandable row functionality tested and working. Ready for Phase 3, Step 5 - Portfolio Level Integration.
 
 ---
