@@ -1002,3 +1002,41 @@ curl http://localhost:8001/portfolios  # Returns 404
 - Comprehensive table design specifications
 
 **Assessment:** The requirement is now significantly more clear and actionable, providing developers with specific implementation guidance while maintaining the original intent and structure.
+
+## 2024-12-29 - Requirement 2 Step 1 Correction - Customer Access Removal
+
+**Prompt:** I made a mistake in the requirement. Customers should not have access to the Model Management menu. See attached revision.
+
+**Issue Identified:** The Model Management submenu was incorrectly configured to allow Customer role access, which should be restricted to internal and partner users only.
+
+**Correction Made:**
+- **Before**: `allowedRoles: ['admin', 'internal', 'partner', 'customer']`
+- **After**: `allowedRoles: ['admin', 'internal', 'partner']`
+
+**Rationale:** Model Management functionality is intended for professional/institutional users only:
+- **Admin**: Full access to all model management features
+- **Internal**: GlobeCo employees managing investment models
+- **Partner**: External partners who perform services for GlobeCo
+- **Customer**: External investors who should not access internal model management tools
+
+**Files Modified:**
+- `src/components/layout/Header.tsx` - Removed 'customer' from MODEL_MANAGEMENT_MENU.allowedRoles
+- `documentation/requirement-2.md` - Updated requirement checklist to reflect correct access control
+
+**Impact:**
+- Customer role users will no longer see the Model Management menu in navigation
+- Navigation remains properly role-filtered for appropriate business access
+- Maintains security boundary between customer-facing and internal functionality
+
+**Testing:**
+- Development server continues running without issues
+- Role-based access control properly enforced
+- Customer users will not see Model Management submenu
+
+**Requirement 2 Step 1: ✅ COMPLETED (Corrected)**
+- ✅ Model Management submenu created with two options
+- ✅ Investment Model navigates to existing model page  
+- ✅ Rebalance Results placeholder page created
+- ✅ **Corrected**: Admin, Internal, and Partner have access (Customer access removed)
+- ✅ Consistent styling with existing navigation
+- ✅ Mobile and desktop support implemented

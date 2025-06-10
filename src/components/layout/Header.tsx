@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { ChevronDown } from 'lucide-react'
 import { useRoleStore } from '@/store/roleStore'
 import RoleSelector from './RoleSelector'
 
@@ -12,16 +13,22 @@ interface MenuItemConfig {
   allowedRoles: string[]
 }
 
+interface SubMenuItemConfig {
+  href: string
+  label: string
+}
+
+interface MenuItemWithSubmenuConfig {
+  label: string
+  allowedRoles: string[]
+  submenu: SubMenuItemConfig[]
+}
+
 const MENU_ITEMS: MenuItemConfig[] = [
   {
     href: '/',
     label: 'Home',
     allowedRoles: ['admin', 'internal', 'partner', 'customer']
-  },
-  {
-    href: '/model-management',
-    label: 'Model Management',
-    allowedRoles: ['admin', 'internal', 'partner']
   },
   {
     href: '/order-generation',
@@ -50,9 +57,26 @@ const MENU_ITEMS: MenuItemConfig[] = [
   }
 ]
 
+// Model Management submenu
+const MODEL_MANAGEMENT_MENU: MenuItemWithSubmenuConfig = {
+  label: 'Model Management',
+  allowedRoles: ['admin', 'internal', 'partner'],
+  submenu: [
+    {
+      href: '/model-management',
+      label: 'Investment Model'
+    },
+    {
+      href: '/model-management/rebalance-results',
+      label: 'Rebalance Results'
+    }
+  ]
+}
+
 export default function Header() {
   const { currentRole, hasAccess } = useRoleStore()
   const [isClient, setIsClient] = useState(false)
+  const [isModelMenuOpen, setIsModelMenuOpen] = useState(false)
 
   // Only show role-filtered menu after hydration to avoid SSR mismatch
   useEffect(() => {
@@ -63,6 +87,11 @@ export default function Header() {
   const visibleMenuItems = isClient 
     ? MENU_ITEMS.filter(item => hasAccess(item.allowedRoles as any))
     : MENU_ITEMS
+
+  // Check if Model Management should be visible
+  const isModelManagementVisible = isClient 
+    ? hasAccess(MODEL_MANAGEMENT_MENU.allowedRoles as any)
+    : true
 
   return (
     <header className="globeco-gradient relative z-50">
@@ -87,7 +116,61 @@ export default function Header() {
 
             {/* Navigation - Desktop */}
             <nav className="hidden lg:flex items-center space-x-1">
-              {visibleMenuItems.map((item) => (
+              {visibleMenuItems.slice(0, 1).map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="text-white/90 hover:text-white hover:bg-white/10 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200"
+                >
+                  {item.label}
+                </Link>
+              ))}
+              
+              {/* Model Management Submenu */}
+              {isModelManagementVisible && (
+                <div className="relative">
+                  <button
+                    onClick={() => setIsModelMenuOpen(!isModelMenuOpen)}
+                    className="flex items-center space-x-1 text-white/90 hover:text-white hover:bg-white/10 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200"
+                  >
+                    <span>{MODEL_MANAGEMENT_MENU.label}</span>
+                    <ChevronDown 
+                      className={`h-4 w-4 transition-transform duration-200 ${
+                        isModelMenuOpen ? 'rotate-180' : ''
+                      }`} 
+                    />
+                  </button>
+
+                  {/* Model Management Dropdown */}
+                  {isModelMenuOpen && (
+                    <>
+                      {/* Backdrop */}
+                      <div 
+                        className="fixed inset-0 z-10" 
+                        onClick={() => setIsModelMenuOpen(false)}
+                      />
+                      
+                      {/* Dropdown */}
+                      <div className="absolute top-full left-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 z-20 overflow-hidden">
+                        <div className="p-2">
+                          {MODEL_MANAGEMENT_MENU.submenu.map((item) => (
+                            <Link
+                              key={item.href}
+                              href={item.href}
+                              onClick={() => setIsModelMenuOpen(false)}
+                              className="block px-3 py-2 text-gray-900 hover:bg-gray-50 rounded-md text-sm font-medium transition-colors"
+                            >
+                              {item.label}
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+
+              {visibleMenuItems.slice(1).map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
@@ -116,7 +199,35 @@ export default function Header() {
                       <div className="text-xs font-medium text-gray-500 uppercase tracking-wide px-2 py-1 mb-1">
                         Navigation
                       </div>
-                      {visibleMenuItems.map((item) => (
+                      {visibleMenuItems.slice(0, 1).map((item) => (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          className="block px-3 py-2 text-gray-900 hover:bg-gray-50 rounded-md text-sm font-medium transition-colors"
+                        >
+                          {item.label}
+                        </Link>
+                      ))}
+                      
+                      {/* Model Management Mobile Submenu */}
+                      {isModelManagementVisible && (
+                        <div className="border-l-2 border-gray-100 ml-2 pl-3 my-2">
+                          <div className="text-xs font-medium text-gray-500 px-2 py-1 mb-1">
+                            {MODEL_MANAGEMENT_MENU.label}
+                          </div>
+                          {MODEL_MANAGEMENT_MENU.submenu.map((item) => (
+                            <Link
+                              key={item.href}
+                              href={item.href}
+                              className="block px-3 py-2 text-gray-900 hover:bg-gray-50 rounded-md text-sm transition-colors"
+                            >
+                              {item.label}
+                            </Link>
+                          ))}
+                        </div>
+                      )}
+
+                      {visibleMenuItems.slice(1).map((item) => (
                         <Link
                           key={item.href}
                           href={item.href}

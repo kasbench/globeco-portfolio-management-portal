@@ -1,15 +1,15 @@
 # Requirement 2
 
 ## Step 1 **Create a Model Management Submenu**
-- [ ] Create a submenu under Model Management with two options:
+- [x] Create a submenu under Model Management with two options:
   - Investment Model
   - Rebalance Results
-- [ ] Selecting Investment Model should navigate to the existing Model Page. We will add the Rebalance Results Page in the next step.
+- [x] Selecting Investment Model should navigate to the existing Model Page. We will add the Rebalance Results Page in the next step.
 
 **Additional Details:**
-- [ ] Add the submenu to the main navigation (assume Model Management is already a top-level nav item)
-- [ ] Use standard dropdown/submenu styling consistent with existing navigation
-- [ ] All user roles (Admin, Internal, Partner, Customer) should have access to both options
+- [x] Add the submenu to the main navigation (assume Model Management is already a top-level nav item)
+- [x] Use standard dropdown/submenu styling consistent with existing navigation
+- [x] Admin, Internal, and Partner should have access to both options (Customer access removed)
 
 ## Step 2 **Build the Rebalance Results Page**
 - [ ] This page is populated from the GET /api/v1/rebalances API of the Order Generation Service, as documented in [globeco-order-generation-service.yaml](globeco-order-generation-service.yaml)
