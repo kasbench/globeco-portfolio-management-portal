@@ -1730,3 +1730,27 @@ The portfolio level integration is now complete and ready for position implement
 **Status**: API specification ready for backend implementation. Frontend code already prepared to consume this endpoint once implemented.
 
 ---
+
+## 2025-01-23 04:18:00 - Fixed React Key Props Error in PortfolioTable
+
+**Error:** React warning "Each child in a list should have a unique 'key' prop" in PortfolioTable component
+
+**Root Cause:** In `src/components/tables/PortfolioTable.tsx`, the `portfolios.map()` function was using React fragments (`<>...</>`) without proper key props. When rendering lists with fragments, React requires keys for reconciliation.
+
+**Solution Applied:**
+- **File:** `src/components/tables/PortfolioTable.tsx`
+- **Changes:**
+  1. **Added React import**: `import React, { useState } from 'react'`
+  2. **Replaced empty fragments with keyed fragments**: 
+     - Changed `<>` to `<React.Fragment key={portfolio.portfolio_id}>`
+     - Changed `</>` to `</React.Fragment>`
+  3. **Removed duplicate key**: Removed `key={portfolio.portfolio_id}` from TableRow since fragment now has the key
+
+**Key Learning:** When using fragments in `.map()` functions, always provide a key to the fragment itself, not to the first child element inside the fragment.
+
+**Status:** ✅ Error resolved, React key warning eliminated
+
+**Files Modified:**
+- `src/components/tables/PortfolioTable.tsx` (3 changes)
+
+---

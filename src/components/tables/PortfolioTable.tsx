@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { format } from 'date-fns'
 import { ChevronRight, Loader2, DollarSign, TrendingUp } from 'lucide-react'
 
@@ -254,9 +254,8 @@ export default function PortfolioTable({
             const isExpanded = expandedPortfolios.has(portfolio.portfolio_id)
             
             return (
-              <>
+              <React.Fragment key={portfolio.portfolio_id}>
                 <TableRow 
-                  key={portfolio.portfolio_id}
                   className="hover:bg-slate-50 transition-colors"
                 >
                   {/* Expand/Collapse Button */}
@@ -353,7 +352,7 @@ export default function PortfolioTable({
                     cashChange={cashChange}
                   />
                 )}
-              </>
+              </React.Fragment>
             )
           })}
         </TableBody>
