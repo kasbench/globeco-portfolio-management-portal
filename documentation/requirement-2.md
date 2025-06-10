@@ -66,10 +66,10 @@ We will add filtering in a subsequent step.
 **🎯 Goal:** Display rebalance data in a basic table format
 
 #### 3. Rebalance Level Table (45-60 mins)
-- [ ] Create basic table showing rebalance-level data
-- [ ] Implement proper column formatting (dates, numbers)
-- [ ] Add infinite scrolling for rebalances
-- [ ] Apply proper styling and responsive design
+- [x] Create basic table showing rebalance-level data
+- [x] Implement proper column formatting (dates, numbers)
+- [x] Add infinite scrolling for rebalances
+- [x] Apply proper styling and responsive design
 
 #### 4. Expandable Row Foundation (30-45 mins)
 - [ ] Add expand/collapse functionality to rebalance rows

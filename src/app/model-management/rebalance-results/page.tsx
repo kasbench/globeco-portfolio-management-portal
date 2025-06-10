@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 import { useRebalances } from '@/lib/hooks/useRebalances'
+import RebalanceTable from '@/components/tables/RebalanceTable'
 
 export default function RebalanceResultsPage() {
   const {
@@ -201,47 +202,22 @@ export default function RebalanceResultsPage() {
                   </div>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-0">
-                {/* Table will be implemented in Phase 2 */}
-                <div className="p-8 text-center border-2 border-dashed border-slate-200">
-                  <BarChart3 className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-                  <h4 className="text-lg font-medium text-slate-900 mb-2">
-                    Rebalance Table Coming Next
-                  </h4>
-                  <p className="text-slate-600 max-w-md mx-auto">
-                    The expandable data table with nested portfolio and position details 
-                    will be implemented in Phase 2 of the development plan.
-                  </p>
-                  <div className="mt-4 text-sm text-slate-500">
-                    <strong>Current Data:</strong> {rebalances.length} rebalances loaded successfully
-                  </div>
-                </div>
+              <CardContent className="p-6">
+                <RebalanceTable
+                  rebalances={rebalances}
+                  isLoading={isLoading}
+                  isError={isError}
+                  error={error}
+                  hasNextPage={hasNextPage}
+                  isFetchingNextPage={isFetchingNextPage}
+                  loadMore={loadMore}
+                  sortConfig={sortConfig}
+                  onSort={handleSort}
+                />
               </CardContent>
             </Card>
 
-            {/* Load More Section */}
-            {hasNextPage && (
-              <div className="text-center py-6">
-                <Button 
-                  onClick={loadMore} 
-                  disabled={isFetchingNextPage}
-                  variant="outline"
-                  className="flex items-center space-x-2"
-                >
-                  {isFetchingNextPage ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span>Loading more...</span>
-                    </>
-                  ) : (
-                    <>
-                      <BarChart3 className="h-4 w-4" />
-                      <span>Load More Rebalances</span>
-                    </>
-                  )}
-                </Button>
-              </div>
-            )}
+
           </div>
         )}
 
@@ -253,13 +229,14 @@ export default function RebalanceResultsPage() {
             </div>
             <div>
               <h4 className="text-sm font-medium text-blue-900 mb-1">
-                Development Progress - Phase 1, Step 2 Complete
+                Development Progress - Phase 2, Step 3 Complete
               </h4>
               <p className="text-sm text-blue-800">
-                Basic page structure implemented with loading states, error handling, and empty states. 
-                The expandable data table will be added in <strong>Phase 2: Core Table Implementation</strong>.
+                Rebalance-level table implemented with sorting, infinite scrolling, and responsive design. 
+                Next up: <strong>Phase 2, Step 4: Expandable Row Foundation</strong> for nested portfolio and position data.
               </p>
               <div className="mt-2 text-xs text-blue-700">
+                <strong>Table Features:</strong> Sorting • Infinite Scroll • Professional Formatting • Row Expansion (Phase 3) <br/>
                 <strong>API Status:</strong> {isLoading ? 'Loading...' : isError ? 'Error' : `${rebalances.length} rebalances loaded`}
               </div>
             </div>
