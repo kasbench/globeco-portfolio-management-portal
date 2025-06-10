@@ -1754,3 +1754,59 @@ The portfolio level integration is now complete and ready for position implement
 - `src/components/tables/PortfolioTable.tsx` (3 changes)
 
 ---
+
+## 2025-01-23 04:23:00 - Created API Specification for Missing Position Endpoint
+
+**Issue:** 404 error when expanding portfolio rows to load position data - missing API endpoint
+- **Error URL:** `/api/v1/rebalance/{rebalance_id}/portfolio/{portfolio_id}/positions`
+- **Error Location:** `orderGenerationService.ts:268` calling `getRebalancePortfolioPositions`
+- **Triggered by:** `useRebalancePortfolioPositions` hook when user expands portfolio rows
+
+**API Specification Created:**
+- **File:** `documentation/api-position-endpoint-spec.md`
+- **Endpoint:** `GET /api/v1/rebalance/{rebalance_id}/portfolio/{portfolio_id}/positions`
+- **Purpose:** Fetch position-level data for lazy loading when users drill down into portfolio details
+
+**Specification Details:**
+1. **Path Parameters:**
+   - `rebalance_id`: MongoDB ObjectId for the rebalance
+   - `portfolio_id`: MongoDB ObjectId for the portfolio within that rebalance
+
+2. **Response Format:** Array of position objects with all rebalancing details:
+   - Security identification (security_id)
+   - Pricing and quantities (price, original_quantity, adjusted_quantity)
+   - Market values (original/adjusted position market values)
+   - Allocation data (target, actual, actual_drift)
+   - Drift thresholds (high_drift, low_drift)
+
+3. **Error Handling:** Comprehensive error responses for:
+   - 404: Rebalance not found
+   - 404: Portfolio not found or doesn't belong to rebalance
+   - 400: Invalid ID formats
+   - 500: Internal server errors
+
+4. **Performance Considerations:**
+   - Expected 50-500 positions per portfolio
+   - Response size: 10KB-150KB typical
+   - Target response time: <100ms for typical portfolios
+   - Database indexing recommendations
+
+5. **Business Logic Requirements:**
+   - Data consistency rules for market value calculations
+   - Drift calculation formulas
+   - Allocation percentage validation
+
+**Frontend Integration Ready:** 
+- TypeScript types already exist in `src/types/rebalance.ts`
+- API client method exists in `src/lib/api/orderGenerationService.ts`
+- React Query hook ready in `src/lib/hooks/useRebalances.ts`
+- UI components prepared to consume this data
+
+**Next Steps:** Backend team to implement this endpoint based on the specification
+
+**Status:** 📋 API specification complete, awaiting backend implementation
+
+**Files Created:**
+- `documentation/api-position-endpoint-spec.md` (comprehensive specification)
+
+---
