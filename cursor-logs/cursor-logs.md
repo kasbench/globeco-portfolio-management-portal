@@ -1040,3 +1040,86 @@ curl http://localhost:8001/portfolios  # Returns 404
 - ✅ **Corrected**: Admin, Internal, and Partner have access (Customer access removed)
 - ✅ Consistent styling with existing navigation
 - ✅ Mobile and desktop support implemented
+
+## 2024-12-29 - Requirement 2 Phase 1.1 Complete - API Integration Setup
+
+**Prompt:** Please proceed with phase 1 of the implementation plan for step 2 in @requirement-2.md
+
+**Objective:** Complete API Integration Setup for Rebalance Results functionality.
+
+**Phase 1, Step 1 Completed: API Integration Setup (30-45 mins)**
+
+**Implementation Details:**
+
+1. **✅ Created TypeScript types for rebalance data structure** (`src/types/rebalance.ts`):
+   - **RebalancePosition**: Security-level data with price, quantities, targets, and drift calculations
+   - **RebalancePortfolio**: Portfolio-level data with market values and cash positions
+   - **Rebalance**: Top-level rebalance data with model information and nested structures
+   - **Query/Sort interfaces**: RebalancesQueryParams, RebalanceSortConfig for API pagination
+   - **UI State interfaces**: RebalanceUIState, PortfolioUIState for expansion tracking
+   - **Response wrappers**: RebalancesResponse for paginated API responses
+
+2. **✅ Extended Order Generation Service API client** (`src/lib/api/orderGenerationService.ts`):
+   - **getRebalances()**: Paginated list with sorting support
+   - **getRebalance()**: Single rebalance with full nested data
+   - **getRebalancePortfolios()**: Lazy-load portfolios for specific rebalance
+   - **getRebalancePortfolioPositions()**: Lazy-load positions for specific portfolio
+   - Proper TypeScript integration with comprehensive error handling
+
+3. **✅ Created React Query hooks for rebalance data** (`src/lib/hooks/useRebalances.ts`):
+   - **useRebalances()**: Infinite scrolling hook with 20 initial + 10 additional per page
+   - **useRebalance()**: Single rebalance fetching with caching
+   - **useRebalancePortfolios()**: Lazy portfolio loading when expanded
+   - **useRebalancePortfolioPositions()**: Lazy position loading when expanded
+   - **usePrefetchRebalanceData()**: Performance optimization with prefetching
+   - Intelligent caching: 5-minute stale time, 10-minute garbage collection
+
+4. **✅ Added comprehensive mock data** (`src/lib/api/mockRebalanceData.ts`):
+   - **Realistic data generation**: MongoDB-style IDs, recent dates, financial data
+   - **Smart portfolio/position generation**: 50-200 portfolios, 5-20 positions each
+   - **15 diverse model names**: Conservative Growth, Technology Sector, ESG Sustainable, etc.
+   - **API simulation**: 500ms delays, paginated responses, lazy loading support
+   - **100 mock rebalances** with proper sorting (most recent first)
+
+**Technical Architecture Decisions:**
+
+**Data Loading Strategy:**
+- **Initial Load**: 20 rebalances with minimal portfolio data
+- **Infinite Scroll**: 10 additional rebalances per scroll
+- **Lazy Loading**: Portfolios loaded only when rebalance expanded
+- **Deep Lazy Loading**: Positions loaded only when portfolio expanded
+
+**Performance Optimizations:**
+- **React Query Caching**: 5-minute stale time prevents unnecessary refetches
+- **Prefetching**: Hover/focus triggers can prefetch nested data
+- **Pagination**: Efficient offset-based pagination for large datasets
+- **Memory Management**: 10-minute garbage collection for unused data
+
+**API Design:**
+- **Service Hostname**: `globeco-order-generation-service:8088` (no localhost)
+- **REST Endpoints**: Standard pagination, sorting, and nested resource access
+- **Error Handling**: Comprehensive error interceptors with retry capabilities
+- **TypeScript Integration**: Full type safety throughout API layer
+
+**Files Created/Modified:**
+- `src/types/rebalance.ts` - Complete type definitions (71 lines)
+- `src/lib/api/orderGenerationService.ts` - Extended with rebalance endpoints
+- `src/lib/hooks/useRebalances.ts` - React Query integration (146 lines)
+- `src/lib/api/mockRebalanceData.ts` - Mock data generation (149 lines)
+- `documentation/requirement-2.md` - Updated progress checkboxes
+
+**Quality Assurance:**
+- ✅ TypeScript compilation successful
+- ✅ All imports resolve correctly  
+- ✅ Mock data generates realistic financial scenarios
+- ✅ React Query hooks follow established patterns
+- ✅ API client extends existing service architecture
+
+**Next Step:** Phase 1, Step 2 - Basic Page Structure (20-30 mins)
+- Replace placeholder page with real implementation
+- Add basic loading and error states
+- Implement empty state handling
+- Create page layout and header section
+
+**Phase 1, Step 1: ✅ COMPLETED**
+All API integration foundation is now in place for building the Rebalance Results UI.

@@ -8,6 +8,12 @@ import {
   RebalanceResult,
   ModelPositionInput
 } from '@/types/model'
+import {
+  Rebalance,
+  RebalancePortfolio,
+  RebalancePosition,
+  RebalancesQueryParams
+} from '@/types/rebalance'
 
 // Order Generation Service configuration
 // Use localhost for development since Docker service names are not accessible from browser
@@ -180,6 +186,44 @@ export const orderGenerationApi = {
 
   readinessCheck: async (): Promise<any> => {
     const response = await apiClient.get('/health/ready')
+    return response.data
+  },
+
+  // Rebalance Results API Functions
+  // Get all rebalances with pagination and sorting
+  getRebalances: async (params: RebalancesQueryParams = {}): Promise<Rebalance[]> => {
+    const response: AxiosResponse<Rebalance[]> = await apiClient.get('/api/v1/rebalances', {
+      params: {
+        offset: params.offset,
+        limit: params.limit,
+        sort_by: params.sort_by,
+      },
+    })
+    return response.data
+  },
+
+  // Get rebalance by ID with full nested data
+  getRebalance: async (rebalanceId: string): Promise<Rebalance> => {
+    const response: AxiosResponse<Rebalance> = await apiClient.get(`/api/v1/rebalance/${rebalanceId}`)
+    return response.data
+  },
+
+  // Get portfolios for a specific rebalance (for lazy loading)
+  getRebalancePortfolios: async (rebalanceId: string): Promise<RebalancePortfolio[]> => {
+    const response: AxiosResponse<RebalancePortfolio[]> = await apiClient.get(
+      `/api/v1/rebalance/${rebalanceId}/portfolios`
+    )
+    return response.data
+  },
+
+  // Get positions for a specific portfolio in a rebalance (for lazy loading)
+  getRebalancePortfolioPositions: async (
+    rebalanceId: string, 
+    portfolioId: string
+  ): Promise<RebalancePosition[]> => {
+    const response: AxiosResponse<RebalancePosition[]> = await apiClient.get(
+      `/api/v1/rebalance/${rebalanceId}/portfolio/${portfolioId}/positions`
+    )
     return response.data
   },
 }

@@ -51,10 +51,10 @@ We will add filtering in a subsequent step.
 **🎯 Goal:** Get basic data flowing and establish the foundation
 
 #### 1. API Integration Setup (30-45 mins)
-- [ ] Create TypeScript types for rebalance data structure
-- [ ] Extend Order Generation Service API client with rebalance endpoints
-- [ ] Create React Query hooks for rebalance data fetching
-- [ ] Add mock data for development/testing
+- [x] Create TypeScript types for rebalance data structure
+- [x] Extend Order Generation Service API client with rebalance endpoints
+- [x] Create React Query hooks for rebalance data fetching
+- [x] Add mock data for development/testing
 
 #### 2. Basic Page Structure (20-30 mins)
 - [ ] Replace placeholder page with real implementation
