@@ -44,12 +44,20 @@ apiClient.interceptors.response.use(
   (error) => {
     if (error.response) {
       // Server responded with error status
-      console.error('API Response Error:', {
+      const errorDetails = {
         status: error.response.status,
         statusText: error.response.statusText,
         data: error.response.data,
         url: error.config?.url,
-      })
+        method: error.config?.method,
+      }
+      console.error('API Response Error:', errorDetails)
+      
+      // Enhance error message for better debugging
+      const errorMessage = error.response.data?.detail || 
+                          error.response.data?.message || 
+                          `HTTP ${error.response.status}: ${error.response.statusText}`
+      throw new Error(`API Error: ${errorMessage}`)
     } else if (error.request) {
       // Request was made but no response received
       console.error('API Network Error:', {
@@ -57,11 +65,12 @@ apiClient.interceptors.response.use(
         url: error.config?.url,
         baseURL: error.config?.baseURL,
       })
+      throw new Error(`Network Error: Unable to connect to ${error.config?.baseURL}`)
     } else {
       // Something else happened
       console.error('API Configuration Error:', error.message)
+      throw new Error(`Configuration Error: ${error.message}`)
     }
-    return Promise.reject(error)
   }
 )
 

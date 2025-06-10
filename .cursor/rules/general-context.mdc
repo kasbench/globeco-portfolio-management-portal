@@ -42,7 +42,7 @@ Incorporate the GlobeCo logo into the design: [globeco-logo.png](mdc:documentati
 | Order Service | globeco-order-service | 8081 | [globeco-order-service-openapi.yaml](mdc:documentation/globeco-order-service-openapi.yaml)
 | Portfolio Service | globeco-portfolio-service | 8001 | [globeco-portfolio-service-openapi.yaml](mdc:documentation/globeco-portfolio-service-openapi.yaml)
 | Order Generation Service | globeco-order-generation-service | 8088 | [globeco-order-generation-service.yaml](mdc:documentation/globeco-order-generation-service.yaml)
----s
+---
 
 Do not use `localhost` in any configuration.  This will be running in Docker for development and in Kubernetes for production.  There is no need to create a Docker Compose file.  The dependent resources are already running.  Use mocks for testing dependent services.
 

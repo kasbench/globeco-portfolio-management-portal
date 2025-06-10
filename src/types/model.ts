@@ -59,10 +59,49 @@ export interface DriftDTO {
   actual: string
 }
 
+// RebalanceDTO - returned by /api/v1/model/{model_id}/rebalance (old format for backward compatibility)
 export interface RebalanceResult {
   portfolio_id: string
+  rebalance_id: string // Required field from updated API spec
   transactions?: TransactionDTO[]
   drifts?: DriftDTO[]
+}
+
+// RebalanceResultDTO - returned by new rebalance APIs /api/v1/rebalances (new format)
+export interface RebalanceResultDTO {
+  rebalance_id: string
+  model_id: string
+  rebalance_date: string
+  model_name: string
+  number_of_portfolios: number
+  portfolios?: RebalancePortfolioDTO[]
+  version: number
+  created_at: string
+}
+
+export interface RebalancePortfolioDTO {
+  portfolio_id: string
+  market_value: string
+  cash_before_rebalance: string
+  cash_after_rebalance: string
+  positions?: RebalancePositionDTO[]
+}
+
+export interface RebalancePositionDTO {
+  security_id: string
+  price: string
+  original_quantity: string
+  adjusted_quantity: string
+  original_position_market_value: string
+  adjusted_position_market_value: string
+  target: string
+  high_drift: string
+  low_drift: string
+  actual: string
+  actual_drift: string
+  transaction_type?: string | null
+  trade_quantity?: number | null
+  trade_date?: string | null
 }
 
 // API Response types

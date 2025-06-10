@@ -244,10 +244,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Comma-separated list of fields to sort by (model_id, name, last_rebalance_date)",
+              "description": "Comma-separated list of fields to sort by. Fields: model_id, name, last_rebalance_date. Prefix with + (ascending) or - (descending). Default is ascending.",
               "title": "Sort By"
             },
-            "description": "Comma-separated list of fields to sort by (model_id, name, last_rebalance_date)"
+            "description": "Comma-separated list of fields to sort by. Fields: model_id, name, last_rebalance_date. Prefix with + (ascending) or - (descending). Default is ascending."
           }
         ],
         "responses": {
@@ -786,6 +786,267 @@
           }
         }
       }
+    },
+    "/api/v1/rebalances": {
+      "get": {
+        "tags": [
+          "rebalances"
+        ],
+        "summary": "Get Rebalances",
+        "description": "Get all rebalances with pagination.\n\nArgs:\n    offset: Number of rebalances to skip (default: 0)\n    limit: Maximum number of rebalances to return (default: 10, max: 100)\n    repository: Rebalance repository dependency\n\nReturns:\n    List[RebalanceResultDTO]: Paginated list of rebalances\n\nRaises:\n    HTTPException: If retrieval fails or parameters are invalid",
+        "operationId": "get_rebalances_api_v1_rebalances_get",
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Number of rebalances to skip",
+              "title": "Offset"
+            },
+            "description": "Number of rebalances to skip"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 100,
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Maximum number of rebalances to return",
+              "title": "Limit"
+            },
+            "description": "Maximum number of rebalances to return"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RebalanceResultDTO"
+                  },
+                  "title": "Response Get Rebalances Api V1 Rebalances Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/rebalance/{rebalance_id}": {
+      "get": {
+        "tags": [
+          "rebalances"
+        ],
+        "summary": "Get Rebalance By Id",
+        "description": "Get a specific rebalance by ID.\n\nArgs:\n    rebalance_id: The rebalance ID to retrieve\n    repository: Rebalance repository dependency\n\nReturns:\n    RebalanceResultDTO: The rebalance data\n\nRaises:\n    HTTPException: If rebalance not found or retrieval fails",
+        "operationId": "get_rebalance_by_id_api_v1_rebalance__rebalance_id__get",
+        "parameters": [
+          {
+            "name": "rebalance_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Rebalance Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RebalanceResultDTO"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "rebalances"
+        ],
+        "summary": "Delete Rebalance",
+        "description": "Delete a specific rebalance by ID with optimistic locking.\n\nArgs:\n    rebalance_id: The rebalance ID to delete\n    version: Expected version for optimistic locking\n    repository: Rebalance repository dependency\n\nReturns:\n    dict: Success message\n\nRaises:\n    HTTPException: If rebalance not found, version mismatch, or deletion fails",
+        "operationId": "delete_rebalance_api_v1_rebalance__rebalance_id__delete",
+        "parameters": [
+          {
+            "name": "rebalance_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Rebalance Id"
+            }
+          },
+          {
+            "name": "version",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Expected version for optimistic locking",
+              "title": "Version"
+            },
+            "description": "Expected version for optimistic locking"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Delete Rebalance Api V1 Rebalance  Rebalance Id  Delete"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/rebalances/portfolios": {
+      "post": {
+        "tags": [
+          "rebalances"
+        ],
+        "summary": "Get Rebalances By Portfolios",
+        "description": "Get rebalances for specific portfolios with pagination.\n\nArgs:\n    request: Request containing list of portfolio IDs\n    offset: Number of rebalances to skip (default: 0)\n    limit: Maximum number of rebalances to return (default: 10, max: 100)\n    repository: Rebalance repository dependency\n\nReturns:\n    List[RebalanceResultDTO]: Filtered and paginated list of rebalances\n\nRaises:\n    HTTPException: If retrieval fails or parameters are invalid",
+        "operationId": "get_rebalances_by_portfolios_api_v1_rebalances_portfolios_post",
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Number of rebalances to skip",
+              "title": "Offset"
+            },
+            "description": "Number of rebalances to skip"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 100,
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Maximum number of rebalances to return",
+              "title": "Limit"
+            },
+            "description": "Maximum number of rebalances to return"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RebalancesByPortfoliosRequestDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RebalanceResultDTO"
+                  },
+                  "title": "Response Get Rebalances By Portfolios Api V1 Rebalances Portfolios Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1197,7 +1458,12 @@
             "maxLength": 24,
             "minLength": 24,
             "title": "Portfolio Id",
-            "description": "24-character alphanumeric portfolio identifier"
+            "description": "Portfolio identifier"
+          },
+          "rebalance_id": {
+            "type": "string",
+            "title": "Rebalance Id",
+            "description": "Rebalance record identifier"
           },
           "transactions": {
             "items": {
@@ -1205,7 +1471,7 @@
             },
             "type": "array",
             "title": "Transactions",
-            "description": "List of transactions to execute for rebalancing"
+            "description": "List of transactions"
           },
           "drifts": {
             "items": {
@@ -1213,15 +1479,248 @@
             },
             "type": "array",
             "title": "Drifts",
-            "description": "Drift analysis for all positions in the portfolio"
+            "description": "List of drift information"
           }
         },
         "type": "object",
         "required": [
-          "portfolio_id"
+          "portfolio_id",
+          "rebalance_id"
         ],
         "title": "RebalanceDTO",
-        "description": "Complete rebalancing results.\n\nContains the full results of a portfolio rebalancing operation, including\nthe list of transactions to execute and drift analysis for all positions."
+        "description": "Original DTO for backward compatibility with existing rebalance API."
+      },
+      "RebalancePortfolioDTO": {
+        "properties": {
+          "portfolio_id": {
+            "type": "string",
+            "title": "Portfolio Id",
+            "description": "Portfolio identifier"
+          },
+          "market_value": {
+            "type": "string",
+            "title": "Market Value",
+            "description": "Market value of the portfolio"
+          },
+          "cash_before_rebalance": {
+            "type": "string",
+            "title": "Cash Before Rebalance",
+            "description": "Cash in the portfolio before rebalance"
+          },
+          "cash_after_rebalance": {
+            "type": "string",
+            "title": "Cash After Rebalance",
+            "description": "Cash in the portfolio after rebalance"
+          },
+          "positions": {
+            "items": {
+              "$ref": "#/components/schemas/RebalancePositionDTO"
+            },
+            "type": "array",
+            "title": "Positions",
+            "description": "List of positions in the portfolio"
+          }
+        },
+        "type": "object",
+        "required": [
+          "portfolio_id",
+          "market_value",
+          "cash_before_rebalance",
+          "cash_after_rebalance"
+        ],
+        "title": "RebalancePortfolioDTO",
+        "description": "DTO for a portfolio within a rebalance operation."
+      },
+      "RebalancePositionDTO": {
+        "properties": {
+          "security_id": {
+            "type": "string",
+            "title": "Security Id",
+            "description": "Security identifier"
+          },
+          "price": {
+            "type": "string",
+            "title": "Price",
+            "description": "Price used for the rebalance"
+          },
+          "original_quantity": {
+            "type": "string",
+            "title": "Original Quantity",
+            "description": "Original value of u"
+          },
+          "adjusted_quantity": {
+            "type": "string",
+            "title": "Adjusted Quantity",
+            "description": "New value of u'"
+          },
+          "original_position_market_value": {
+            "type": "string",
+            "title": "Original Position Market Value",
+            "description": "Original quantity times price"
+          },
+          "adjusted_position_market_value": {
+            "type": "string",
+            "title": "Adjusted Position Market Value",
+            "description": "Adjusted quantity times price"
+          },
+          "target": {
+            "type": "string",
+            "title": "Target",
+            "description": "Target from the model"
+          },
+          "high_drift": {
+            "type": "string",
+            "title": "High Drift",
+            "description": "High drift from the model"
+          },
+          "low_drift": {
+            "type": "string",
+            "title": "Low Drift",
+            "description": "Low drift from the model"
+          },
+          "actual": {
+            "type": "string",
+            "title": "Actual",
+            "description": "(u' * p) / MV"
+          },
+          "actual_drift": {
+            "type": "string",
+            "title": "Actual Drift",
+            "description": "1 - (actual/target)"
+          },
+          "transaction_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transaction Type",
+            "description": "'BUY' or 'SELL' or None if no transaction"
+          },
+          "trade_quantity": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trade Quantity",
+            "description": "Positive quantity to BUY or SELL"
+          },
+          "trade_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trade Date",
+            "description": "Current date (no time)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "security_id",
+          "price",
+          "original_quantity",
+          "adjusted_quantity",
+          "original_position_market_value",
+          "adjusted_position_market_value",
+          "target",
+          "high_drift",
+          "low_drift",
+          "actual",
+          "actual_drift"
+        ],
+        "title": "RebalancePositionDTO",
+        "description": "DTO for a position within a rebalanced portfolio."
+      },
+      "RebalanceResultDTO": {
+        "properties": {
+          "rebalance_id": {
+            "type": "string",
+            "title": "Rebalance Id",
+            "description": "Unique rebalance identifier"
+          },
+          "model_id": {
+            "type": "string",
+            "title": "Model Id",
+            "description": "ID of the model that was rebalanced"
+          },
+          "rebalance_date": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Rebalance Date",
+            "description": "Date of the rebalance"
+          },
+          "model_name": {
+            "type": "string",
+            "title": "Model Name",
+            "description": "Name of the model that was rebalanced"
+          },
+          "number_of_portfolios": {
+            "type": "integer",
+            "title": "Number Of Portfolios",
+            "description": "Number of portfolios in the rebalance"
+          },
+          "portfolios": {
+            "items": {
+              "$ref": "#/components/schemas/RebalancePortfolioDTO"
+            },
+            "type": "array",
+            "title": "Portfolios",
+            "description": "List of portfolios rebalanced"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version",
+            "description": "Version for optimistic locking",
+            "default": 1
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Creation timestamp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rebalance_id",
+          "model_id",
+          "rebalance_date",
+          "model_name",
+          "number_of_portfolios",
+          "created_at"
+        ],
+        "title": "RebalanceResultDTO",
+        "description": "DTO for a complete rebalance operation (new API)."
+      },
+      "RebalancesByPortfoliosRequestDTO": {
+        "properties": {
+          "portfolios": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Portfolios",
+            "description": "List of portfolio IDs to filter by"
+          }
+        },
+        "type": "object",
+        "required": [
+          "portfolios"
+        ],
+        "title": "RebalancesByPortfoliosRequestDTO",
+        "description": "Request DTO for retrieving rebalances by portfolios."
       },
       "TransactionDTO": {
         "properties": {

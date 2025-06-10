@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -46,22 +46,44 @@ export default function ModelForm({ model, isOpen, onClose, onSubmit, isLoading 
   // Get portfolios for name mapping
   const { portfolioOptions, getPortfolioNames, getPortfolioIds, isLoading: portfoliosLoading } = usePortfolios()
 
-  // Convert portfolio IDs to names for form display
-  const portfolioNamesFromModel = model?.portfolios ? getPortfolioNames(model.portfolios) : []
-  
   const form = useForm<ModelFormData>({
     resolver: zodResolver(modelFormSchema),
     defaultValues: {
-      name: model?.name || '',
-      portfolios: portfolioNamesFromModel,
-      positions: model?.positions?.map(p => ({
-        security_id: p.security_id,
-        target: parseFloat(p.target),
-        high_drift: parseFloat(p.high_drift),
-        low_drift: parseFloat(p.low_drift),
-      })) || [],
+      name: '',
+      portfolios: [],
+      positions: [],
     },
   })
+  
+  // Reset form when model changes or dialog opens
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedPortfolio('') // Clear portfolio selection
+      
+      if (model) {
+        // Convert portfolio IDs to names for form display
+        const portfolioNamesFromModel = getPortfolioNames(model.portfolios)
+        
+        form.reset({
+          name: model.name,
+          portfolios: portfolioNamesFromModel,
+          positions: model.positions?.map(p => ({
+            security_id: p.security_id,
+            target: parseFloat(p.target),
+            high_drift: parseFloat(p.high_drift),
+            low_drift: parseFloat(p.low_drift),
+          })) || [],
+        })
+      } else {
+        // Reset for new model
+        form.reset({
+          name: '',
+          portfolios: [],
+          positions: [],
+        })
+      }
+    }
+  }, [model?.model_id, isOpen]) // Only depend on model ID and dialog state
 
   const { fields: positionFields, append: addPosition, remove: removePosition } = useFieldArray({
     control: form.control,
@@ -124,6 +146,12 @@ export default function ModelForm({ model, isOpen, onClose, onSubmit, isLoading 
           <DialogTitle>
             {model ? 'Edit Investment Model' : 'Create New Investment Model'}
           </DialogTitle>
+          <DialogDescription>
+            {model 
+              ? 'Update the model configuration, portfolio assignments, and security positions.'
+              : 'Configure a new investment model with portfolio assignments and security positions.'
+            }
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
