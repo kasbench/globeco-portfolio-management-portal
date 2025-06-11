@@ -241,13 +241,13 @@ When some orders succeed and others fail in a batch:
 - [x] Implement "Select All" functionality with smart filtering
 - [x] Add batch submission with progress tracking
 - [x] Create batch deletion with confirmation
-- [x] Implement selective retry for failed batches
+- [xgit ] Implement selective retry for failed batches
 
 #### Stage 5.2: Performance Optimization
-- [ ] Add background processing for large submissions
-- [ ] Implement order submission queuing system
-- [ ] Add request debouncing for rapid user actions
-- [ ] Optimize UI rendering for large datasets
+- [x] Add background processing for large submissions
+- [x] Implement order submission queuing system
+- [x] Add request debouncing for rapid user actions
+- [x] Optimize UI rendering for large datasets
 
 #### Stage 5.3: User Experience Enhancements
 - [ ] Add keyboard shortcuts for common operations

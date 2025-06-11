@@ -15,6 +15,16 @@ import { SubmissionState, OrderSubmissionResult } from '@/types/order'
 import { orderServiceClient } from '@/lib/api/orderService'
 import { dataTransformationService } from '@/lib/services/dataTransformationService'
 import { responseProcessingService } from '@/lib/services/responseProcessingService'
+import { 
+  getGlobalSubmissionQueue, 
+  QueuePriority, 
+  QueueSubmissionItem 
+} from '@/lib/services/orderSubmissionQueue'
+import { 
+  globalRequestThrottler, 
+  ActionBatcher,
+  AdvancedDebouncer 
+} from '@/lib/utils/performance'
 
 /**
  * Order submission hook state
@@ -33,6 +43,11 @@ export interface OrderSubmissionState {
     currentRebalance?: string
     currentPortfolio?: string
   } | null
+  
+  // Background processing state
+  queuedItems: QueueSubmissionItem[]
+  processingItems: QueueSubmissionItem[]
+  backgroundProcessingEnabled: boolean
   
   // Results
   submissionResults: OrderSubmissionResult[]
@@ -74,6 +89,14 @@ export interface UseOrderSubmissionReturn {
     totalPortfolios: number
   }
   
+  // Background processing
+  enableBackgroundProcessing: (enabled: boolean) => void
+  getQueueStatus: () => {
+    pending: QueueSubmissionItem[]
+    processing: QueueSubmissionItem[]
+    completed: QueueSubmissionItem[]
+  }
+  
   // Progress tracking
   resetSubmissionState: () => void
 }
@@ -91,45 +114,77 @@ export function useOrderSubmission(): UseOrderSubmissionReturn {
     isSubmitting: false,
     isDeleting: false,
     submissionProgress: null,
+    queuedItems: [],
+    processingItems: [],
+    backgroundProcessingEnabled: true,
     submissionResults: [],
     lastSubmissionError: null
   })
 
+  // Performance utilities
+  const submissionQueue = useMemo(() => getGlobalSubmissionQueue(), [])
+  const selectionBatcher = useMemo(() => 
+    new ActionBatcher<{ type: 'select'; id: string; selected: boolean }>(
+      (actions) => {
+        // Process batched selection changes
+        setState(prev => {
+          const newRebalanceIds = new Set(prev.selectedRebalanceIds)
+          const newPortfolioIds = new Set(prev.selectedPortfolioIds)
+          
+          actions.forEach(action => {
+            if (action.type === 'select') {
+              // Determine if it's a rebalance or portfolio ID based on pattern
+              if (action.id.startsWith('rebal_')) {
+                if (action.selected) {
+                  newRebalanceIds.add(action.id)
+                } else {
+                  newRebalanceIds.delete(action.id)
+                }
+              } else {
+                if (action.selected) {
+                  newPortfolioIds.add(action.id)
+                } else {
+                  newPortfolioIds.delete(action.id)
+                }
+              }
+            }
+          })
+          
+          return {
+            ...prev,
+            selectedRebalanceIds: newRebalanceIds,
+            selectedPortfolioIds: newPortfolioIds
+          }
+        })
+      },
+      5, // Batch size
+      100 // Timeout ms
+    ), []
+  )
+
+  const debouncedStateUpdate = useMemo(() =>
+    new AdvancedDebouncer(
+      (updates: Partial<OrderSubmissionState>) => {
+        setState(prev => ({ ...prev, ...updates }))
+      },
+      50, // 50ms debounce
+      { trailing: true }
+    ), []
+  )
+
   // Update state helper
   const updateState = useCallback((updates: Partial<OrderSubmissionState>) => {
-    setState(prev => ({ ...prev, ...updates }))
-  }, [])
+    debouncedStateUpdate.call(updates)
+  }, [debouncedStateUpdate])
 
-  // Selection handlers
+  // Selection handlers (optimized with batching)
   const selectRebalance = useCallback((rebalanceId: string, selected: boolean) => {
-    setState(prev => {
-      const newRebalanceIds = new Set(prev.selectedRebalanceIds)
-      if (selected) {
-        newRebalanceIds.add(rebalanceId)
-      } else {
-        newRebalanceIds.delete(rebalanceId)
-      }
-      return {
-        ...prev,
-        selectedRebalanceIds: newRebalanceIds
-      }
-    })
-  }, [])
+    selectionBatcher.add({ type: 'select', id: rebalanceId, selected })
+  }, [selectionBatcher])
 
   const selectPortfolio = useCallback((portfolioId: string, selected: boolean) => {
-    setState(prev => {
-      const newPortfolioIds = new Set(prev.selectedPortfolioIds)
-      if (selected) {
-        newPortfolioIds.add(portfolioId)
-      } else {
-        newPortfolioIds.delete(portfolioId)
-      }
-      return {
-        ...prev,
-        selectedPortfolioIds: newPortfolioIds
-      }
-    })
-  }, [])
+    selectionBatcher.add({ type: 'select', id: portfolioId, selected })
+  }, [selectionBatcher])
 
   const selectAllRebalances = useCallback((rebalances: RebalanceWithSubmission[], selected: boolean) => {
     if (selected) {
@@ -159,10 +214,11 @@ export function useOrderSubmission(): UseOrderSubmissionReturn {
     }))
   }, [])
 
-  // Core submission logic
+  // Core submission logic with background processing support
   const performSubmission = useCallback(async (
     rebalances: RebalanceWithSubmission[],
-    submissionType: 'all' | 'selected_rebalances' | 'selected_portfolios' | 'single_rebalance' | 'single_portfolio'
+    submissionType: 'all' | 'selected_rebalances' | 'selected_portfolios' | 'single_rebalance' | 'single_portfolio',
+    useBackgroundProcessing: boolean = state.backgroundProcessingEnabled
   ): Promise<void> => {
     try {
       updateState({ 
@@ -202,72 +258,126 @@ export function useOrderSubmission(): UseOrderSubmissionReturn {
         { includeMetadata: true }
       )
 
-      // Process submissions in batches
-      const results: OrderSubmissionResult[] = []
-      let batchIndex = 0
+      if (useBackgroundProcessing && submissionRebalances.length > 1) {
+        // Use background processing for multiple items
+        const queuedItemIds: string[] = []
+        
+        for (const rebalance of submissionRebalances) {
+          const queueId = submissionQueue.enqueue(rebalance, {
+            type: 'rebalance',
+            priority: QueuePriority.Normal,
+            estimatedDuration: rebalance.totalEligibleOrders * 100 // Rough estimate
+          })
+          queuedItemIds.push(queueId)
+        }
 
-      for (const rebalance of submissionRebalances) {
-        // Update progress
-        updateState({
-          submissionProgress: {
-            currentBatch: batchIndex + 1,
-            totalBatches: submissionRebalances.length,
-            currentRebalance: rebalance.rebalance_id,
-            currentPortfolio: undefined
-          }
-        })
-
-        try {
-          // Submit rebalance using order service
-          const submissionResult = await orderServiceClient.submitRebalancePositions(
-            rebalance,
-            `submission-${Date.now()}-${batchIndex}`,
-            (progress) => {
-              updateState({
-                submissionProgress: {
-                  currentBatch: batchIndex + 1,
-                  totalBatches: submissionRebalances.length,
-                  currentRebalance: rebalance.rebalance_id,
-                  currentPortfolio: progress.currentItem
-                }
-              })
-            }
-          )
-
-          results.push(submissionResult)
-          
-        } catch (error) {
-          console.error(`Failed to submit rebalance ${rebalance.rebalance_id}:`, error)
-          // Continue with other rebalances even if one fails
-          results.push({
-            submissionRequestId: `failed-${rebalance.rebalance_id}`,
-            rebalanceId: rebalance.rebalance_id,
-            totalOrders: 0,
-            successfulOrders: 0,
-            failedOrders: 0,
-            state: SubmissionState.Failed,
-            error: error instanceof Error ? error.message : 'Unknown error',
-            submittedAt: new Date(),
-            processingTimeMs: 0
+        // Monitor queue progress
+        const handleQueueProgress = () => {
+          const queueStatus = submissionQueue.getQueueStatus()
+          updateState({
+            queuedItems: queueStatus.pending,
+            processingItems: queueStatus.processing
           })
         }
 
-        batchIndex++
-      }
+        submissionQueue.on('item-started', handleQueueProgress)
+        submissionQueue.on('item-completed', handleQueueProgress)
+        submissionQueue.on('item-failed', handleQueueProgress)
 
-      // Update final state
-      updateState({
-        submissionResults: results,
-        submissionProgress: null
-      })
+        // Clean up listeners and update state
+        const cleanup = () => {
+          submissionQueue.off('item-started', handleQueueProgress)
+          submissionQueue.off('item-completed', handleQueueProgress)
+          submissionQueue.off('item-failed', handleQueueProgress)
+          updateState({ isSubmitting: false })
+        }
 
-      // Invalidate relevant queries to refresh data
-      queryClient.invalidateQueries({ queryKey: ['rebalances'] })
-      queryClient.invalidateQueries({ queryKey: ['portfolios'] })
+        // Set up completion handling
+        let completedCount = 0
+        const handleCompletion = () => {
+          completedCount++
+          if (completedCount >= queuedItemIds.length) {
+            cleanup()
+            queryClient.invalidateQueries({ queryKey: ['rebalances'] })
+            queryClient.invalidateQueries({ queryKey: ['portfolios'] })
+            clearSelections()
+          }
+        }
 
-      // Clear selections after successful submission
-      if (results.some(r => r.state === SubmissionState.Submitted)) {
-        clearSelections()
+        submissionQueue.on('item-completed', handleCompletion)
+        submissionQueue.on('item-failed', handleCompletion)
+
+      } else {
+        // Use direct processing for single items or when background processing is disabled
+        const results: OrderSubmissionResult[] = []
+        let batchIndex = 0
+
+        for (const rebalance of submissionRebalances) {
+          // Update progress
+          updateState({
+            submissionProgress: {
+              currentBatch: batchIndex + 1,
+              totalBatches: submissionRebalances.length,
+              currentRebalance: rebalance.rebalance_id,
+              currentPortfolio: undefined
+            }
+          })
+
+          try {
+            // Use request throttling for API calls
+            const submissionResult = await globalRequestThrottler.throttle(
+              () => orderServiceClient.submitRebalancePositions(
+                rebalance,
+                `submission-${Date.now()}-${batchIndex}`,
+                (progress) => {
+                  updateState({
+                    submissionProgress: {
+                      currentBatch: batchIndex + 1,
+                      totalBatches: submissionRebalances.length,
+                      currentRebalance: rebalance.rebalance_id,
+                      currentPortfolio: progress.currentItem
+                    }
+                  })
+                }
+              ),
+              1 // Normal priority
+            )
+
+            results.push(submissionResult)
+            
+          } catch (error) {
+            console.error(`Failed to submit rebalance ${rebalance.rebalance_id}:`, error)
+            // Continue with other rebalances even if one fails
+            results.push({
+              submissionRequestId: `failed-${rebalance.rebalance_id}`,
+              rebalanceId: rebalance.rebalance_id,
+              totalOrders: 0,
+              successfulOrders: 0,
+              failedOrders: 0,
+              state: SubmissionState.Failed,
+              error: error instanceof Error ? error.message : 'Unknown error',
+              submittedAt: new Date(),
+              processingTimeMs: 0
+            })
+          }
+
+          batchIndex++
+        }
+
+        // Update final state
+        updateState({
+          submissionResults: results,
+          submissionProgress: null
+        })
+
+        // Invalidate relevant queries to refresh data
+        queryClient.invalidateQueries({ queryKey: ['rebalances'] })
+        queryClient.invalidateQueries({ queryKey: ['portfolios'] })
+
+        // Clear selections after successful submission
+        if (results.some(r => r.state === SubmissionState.Submitted)) {
+          clearSelections()
+        }
       }
 
     } catch (error) {
@@ -278,9 +388,11 @@ export function useOrderSubmission(): UseOrderSubmissionReturn {
       })
       throw error
     } finally {
-      updateState({ isSubmitting: false })
+      if (!useBackgroundProcessing) {
+        updateState({ isSubmitting: false })
+      }
     }
-  }, [state.selectedRebalanceIds, state.selectedPortfolioIds, updateState, queryClient, clearSelections])
+  }, [state.selectedRebalanceIds, state.selectedPortfolioIds, state.backgroundProcessingEnabled, updateState, queryClient, clearSelections, submissionQueue])
 
   // Submission handlers
   const submitAll = useCallback(async (rebalances: RebalanceWithSubmission[]) => {
@@ -416,17 +528,33 @@ export function useOrderSubmission(): UseOrderSubmissionReturn {
     }
   }, [state.selectedRebalanceIds, state.selectedPortfolioIds])
 
+  // Background processing controls
+  const enableBackgroundProcessing = useCallback((enabled: boolean) => {
+    updateState({ backgroundProcessingEnabled: enabled })
+  }, [updateState])
+
+  const getQueueStatus = useCallback(() => {
+    return submissionQueue.getQueueStatus()
+  }, [submissionQueue])
+
   const resetSubmissionState = useCallback(() => {
+    // Flush any pending batched operations
+    selectionBatcher.flush()
+    debouncedStateUpdate.flush()
+    
     setState({
       selectedRebalanceIds: new Set(),
       selectedPortfolioIds: new Set(),
       isSubmitting: false,
       isDeleting: false,
       submissionProgress: null,
+      queuedItems: [],
+      processingItems: [],
+      backgroundProcessingEnabled: true,
       submissionResults: [],
       lastSubmissionError: null
     })
-  }, [])
+  }, [selectionBatcher, debouncedStateUpdate])
 
   return {
     state,
@@ -444,6 +572,8 @@ export function useOrderSubmission(): UseOrderSubmissionReturn {
     deleteSingleRebalance,
     deleteSinglePortfolio,
     getSelectionStats,
+    enableBackgroundProcessing,
+    getQueueStatus,
     resetSubmissionState
   }
 } 
