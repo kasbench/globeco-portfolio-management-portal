@@ -238,10 +238,10 @@ When some orders succeed and others fail in a batch:
 **Objective**: Add advanced functionality and polish the user experience
 
 #### Stage 5.1: Batch Operations
-- [ ] Implement "Select All" functionality with smart filtering
-- [ ] Add batch submission with progress tracking
-- [ ] Create batch deletion with confirmation
-- [ ] Implement selective retry for failed batches
+- [x] Implement "Select All" functionality with smart filtering
+- [x] Add batch submission with progress tracking
+- [x] Create batch deletion with confirmation
+- [x] Implement selective retry for failed batches
 
 #### Stage 5.2: Performance Optimization
 - [ ] Add background processing for large submissions

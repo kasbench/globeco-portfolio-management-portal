@@ -120,7 +120,12 @@ export interface BatchSubmissionRequest {
 }
 
 export interface BatchSubmissionResult {
-  request: BatchSubmissionRequest
+  request: {
+    requestId: string
+    type: 'batch_submit' | 'batch_delete' | 'batch_retry'
+    rebalanceIds: string[]
+    submittedAt: Date
+  }
   overallStatus: SubmissionStatus
   results: {
     rebalanceId: string

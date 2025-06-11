@@ -13,7 +13,7 @@ import {
   RebalanceWithSubmission 
 } from '@/types/rebalance'
 import { mapPositionToOrder, validateOrderEligibility } from '@/lib/utils/orderMapping'
-import { OrderLogger } from '@/lib/utils/orderLogging'
+import { orderLogger } from '@/lib/utils/orderLogging'
 import { 
   transformToSubmissionRebalance,
   markPositionsAsSubmitting,
@@ -49,8 +49,8 @@ export const getOrderServiceConfig = (): OrderMappingConfig & {
   }
 })
 
-// Initialize logger
-const logger = new OrderLogger()
+// Use singleton logger
+const logger = orderLogger
 
 // Create axios instance with configuration
 const apiClient = axios.create({
