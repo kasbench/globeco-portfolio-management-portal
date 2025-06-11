@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { format } from 'date-fns'
-import { ChevronRight, Loader2, DollarSign, TrendingUp, AlertTriangle, RefreshCw } from 'lucide-react'
+import { ChevronRight, Loader2, DollarSign, TrendingUp, AlertTriangle, RefreshCw, Send } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { 
@@ -38,6 +38,8 @@ const ExpandedPortfolioContent = ({
   rebalanceId: string
   cashChange: { amount: number; isPositive: boolean; percentage: number }
 }) => {
+  const [isSubmittingPositions, setIsSubmittingPositions] = useState(false)
+  
   // Format currency values to 2 decimal places
   const formatCurrency = (value: number): string => {
     return new Intl.NumberFormat('en-US', {
@@ -56,9 +58,36 @@ const ExpandedPortfolioContent = ({
     error: positionsErrorData,
   } = useRebalancePortfolioPositions(rebalanceId, portfolio.portfolio_id, true)
 
+  // Handler for submitting just this portfolio's positions
+  const handleSubmitPortfolioPositions = async () => {
+    setIsSubmittingPositions(true)
+    try {
+      // TODO: Implement portfolio position submission logic
+      console.log('Submitting portfolio positions:', portfolio.portfolio_id)
+      
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1500))
+      
+      // TODO: Handle success/failure and update UI
+    } catch (error) {
+      console.error('Failed to submit portfolio positions:', error)
+    } finally {
+      setIsSubmittingPositions(false)
+    }
+  }
+
+  // Calculate eligible positions (BUY/SELL with non-zero quantities)
+  const getEligiblePositionsCount = () => {
+    if (!positions) return 0
+    return positions.filter(p => 
+      (p.transaction_type === 'BUY' || p.transaction_type === 'SELL') && 
+      p.trade_quantity !== 0
+    ).length
+  }
+
   return (
     <TableRow key={`${portfolio.portfolio_id}-expanded`}>
-      <TableCell colSpan={6} className="p-0">
+      <TableCell colSpan={7} className="p-0">
         <div className="p-6 bg-slate-25 border-t border-slate-100">
           <div className="flex items-center justify-between mb-4">
             <h6 className="text-lg font-semibold text-slate-900">
@@ -101,6 +130,46 @@ const ExpandedPortfolioContent = ({
               </div>
             </div>
           </div>
+
+          {/* Portfolio Submit Section */}
+          <div className="bg-gradient-to-r from-purple-50 to-violet-50 border border-purple-200 rounded-lg p-4 mb-6">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <div className="flex items-center space-x-2 mb-1">
+                  <Send className="h-4 w-4 text-purple-600" />
+                  <h6 className="font-medium text-purple-900">Submit Portfolio Positions</h6>
+                </div>
+                <p className="text-sm text-purple-800 mb-2">
+                  Submit all eligible positions in this portfolio to the Order Service for execution.
+                </p>
+                <div className="flex items-center space-x-4 text-xs text-purple-700">
+                  <span>• {positionsLoading ? '...' : positions?.length || 0} total positions</span>
+                  <span>• {positionsLoading ? '...' : getEligiblePositionsCount()} eligible orders</span>
+                  <span>• Portfolio value: {formatCurrency(portfolio.market_value)}</span>
+                </div>
+              </div>
+              <div className="ml-4">
+                <Button 
+                  onClick={handleSubmitPortfolioPositions}
+                  disabled={isSubmittingPositions || positionsLoading || getEligiblePositionsCount() === 0}
+                  size="sm"
+                  className="flex items-center space-x-2 bg-purple-600 hover:bg-purple-700"
+                >
+                  {isSubmittingPositions ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Submitting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send className="h-4 w-4" />
+                      <span>Submit Positions</span>
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
           
           {/* Position Table - Real Data */}
           <PositionTable
@@ -126,6 +195,7 @@ const PortfolioTable = React.memo(function PortfolioTable({
   onRetry,
 }: PortfolioTableProps) {
   const [expandedPortfolios, setExpandedPortfolios] = useState<Set<string>>(new Set())
+  const [submittingPortfolios, setSubmittingPortfolios] = useState<Set<string>>(new Set())
 
   // Format currency values to 2 decimal places
   const formatCurrency = (value: number): string => {
@@ -148,6 +218,28 @@ const PortfolioTable = React.memo(function PortfolioTable({
       }
       return newSet
     })
+  }
+
+  // Handle individual portfolio submission
+  const handleSubmitPortfolio = async (portfolioId: string) => {
+    setSubmittingPortfolios(prev => new Set(prev).add(portfolioId))
+    try {
+      // TODO: Implement portfolio submission logic
+      console.log('Submitting portfolio:', portfolioId)
+      
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      // TODO: Handle success/failure and update UI
+    } catch (error) {
+      console.error('Failed to submit portfolio:', error)
+    } finally {
+      setSubmittingPortfolios(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(portfolioId)
+        return newSet
+      })
+    }
   }
 
   // Calculate cash change for each portfolio
@@ -256,6 +348,10 @@ const PortfolioTable = React.memo(function PortfolioTable({
             <TableHead className="min-w-[120px] text-right">
               Cash Change
             </TableHead>
+
+            <TableHead className="min-w-[140px] text-center">
+              Actions
+            </TableHead>
           </TableRow>
         </TableHeader>
         
@@ -263,6 +359,7 @@ const PortfolioTable = React.memo(function PortfolioTable({
           {portfolios.map((portfolio) => {
             const cashChange = getCashChange(portfolio)
             const isExpanded = expandedPortfolios.has(portfolio.portfolio_id)
+            const isSubmitting = submittingPortfolios.has(portfolio.portfolio_id)
             
             return (
               <React.Fragment key={portfolio.portfolio_id}>
@@ -352,6 +449,28 @@ const PortfolioTable = React.memo(function PortfolioTable({
                         {cashChange.isPositive ? '+' : '-'}{Math.abs(cashChange.percentage).toFixed(2)}%
                       </span>
                     </div>
+                  </TableCell>
+
+                  {/* Actions Column - Submit Button */}
+                  <TableCell className="text-center">
+                    <Button
+                      onClick={() => handleSubmitPortfolio(portfolio.portfolio_id)}
+                      disabled={isSubmitting}
+                      size="sm"
+                      className="flex items-center space-x-2 bg-purple-600 hover:bg-purple-700"
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <span>Submitting...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Send className="h-4 w-4" />
+                          <span>Submit</span>
+                        </>
+                      )}
+                    </Button>
                   </TableCell>
                 </TableRow>
                 

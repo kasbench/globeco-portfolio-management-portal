@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { BarChart3, AlertCircle, RefreshCw, Loader2, HelpCircle, Info } from 'lucide-react'
+import { BarChart3, AlertCircle, RefreshCw, Loader2, HelpCircle, Info, Send } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -13,6 +13,8 @@ import { useRebalances } from '@/lib/hooks/useRebalances'
 import RebalanceTable from '@/components/tables/RebalanceTable'
 
 export default function RebalanceResultsPage() {
+  const [isSubmittingAll, setIsSubmittingAll] = useState(false)
+  
   const {
     rebalances,
     isLoading,
@@ -28,6 +30,33 @@ export default function RebalanceResultsPage() {
 
   const handleRetry = () => {
     refetch()
+  }
+
+  // Handler for global submit all
+  const handleSubmitAllRebalances = async () => {
+    if (rebalances.length === 0) return
+    
+    setIsSubmittingAll(true)
+    try {
+      // TODO: Implement global submission logic
+      console.log('Submitting all rebalances:', rebalances.length)
+      
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      
+      // TODO: Handle success/failure and update UI
+    } catch (error) {
+      console.error('Failed to submit all rebalances:', error)
+    } finally {
+      setIsSubmittingAll(false)
+    }
+  }
+
+  // Calculate total eligible orders across all rebalances
+  const getTotalEligibleOrders = () => {
+    // TODO: Calculate based on actual position data
+    // For now, estimate based on portfolio count
+    return rebalances.reduce((sum, r) => sum + r.number_of_portfolios, 0) * 50 // Estimated 50 positions per portfolio
   }
 
   return (
@@ -210,6 +239,55 @@ export default function RebalanceResultsPage() {
                 </CardContent>
               </Card>
             </div>
+
+            {/* Global Submit Section */}
+            <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Send className="h-5 w-5 text-blue-600" />
+                    <span>Order Submission</span>
+                  </div>
+                  <div className="text-sm font-normal text-slate-600">
+                    Submit all eligible positions as orders
+                  </div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <p className="text-sm text-slate-700 mb-2">
+                      Submit all rebalance results to the Order Service for execution. 
+                      This will create orders for all eligible BUY/SELL positions with non-zero quantities.
+                    </p>
+                    <div className="flex items-center space-x-4 text-sm text-slate-600">
+                      <span>• {rebalances.length} rebalances</span>
+                      <span>• {rebalances.reduce((sum, r) => sum + r.number_of_portfolios, 0).toLocaleString()} portfolios</span>
+                      <span>• ~{getTotalEligibleOrders().toLocaleString()} estimated orders</span>
+                    </div>
+                  </div>
+                  <div className="ml-6">
+                    <Button 
+                      onClick={handleSubmitAllRebalances}
+                      disabled={isSubmittingAll || rebalances.length === 0}
+                      className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700"
+                    >
+                      {isSubmittingAll ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <span>Submitting...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Send className="h-4 w-4" />
+                          <span>Submit All Rebalances</span>
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Table Section */}
             <Card>

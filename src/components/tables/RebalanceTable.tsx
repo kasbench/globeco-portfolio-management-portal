@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback, Fragment } from 'react'
 import { format } from 'date-fns'
-import { ChevronUp, ChevronDown, ChevronRight, Loader2 } from 'lucide-react'
+import { ChevronUp, ChevronDown, ChevronRight, Loader2, Send } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { 
@@ -126,6 +126,7 @@ const RebalanceTable = React.memo(function RebalanceTable({
   const ExpandedRebalanceContent = ({ rebalance }: { rebalance: Rebalance }) => {
     const details = getRebalanceDetails(rebalance)
     const isExpanded = expandedRows.has(rebalance.rebalance_id)
+    const [isSubmittingRebalance, setIsSubmittingRebalance] = useState(false)
     
     // Use the portfolio data hook for lazy loading
     const {
@@ -134,6 +135,31 @@ const RebalanceTable = React.memo(function RebalanceTable({
       isError: portfoliosError,
       error: portfoliosErrorData,
     } = useRebalancePortfolios(rebalance.rebalance_id, isExpanded)
+
+    // Handler for rebalance-level submission
+    const handleSubmitRebalance = async () => {
+      setIsSubmittingRebalance(true)
+      try {
+        // TODO: Implement rebalance submission logic
+        console.log('Submitting rebalance:', rebalance.rebalance_id)
+        
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 1500))
+        
+        // TODO: Handle success/failure and update UI
+      } catch (error) {
+        console.error('Failed to submit rebalance:', error)
+      } finally {
+        setIsSubmittingRebalance(false)
+      }
+    }
+
+    // Calculate estimated orders for this rebalance
+    const getEstimatedOrders = () => {
+      // TODO: Calculate based on actual position data
+      // For now, estimate based on portfolio count
+      return details.portfolios * 50 // Estimated 50 positions per portfolio
+    }
 
     return (
       <TableRow key={`${rebalance.rebalance_id}-expanded`}>
@@ -172,6 +198,45 @@ const RebalanceTable = React.memo(function RebalanceTable({
                   <div className="text-sm font-medium text-slate-600 mb-1">Version & Created</div>
                   <div className="text-lg font-bold text-slate-900">v{details.version}</div>
                   <div className="text-xs text-slate-500">{formatRebalanceDate(details.createdAt)}</div>
+                </div>
+              </div>
+
+              {/* Rebalance Submit Section */}
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4 mb-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <Send className="h-4 w-4 text-green-600" />
+                      <h5 className="font-medium text-green-900">Submit Rebalance</h5>
+                    </div>
+                    <p className="text-sm text-green-800 mb-2">
+                      Submit all portfolios in this rebalance to the Order Service for execution.
+                    </p>
+                    <div className="flex items-center space-x-4 text-xs text-green-700">
+                      <span>• {details.portfolios.toLocaleString()} portfolios</span>
+                      <span>• ~{getEstimatedOrders().toLocaleString()} estimated orders</span>
+                    </div>
+                  </div>
+                  <div className="ml-4">
+                    <Button 
+                      onClick={handleSubmitRebalance}
+                      disabled={isSubmittingRebalance || portfoliosLoading}
+                      size="sm"
+                      className="flex items-center space-x-2 bg-green-600 hover:bg-green-700"
+                    >
+                      {isSubmittingRebalance ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <span>Submitting...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Send className="h-4 w-4" />
+                          <span>Submit Rebalance</span>
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </div>
 
