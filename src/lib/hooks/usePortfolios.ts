@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import { portfolioApi } from '@/lib/api/portfolioService'
 import { Portfolio, PortfolioMap, PortfolioOption } from '@/types/portfolio'
+import { orderGenerationApi } from '@/lib/api/orderGenerationService'
 
 // Custom hook for portfolio management and mapping
 export function usePortfolios() {
@@ -107,4 +108,20 @@ export function usePortfolio(portfolioId: string) {
     isError,
     error,
   }
-} 
+}
+
+// Hook for loading portfolios for a specific rebalance
+export function useRebalancePortfolios(rebalanceId: string, enabled: boolean = true) {
+  return useQuery({
+    queryKey: ['rebalance-portfolios', rebalanceId],
+    queryFn: () => orderGenerationApi.getRebalancePortfolios(rebalanceId),
+    enabled: enabled && !!rebalanceId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+  })
+}
+
+export default usePortfolios 

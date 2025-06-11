@@ -229,10 +229,10 @@ When some orders succeed and others fail in a batch:
 - [x] Implement data refetching after successful operations
 
 #### Stage 4.3: Error State Management
-- [ ] Preserve failed positions with error annotations
-- [ ] Implement partial success state handling
-- [ ] Add error state persistence and recovery
-- [ ] Create cleanup utilities for stale error states
+- [x] Preserve failed positions with error annotations
+- [x] Implement partial success state handling
+- [x] Add error state persistence and recovery
+- [x] Create cleanup utilities for stale error states
 
 ### Stage 5: Advanced Features and Polish (2-3 days)
 **Objective**: Add advanced functionality and polish the user experience

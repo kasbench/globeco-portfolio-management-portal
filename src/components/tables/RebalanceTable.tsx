@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback, Fragment } from 'react'
 import { format } from 'date-fns'
-import { ChevronUp, ChevronDown, ChevronRight, Loader2, Send } from 'lucide-react'
+import { ChevronUp, ChevronDown, ChevronRight, Loader2, Send, ExternalLink, Trash2 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { 
@@ -13,13 +13,23 @@ import {
   TableHeader, 
   TableRow 
 } from '@/components/ui/table'
-import { Card } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { TableSkeleton, ExpandedContentSkeleton } from '@/components/ui/skeleton'
 import { TooltipProvider, HelpTooltip } from '@/components/ui/tooltip'
 import PortfolioTable from '@/components/tables/PortfolioTable'
+import { Badge } from '@/components/ui/badge'
+import { Checkbox } from '@/components/ui/checkbox'
+import { 
+  ConfirmationDialog, 
+  useSubmissionPreview,
+  useDeletionPreview,
+  type SubmissionPreview,
+  type DeletionPreview
+} from '@/components/ui/confirmation-dialog'
 
 import { Rebalance, RebalanceSortField, RebalanceSortConfig } from '@/types/rebalance'
 import { useRebalancePortfolios } from '@/lib/hooks/useRebalances'
+import { useRebalancePortfolios as usePortfolios } from '@/lib/hooks/usePortfolios'
 
 interface RebalanceTableProps {
   rebalances: Rebalance[]
@@ -31,6 +41,8 @@ interface RebalanceTableProps {
   loadMore: () => void
   sortConfig: RebalanceSortConfig
   onSort: (field: RebalanceSortField) => void
+  selectedRebalances: Set<string>
+  onSelectRebalance: (rebalanceId: string, selected: boolean) => void
 }
 
 const RebalanceTable = React.memo(function RebalanceTable({
@@ -43,9 +55,58 @@ const RebalanceTable = React.memo(function RebalanceTable({
   loadMore,
   sortConfig,
   onSort,
+  selectedRebalances,
+  onSelectRebalance
 }: RebalanceTableProps) {
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set())
+  const [submittingRebalances, setSubmittingRebalances] = useState<Set<string>>(new Set())
+  const [showSubmissionDialog, setShowSubmissionDialog] = useState(false)
+  const [showDeletionDialog, setShowDeletionDialog] = useState(false)
+  const [submissionPreview, setSubmissionPreview] = useState<SubmissionPreview | null>(null)
+  const [deletionPreview, setDeletionPreview] = useState<DeletionPreview | null>(null)
+  const [currentRebalanceId, setCurrentRebalanceId] = useState<string | null>(null)
   const loadMoreRef = useRef<HTMLDivElement>(null)
+
+  const { createPreview: createSubmissionPreview } = useSubmissionPreview()
+  const { createPreview: createDeletionPreview } = useDeletionPreview()
+
+  // Handle confirmation dialog actions
+  const handleConfirmSubmit = async () => {
+    if (!currentRebalanceId) return
+    
+    setSubmittingRebalances(prev => new Set(prev).add(currentRebalanceId))
+    setShowSubmissionDialog(false)
+    
+    try {
+      // TODO: Implement actual submission logic
+      await new Promise(resolve => setTimeout(resolve, 2000)) // Simulate API call
+      console.log('Submitting rebalance:', currentRebalanceId)
+    } catch (error) {
+      console.error('Failed to submit rebalance:', error)
+    } finally {
+      setSubmittingRebalances(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(currentRebalanceId)
+        return newSet
+      })
+      setCurrentRebalanceId(null)
+    }
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!currentRebalanceId) return
+    
+    setShowDeletionDialog(false)
+    
+    try {
+      // TODO: Implement actual deletion logic
+      console.log('Deleting rebalance:', currentRebalanceId)
+    } catch (error) {
+      console.error('Failed to delete rebalance:', error)
+    } finally {
+      setCurrentRebalanceId(null)
+    }
+  }
 
   // Format rebalance date for display
   const formatRebalanceDate = (dateString: string): string => {
@@ -138,19 +199,40 @@ const RebalanceTable = React.memo(function RebalanceTable({
 
     // Handler for rebalance-level submission
     const handleSubmitRebalance = async () => {
-      setIsSubmittingRebalance(true)
       try {
-        // TODO: Implement rebalance submission logic
-        console.log('Submitting rebalance:', rebalance.rebalance_id)
+        // Create submission preview
+        const preview = createSubmissionPreview('rebalance', {
+          entityId: rebalance.rebalance_id,
+          entityName: `${rebalance.model_name} - ${formatRebalanceDate(rebalance.rebalance_date)}`,
+          rebalances: [rebalance],
+          portfolios: portfolios || [],
+          positions: (portfolios || []).flatMap((p: any) => p.positions || [])
+        })
         
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1500))
-        
-        // TODO: Handle success/failure and update UI
+        setSubmissionPreview(preview)
+        setCurrentRebalanceId(rebalance.rebalance_id)
+        setShowSubmissionDialog(true)
       } catch (error) {
-        console.error('Failed to submit rebalance:', error)
-      } finally {
-        setIsSubmittingRebalance(false)
+        console.error('Failed to create submission preview:', error)
+      }
+    }
+
+    // Handler for rebalance-level deletion
+    const handleDeleteRebalance = async () => {
+      try {
+        // Create deletion preview
+        const preview = createDeletionPreview('rebalance', {
+          entityId: rebalance.rebalance_id,
+          entityName: `${rebalance.model_name} - ${formatRebalanceDate(rebalance.rebalance_date)}`,
+          childPortfolios: portfolios || [],
+          childPositions: (portfolios || []).flatMap((p: any) => p.positions || [])
+        })
+        
+        setDeletionPreview(preview)
+        setCurrentRebalanceId(rebalance.rebalance_id)
+        setShowDeletionDialog(true)
+      } catch (error) {
+        console.error('Failed to create deletion preview:', error)
       }
     }
 
@@ -163,7 +245,7 @@ const RebalanceTable = React.memo(function RebalanceTable({
 
     return (
       <TableRow key={`${rebalance.rebalance_id}-expanded`}>
-        <TableCell colSpan={5} className="p-0">
+        <TableCell colSpan={6} className="p-0">
           <div 
             className={`overflow-hidden transition-all duration-300 ease-in-out ${
               isExpanded ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'
@@ -217,24 +299,25 @@ const RebalanceTable = React.memo(function RebalanceTable({
                       <span>• ~{getEstimatedOrders().toLocaleString()} estimated orders</span>
                     </div>
                   </div>
-                  <div className="ml-4">
+                  <div className="ml-4 flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleDeleteRebalance}
+                      className="flex items-center space-x-1 text-red-600 hover:text-red-700 border-red-300 hover:border-red-400"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                      <span>Delete</span>
+                    </Button>
+
                     <Button 
                       onClick={handleSubmitRebalance}
-                      disabled={isSubmittingRebalance || portfoliosLoading}
+                      disabled={portfoliosLoading}
                       size="sm"
                       className="flex items-center space-x-2 bg-green-600 hover:bg-green-700"
                     >
-                      {isSubmittingRebalance ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          <span>Submitting...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Send className="h-4 w-4" />
-                          <span>Submit Rebalance</span>
-                        </>
-                      )}
+                      <Send className="h-4 w-4" />
+                      <span>Submit Rebalance</span>
                     </Button>
                   </div>
                 </div>
@@ -334,6 +417,10 @@ const RebalanceTable = React.memo(function RebalanceTable({
           <TableHeader>
             <TableRow className="bg-slate-50">
               <TableHead className="w-12">
+                {/* Selection Column */}
+              </TableHead>
+              
+              <TableHead className="w-12">
                 {/* Expand/Collapse Column */}
               </TableHead>
               
@@ -388,6 +475,16 @@ const RebalanceTable = React.memo(function RebalanceTable({
                   <TableRow 
                     className="hover:bg-slate-50 transition-colors"
                   >
+                    {/* Selection Checkbox */}
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedRebalances.has(rebalance.rebalance_id)}
+                        onCheckedChange={(checked) => 
+                          onSelectRebalance(rebalance.rebalance_id, checked as boolean)
+                        }
+                      />
+                    </TableCell>
+                    
                     {/* Expand/Collapse Button */}
                     <TableCell>
                       <Button
@@ -502,6 +599,32 @@ const RebalanceTable = React.memo(function RebalanceTable({
           </div>
         </div>
       </div>
+
+      {/* Confirmation Dialogs */}
+      <ConfirmationDialog
+        open={showSubmissionDialog}
+        onOpenChange={setShowSubmissionDialog}
+        type="submission"
+        title="Confirm Rebalance Submission"
+        description="Please review the submission details before proceeding."
+        submissionPreview={submissionPreview || undefined}
+        onConfirm={handleConfirmSubmit}
+        onCancel={() => setShowSubmissionDialog(false)}
+        isLoading={currentRebalanceId ? submittingRebalances.has(currentRebalanceId) : false}
+        requiresExplicitConfirmation={submissionPreview?.affectedItems.riskLevel === 'high'}
+      />
+
+      <ConfirmationDialog
+        open={showDeletionDialog}
+        onOpenChange={setShowDeletionDialog}
+        type="deletion"
+        title="Confirm Rebalance Deletion"
+        description="This action will permanently delete the rebalance and all associated portfolios and positions."
+        deletionPreview={deletionPreview || undefined}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setShowDeletionDialog(false)}
+        requiresExplicitConfirmation={true}
+      />
     </div>
   )
 })
