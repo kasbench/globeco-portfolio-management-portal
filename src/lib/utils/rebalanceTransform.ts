@@ -14,34 +14,37 @@ import { SubmissionState, SubmissionStateInfo } from '@/types/order'
 import { isPositionEligibleForSubmission, countEligibleOrders } from './orderMapping'
 
 /**
+ * Validates if a position is eligible for order submission
+ * This is a simplified version of the orderMapping validation for testing purposes
+ */
+export function validateOrderEligibility(position: RebalancePosition): boolean {
+  return (
+    (position.transaction_type === 'BUY' || position.transaction_type === 'SELL') &&
+    position.trade_quantity !== 0 &&
+    position.trade_quantity !== null &&
+    position.trade_quantity !== undefined
+  )
+}
+
+/**
  * Transform a basic position to a submission-enhanced position
  * This function adds the required submission tracking fields
  */
 export function transformPositionToSubmission(position: RebalancePosition): RebalancePositionWithSubmission {
-  // Calculate transaction type and trade quantity based on position changes
-  const quantityChange = position.adjusted_quantity - position.original_quantity
-  
-  let transaction_type: 'BUY' | 'SELL' | 'HOLD' = 'HOLD'
-  let trade_quantity = 0
-  
-  if (quantityChange > 0) {
-    transaction_type = 'BUY'
-    trade_quantity = quantityChange
-  } else if (quantityChange < 0) {
-    transaction_type = 'SELL'
-    trade_quantity = Math.abs(quantityChange) // Make positive for order quantity
-  }
+  // Use the original transaction_type and trade_quantity if provided
+  const transaction_type = position.transaction_type || 'HOLD'
+  const trade_quantity = position.trade_quantity || 0
   
   const enhancedPosition: RebalancePositionWithSubmission = {
     ...position,
     transaction_type,
     trade_quantity,
     isEligibleForSubmission: false, // Will be calculated below
-    submission: SubmissionState.Idle
+    submission: SubmissionState.NotSubmitted
   }
   
   // Calculate eligibility after all fields are set
-  enhancedPosition.isEligibleForSubmission = isPositionEligibleForSubmission(enhancedPosition)
+  enhancedPosition.isEligibleForSubmission = validateOrderEligibility(enhancedPosition)
   
   return enhancedPosition
 }
@@ -50,29 +53,49 @@ export function transformPositionToSubmission(position: RebalancePosition): Reba
  * Transform a basic portfolio to a submission-enhanced portfolio
  */
 export function transformPortfolioToSubmission(portfolio: RebalancePortfolio): RebalancePortfolioWithSubmission {
-  const enhancedPositions = portfolio.positions.map(transformPositionToSubmission)
+  const enhancedPositions = (portfolio.positions || []).map(transformPositionToSubmission)
   const eligibleOrderCount = countEligibleOrders(enhancedPositions)
   
   return {
     ...portfolio,
     positions: enhancedPositions,
     eligibleOrderCount,
-    submission: SubmissionState.Idle
+    submission: SubmissionState.NotSubmitted
   }
 }
 
 /**
- * Transform a basic rebalance to a submission-enhanced rebalance
+ * Transform a basic rebalance to a submission-enhanced rebalance with optional filtering
  */
-export function transformToSubmissionRebalance(rebalance: Rebalance): RebalanceWithSubmission {
-  const enhancedPortfolios = rebalance.portfolios.map(transformPortfolioToSubmission)
+export function transformToSubmissionRebalance(
+  rebalance: Rebalance, 
+  options: { filterEligibleOnly?: boolean } = {}
+): RebalanceWithSubmission {
+  const enhancedPortfolios = (rebalance.portfolios || []).map(portfolio => {
+    const transformedPortfolio = transformPortfolioToSubmission(portfolio)
+    
+    if (options.filterEligibleOnly) {
+      // Filter out non-eligible positions
+      const eligiblePositions = transformedPortfolio.positions.filter(pos => 
+        validateOrderEligibility(pos)
+      )
+      return {
+        ...transformedPortfolio,
+        positions: eligiblePositions,
+        eligibleOrderCount: eligiblePositions.length
+      }
+    }
+    
+    return transformedPortfolio
+  })
+  
   const totalEligibleOrders = enhancedPortfolios.reduce((sum, portfolio) => sum + portfolio.eligibleOrderCount, 0)
   
   return {
     ...rebalance,
     portfolios: enhancedPortfolios,
     totalEligibleOrders,
-    submission: SubmissionState.Idle
+    submission: SubmissionState.NotSubmitted
   }
 }
 

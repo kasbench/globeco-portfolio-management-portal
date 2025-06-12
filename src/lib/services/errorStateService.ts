@@ -276,7 +276,7 @@ export class ErrorStateService extends EventEmitter {
     }
 
     this.persistError(error)
-    this.emit('retryAttempted', error)
+    this.emit('errorRetried', { errorId, error })
     return true
   }
 

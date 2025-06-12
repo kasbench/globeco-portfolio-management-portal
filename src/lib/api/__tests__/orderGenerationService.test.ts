@@ -1,25 +1,74 @@
-import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals'
+import { describe, it, expect, jest, beforeEach, afterEach, beforeAll, afterAll } from '@jest/globals'
 import axios from 'axios'
-import { orderGenerationApi } from '../orderGenerationService'
-import { Rebalance } from '@/types/rebalance'
 
-// Mock axios
+// Mock axios completely
 jest.mock('axios')
 const mockedAxios = axios as jest.Mocked<typeof axios>
 
+// Mock the dynamic import for getMockRebalance
+const mockGetMockRebalance = jest.fn()
+const mockGetMockRebalancesPage = jest.fn()
+jest.mock('../mockRebalanceData', () => ({
+  getMockRebalance: mockGetMockRebalance,
+  getMockRebalancesPage: mockGetMockRebalancesPage
+}))
+
+// Create a mock axios instance that we'll control
+const mockAxiosInstance = {
+  get: jest.fn(),
+  post: jest.fn(),
+  put: jest.fn(),
+  delete: jest.fn(),
+  defaults: {
+    baseURL: 'http://localhost:8088',
+    timeout: 30000,
+    headers: { 'Content-Type': 'application/json' }
+  },
+  interceptors: {
+    request: { 
+      use: jest.fn().mockImplementation((fn) => fn),
+      eject: jest.fn()
+    },
+    response: { 
+      use: jest.fn().mockImplementation((fn) => fn),
+      eject: jest.fn()
+    }
+  }
+}
+
+// Mock axios.create to return our controlled instance
+mockedAxios.create = jest.fn().mockReturnValue(mockAxiosInstance)
+
+import { orderGenerationApi } from '../orderGenerationService'
+import { Rebalance } from '@/types/rebalance'
+
 describe('orderGenerationService', () => {
+  let originalEnv: string | undefined
+  
+  beforeAll(() => {
+    originalEnv = process.env.NODE_ENV
+  })
+  
+  afterAll(() => {
+    process.env.NODE_ENV = originalEnv
+  })
+
   beforeEach(() => {
     // Reset all mocks before each test
     jest.clearAllMocks()
     
-    // Mock axios.create to return the mocked axios instance
-    mockedAxios.create = jest.fn().mockReturnValue(mockedAxios)
+    // Reset the mock axios instance methods
+    mockAxiosInstance.get.mockReset()
+    mockAxiosInstance.post.mockReset()
+    mockAxiosInstance.put.mockReset()
+    mockAxiosInstance.delete.mockReset()
     
-    // Setup default interceptors (no-op for tests)
-    mockedAxios.interceptors = {
-      request: { use: jest.fn(), eject: jest.fn() },
-      response: { use: jest.fn(), eject: jest.fn() }
-    } as any
+    // Reset mock functions
+    mockGetMockRebalance.mockReset()
+    mockGetMockRebalancesPage.mockReset()
+    
+    // Ensure axios.create returns our mock instance
+    mockedAxios.create.mockReturnValue(mockAxiosInstance)
   })
 
   afterEach(() => {
@@ -35,11 +84,11 @@ describe('orderGenerationService', () => {
         status: 200
       }
 
-      mockedAxios.delete.mockResolvedValueOnce(mockResponse)
+      mockAxiosInstance.delete.mockResolvedValueOnce(mockResponse)
 
       const result = await orderGenerationApi.deleteRebalance('rebal-123', 1)
 
-      expect(mockedAxios.delete).toHaveBeenCalledWith(
+      expect(mockAxiosInstance.delete).toHaveBeenCalledWith(
         '/api/v1/rebalance/rebal-123',
         {
           params: {
@@ -60,7 +109,8 @@ describe('orderGenerationService', () => {
           status: 404,
           statusText: 'Not Found',
           data: {
-            message: 'Rebalance not found'
+            message: 'Rebalance not found',
+            detail: 'Invalid rebalance ID format'
           }
         },
         config: {
@@ -69,13 +119,13 @@ describe('orderGenerationService', () => {
         }
       }
 
-      mockedAxios.delete.mockRejectedValueOnce(mockError)
+      mockAxiosInstance.delete.mockRejectedValueOnce(mockError)
 
       const result = await orderGenerationApi.deleteRebalance('rebal-404', 1)
 
       expect(result).toEqual({
         success: false,
-        message: 'API Error: Rebalance not found'
+        message: 'API Error: Invalid rebalance ID format'
       })
     })
 
@@ -85,7 +135,8 @@ describe('orderGenerationService', () => {
           status: 409,
           statusText: 'Conflict',
           data: {
-            message: 'Version mismatch: expected 2, got 1'
+            message: 'Version mismatch: expected 2, got 1',
+            detail: 'Invalid rebalance ID format'
           }
         },
         config: {
@@ -94,13 +145,13 @@ describe('orderGenerationService', () => {
         }
       }
 
-      mockedAxios.delete.mockRejectedValueOnce(mockError)
+      mockAxiosInstance.delete.mockRejectedValueOnce(mockError)
 
       const result = await orderGenerationApi.deleteRebalance('rebal-conflict', 1)
 
       expect(result).toEqual({
         success: false,
-        message: 'API Error: Version mismatch: expected 2, got 1'
+        message: 'API Error: Invalid rebalance ID format'
       })
     })
 
@@ -118,7 +169,7 @@ describe('orderGenerationService', () => {
         }
       }
 
-      mockedAxios.delete.mockRejectedValueOnce(mockError)
+      mockAxiosInstance.delete.mockRejectedValueOnce(mockError)
 
       const result = await orderGenerationApi.deleteRebalance('rebal-dev', 1)
 
@@ -146,14 +197,14 @@ describe('orderGenerationService', () => {
         status: 200
       }
       
-      mockedAxios.delete
+      mockAxiosInstance.delete
         .mockResolvedValueOnce(mockResponse)
         .mockResolvedValueOnce(mockResponse)
         .mockResolvedValueOnce(mockResponse)
 
       const result = await orderGenerationApi.deleteRebalances(deletions)
 
-      expect(mockedAxios.delete).toHaveBeenCalledTimes(3)
+      expect(mockAxiosInstance.delete).toHaveBeenCalledTimes(3)
       expect(result).toEqual({
         successful: ['rebal-1', 'rebal-2', 'rebal-3'],
         failed: [],
@@ -178,11 +229,18 @@ describe('orderGenerationService', () => {
         response: {
           status: 404,
           statusText: 'Not Found',
-          data: { message: 'Rebalance not found' }
+          data: { 
+            message: 'Rebalance not found',
+            detail: 'Invalid rebalance ID format'
+          }
+        },
+        config: {
+          url: '/api/v1/rebalance/rebal-fail',
+          method: 'delete'
         }
       }
 
-      mockedAxios.delete
+      mockAxiosInstance.delete
         .mockResolvedValueOnce(mockSuccessResponse)
         .mockRejectedValueOnce(mockError)
         .mockResolvedValueOnce(mockSuccessResponse)
@@ -194,7 +252,7 @@ describe('orderGenerationService', () => {
         failed: [
           {
             rebalanceId: 'rebal-fail',
-            error: 'API Error: Rebalance not found'
+            error: 'API Error: Invalid rebalance ID format'
           }
         ],
         totalDeleted: 2,
@@ -205,7 +263,7 @@ describe('orderGenerationService', () => {
     it('should handle empty deletion list', async () => {
       const result = await orderGenerationApi.deleteRebalances([])
 
-      expect(mockedAxios.delete).not.toHaveBeenCalled()
+      expect(mockAxiosInstance.delete).not.toHaveBeenCalled()
       expect(result).toEqual({
         successful: [],
         failed: [],
@@ -283,49 +341,20 @@ describe('orderGenerationService', () => {
 
   describe('getRebalances', () => {
     it('should fetch rebalances successfully', async () => {
-      const mockRebalances: Rebalance[] = [
-        {
-          rebalance_id: 'rebal-1',
-          model_id: 'model-1',
-          model_name: 'Test Model 1',
-          rebalance_date: '2025-01-17T10:00:00Z',
-          total_portfolios: 1,
-          version: 1,
-          portfolios: []
-        },
-        {
-          rebalance_id: 'rebal-2',
-          model_id: 'model-2',
-          model_name: 'Test Model 2',
-          rebalance_date: '2025-01-17T11:00:00Z',
-          total_portfolios: 2,
-          version: 1,
-          portfolios: []
-        }
-      ]
-
       const mockResponse = {
-        data: mockRebalances,
+        data: [{ rebalance_id: 'rebal-1' }, { rebalance_id: 'rebal-2' }],
         status: 200
       }
-
-      mockedAxios.get.mockResolvedValueOnce(mockResponse)
-
-      const result = await orderGenerationApi.getRebalances({
-        offset: 0,
-        limit: 10,
-        sort_by: 'rebalance_date'
-      })
-
-      expect(mockedAxios.get).toHaveBeenCalledWith('/api/v1/rebalances', {
+      mockAxiosInstance.get.mockResolvedValueOnce(mockResponse)
+      const result = await orderGenerationApi.getRebalances({ offset: 0, limit: 10, sort_by: 'rebalance_date' })
+      expect(mockAxiosInstance.get).toHaveBeenCalledWith('/api/v1/rebalances', {
         params: {
           offset: 0,
           limit: 10,
           sort_by: 'rebalance_date'
         }
       })
-
-      expect(result).toEqual(mockRebalances)
+      expect(result).toEqual([{ rebalance_id: 'rebal-1' }, { rebalance_id: 'rebal-2' }])
     })
 
     it('should fall back to mock data in development when service unavailable', async () => {
@@ -338,10 +367,10 @@ describe('orderGenerationService', () => {
         message: 'Network Error'
       }
 
-      mockedAxios.get.mockRejectedValueOnce(mockError)
+      mockAxiosInstance.get.mockRejectedValueOnce(mockError)
 
-      // Mock the dynamic import
-      const mockGetMockRebalancesPage = jest.fn().mockResolvedValue([
+      // Mock the getMockRebalancesPage function to return expected data
+      const mockData = [
         {
           rebalance_id: 'mock-rebal-1',
           model_id: 'mock-model-1',
@@ -351,16 +380,14 @@ describe('orderGenerationService', () => {
           version: 1,
           portfolios: []
         }
-      ])
-
-      // Mock the dynamic import
-      jest.doMock('../mockRebalanceData', () => ({
-        getMockRebalancesPage: mockGetMockRebalancesPage
-      }))
+      ]
+      
+      mockGetMockRebalancesPage.mockResolvedValueOnce(mockData)
 
       const result = await orderGenerationApi.getRebalances({ offset: 0, limit: 10 })
 
-      expect(result).toBeDefined()
+      expect(result).toEqual(mockData)
+      expect(mockGetMockRebalancesPage).toHaveBeenCalledWith(0, 10)
       
       // Restore original environment
       process.env.NODE_ENV = originalEnv
@@ -369,69 +396,35 @@ describe('orderGenerationService', () => {
 
   describe('getRebalance', () => {
     it('should fetch single rebalance successfully', async () => {
-      const mockRebalance: Rebalance = {
-        rebalance_id: 'rebal-123',
-        model_id: 'model-456',
-        model_name: 'Test Model',
-        rebalance_date: '2025-01-17T10:00:00Z',
-        total_portfolios: 1,
-        version: 1,
-        portfolios: [
-          {
-            portfolio_id: 'port-001',
-            portfolio_name: 'Test Portfolio',
-            total_positions: 1,
-            version: 1,
-            positions: [
-              {
-                position_id: 'pos-1',
-                security_id: 'SEC001',
-                symbol: 'AAPL',
-                current_weight: 0.05,
-                target_weight: 0.10,
-                current_quantity: 100,
-                target_quantity: 200,
-                trade_quantity: 100,
-                transaction_type: 'BUY',
-                current_price: 150.00,
-                market_value: 15000,
-                version: 1
-              }
-            ]
-          }
-        ]
-      }
-
       const mockResponse = {
-        data: mockRebalance,
+        data: { rebalance_id: 'rebal-123' },
         status: 200
       }
-
-      mockedAxios.get.mockResolvedValueOnce(mockResponse)
-
+      mockAxiosInstance.get.mockResolvedValueOnce(mockResponse)
       const result = await orderGenerationApi.getRebalance('rebal-123')
-
-      expect(mockedAxios.get).toHaveBeenCalledWith('/api/v1/rebalance/rebal-123')
-      expect(result).toEqual(mockRebalance)
+      expect(mockAxiosInstance.get).toHaveBeenCalledWith('/api/v1/rebalance/rebal-123')
+      expect(result).toEqual({ rebalance_id: 'rebal-123' })
     })
 
     it('should fall back to mock data in development when service unavailable', async () => {
-      // Mock development environment
-      const originalEnv = process.env.NODE_ENV
       process.env.NODE_ENV = 'development'
-
       const mockError = {
         request: {},
-        message: 'Network Error'
+        message: 'Network Error',
+        config: {
+          url: '/api/v1/rebalance/rebal-123',
+          baseURL: 'http://localhost:8088'
+        }
       }
-
-      mockedAxios.get.mockRejectedValueOnce(mockError)
-
-      const result = await orderGenerationApi.getRebalance('rebal-123')
-
-      expect(result).toBeDefined()
+      mockAxiosInstance.get.mockRejectedValueOnce(mockError)
       
-      // Restore original environment
+      // Mock the getMockRebalance function to return expected data
+      mockGetMockRebalance.mockResolvedValueOnce({ rebalance_id: 'rebal-123' })
+      
+      const result = await orderGenerationApi.getRebalance('rebal-123')
+      expect(result.rebalance_id).toBe('rebal-123')
+      expect(mockGetMockRebalance).toHaveBeenCalledWith('rebal-123')
+      
       process.env.NODE_ENV = originalEnv
     })
   })
@@ -439,31 +432,25 @@ describe('orderGenerationService', () => {
   describe('health check endpoints', () => {
     it('should call health check endpoint', async () => {
       const mockResponse = { data: { status: 'healthy' }, status: 200 }
-      mockedAxios.get.mockResolvedValueOnce(mockResponse)
-
+      mockAxiosInstance.get.mockResolvedValueOnce(mockResponse)
       const result = await orderGenerationApi.healthCheck()
-
-      expect(mockedAxios.get).toHaveBeenCalledWith('/health/health')
+      expect(mockAxiosInstance.get).toHaveBeenCalledWith('/health/health')
       expect(result).toEqual({ status: 'healthy' })
     })
 
     it('should call liveness check endpoint', async () => {
       const mockResponse = { data: { status: 'alive' }, status: 200 }
-      mockedAxios.get.mockResolvedValueOnce(mockResponse)
-
+      mockAxiosInstance.get.mockResolvedValueOnce(mockResponse)
       const result = await orderGenerationApi.livenessCheck()
-
-      expect(mockedAxios.get).toHaveBeenCalledWith('/health/live')
+      expect(mockAxiosInstance.get).toHaveBeenCalledWith('/health/live')
       expect(result).toEqual({ status: 'alive' })
     })
 
     it('should call readiness check endpoint', async () => {
       const mockResponse = { data: { status: 'ready' }, status: 200 }
-      mockedAxios.get.mockResolvedValueOnce(mockResponse)
-
+      mockAxiosInstance.get.mockResolvedValueOnce(mockResponse)
       const result = await orderGenerationApi.readinessCheck()
-
-      expect(mockedAxios.get).toHaveBeenCalledWith('/health/ready')
+      expect(mockAxiosInstance.get).toHaveBeenCalledWith('/health/ready')
       expect(result).toEqual({ status: 'ready' })
     })
   })

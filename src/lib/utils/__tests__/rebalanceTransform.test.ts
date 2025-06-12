@@ -211,12 +211,18 @@ describe('rebalanceTransform', () => {
         model_id: 'model-456',
         model_name: 'Growth Model',
         rebalance_date: '2025-01-17T10:00:00Z',
+        total_portfolios: 2,
         version: 1,
+        submission: 'not_submitted',
+        totalEligibleOrders: 3,
         portfolios: [
           {
             portfolio_id: 'port-001',
             portfolio_name: 'Growth Portfolio 1',
+            total_positions: 3,
             version: 1,
+            submission: 'not_submitted',
+            eligibleOrderCount: 2,
             positions: [
               {
                 position_id: 'pos-1',
@@ -230,7 +236,9 @@ describe('rebalanceTransform', () => {
                 transaction_type: 'BUY',
                 current_price: 150.00,
                 market_value: 15000,
-                version: 1
+                version: 1,
+                isEligibleForSubmission: true,
+                submission: 'not_submitted'
               },
               {
                 position_id: 'pos-2',
@@ -244,7 +252,9 @@ describe('rebalanceTransform', () => {
                 transaction_type: 'SELL',
                 current_price: 2500.00,
                 market_value: 250000,
-                version: 1
+                version: 1,
+                isEligibleForSubmission: true,
+                submission: 'not_submitted'
               },
               {
                 position_id: 'pos-3',
@@ -258,14 +268,19 @@ describe('rebalanceTransform', () => {
                 transaction_type: 'HOLD',
                 current_price: 300.00,
                 market_value: 45000,
-                version: 1
+                version: 1,
+                isEligibleForSubmission: false,
+                submission: 'not_submitted'
               }
             ]
           },
           {
             portfolio_id: 'port-002',
             portfolio_name: 'Growth Portfolio 2',
+            total_positions: 1,
             version: 1,
+            submission: 'not_submitted',
+            eligibleOrderCount: 1,
             positions: [
               {
                 position_id: 'pos-4',
@@ -279,7 +294,9 @@ describe('rebalanceTransform', () => {
                 transaction_type: 'BUY',
                 current_price: 800.00,
                 market_value: 40000,
-                version: 1
+                version: 1,
+                isEligibleForSubmission: true,
+                submission: 'not_submitted'
               }
             ]
           }

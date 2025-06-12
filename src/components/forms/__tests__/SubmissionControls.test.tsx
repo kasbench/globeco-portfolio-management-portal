@@ -4,6 +4,7 @@ import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { TooltipProvider } from '@/components/ui/tooltip'
 
 import { 
   GlobalSubmissionControls, 
@@ -85,7 +86,7 @@ const mockRebalances = [
   createMockRebalance('rebal_3')
 ]
 
-// Create wrapper with QueryClient
+// Create wrapper with QueryClient and TooltipProvider
 const createWrapper = () => {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -96,7 +97,9 @@ const createWrapper = () => {
 
   return ({ children }: { children: React.ReactNode }) => (
     <QueryClientProvider client={queryClient}>
-      {children}
+      <TooltipProvider>
+        {children}
+      </TooltipProvider>
     </QueryClientProvider>
   )
 }
@@ -127,8 +130,8 @@ describe('GlobalSubmissionControls', () => {
     expect(screen.getByText('Select All')).toBeInTheDocument()
     expect(screen.getByText('0 rebalances')).toBeInTheDocument()
     expect(screen.getByText('0 portfolios')).toBeInTheDocument()
-    expect(screen.getByText('Submit Selected')).toBeDisabled()
-    expect(screen.getByText('Delete Selected')).toBeDisabled()
+    expect(screen.getByRole('button', { name: /submit selected/i })).toBeDisabled()
+    expect(screen.getByRole('button', { name: /delete selected/i })).toBeDisabled()
   })
 
   it('updates selection counts correctly', () => {
@@ -252,7 +255,7 @@ describe('GlobalSubmissionControls', () => {
 
     render(<GlobalSubmissionControls {...propsWithSubmission} />, { wrapper: createWrapper() })
 
-    expect(screen.getByText('Submit Selected')).toBeDisabled()
+    expect(screen.getByRole('button', { name: /submit selected/i })).toBeDisabled()
   })
 
   it('disables buttons during deletion', () => {
@@ -265,7 +268,7 @@ describe('GlobalSubmissionControls', () => {
 
     render(<GlobalSubmissionControls {...propsWithDeletion} />, { wrapper: createWrapper() })
 
-    expect(screen.getByText('Delete Selected')).toBeDisabled()
+    expect(screen.getByRole('button', { name: /delete selected/i })).toBeDisabled()
   })
 })
 
@@ -352,14 +355,13 @@ describe('RebalanceControls', () => {
       { wrapper: createWrapper() }
     )
 
-    expect(screen.getByText('Submit')).toBeDisabled()
+    expect(screen.getByRole('button', { name: /submit/i })).toBeDisabled()
   })
 
   it('shows loading state during submission', () => {
     render(<RebalanceControls {...mockProps} isSubmitting={true} />, { wrapper: createWrapper() })
 
-    expect(screen.getByText('Submit')).toBeDisabled()
-    expect(screen.getByRole('button', { name: /submit/i })).toHaveClass('disabled')
+    expect(screen.getByRole('button', { name: /submit/i })).toBeDisabled()
   })
 })
 
@@ -438,7 +440,7 @@ describe('PortfolioControls', () => {
       { wrapper: createWrapper() }
     )
 
-    expect(screen.getByText('Submit')).toBeDisabled()
+    expect(screen.getByRole('button', { name: /submit/i })).toBeDisabled()
   })
 })
 

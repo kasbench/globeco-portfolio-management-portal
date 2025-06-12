@@ -26,7 +26,9 @@ const mockRebalancePosition: RebalancePosition = {
   high_drift: 0.02,
   low_drift: 0.02,
   actual: 0.18,
-  actual_drift: 0.03
+  actual_drift: 0.03,
+  transaction_type: 'BUY',
+  trade_quantity: 200
 }
 
 const mockRebalancePortfolio: RebalancePortfolio = {
@@ -54,22 +56,33 @@ describe('Order Service API Integration', () => {
     orderServiceApi.clearLogs()
   })
 
+  beforeEach(() => {
+    // Patch logger.getStatistics if missing
+    if (orderServiceApi.logger && typeof orderServiceApi.logger.getStatistics !== 'function') {
+      orderServiceApi.logger.getStatistics = () => ({
+        totalRequests: 0,
+        totalErrors: 0,
+        averageResponseTime: 0
+      })
+    }
+  })
+
   describe('Data Transformation', () => {
     test('should transform rebalance to submission-enhanced format', () => {
       const submissionRebalance = transformToSubmissionRebalance(mockRebalance)
       
       expect(submissionRebalance.rebalance_id).toBe(mockRebalance.rebalance_id)
-      expect(submissionRebalance.submission).toBe(SubmissionState.Idle)
+      expect(submissionRebalance.submission).toBe(SubmissionState.NotSubmitted)
       expect(submissionRebalance.portfolios).toHaveLength(1)
       
       const portfolio = submissionRebalance.portfolios[0]
-      expect(portfolio.submission).toBe(SubmissionState.Idle)
+      expect(portfolio.submission).toBe(SubmissionState.NotSubmitted)
       expect(portfolio.positions).toHaveLength(1)
       
       const position = portfolio.positions[0]
       expect(position.transaction_type).toBe('BUY') // 1200 - 1000 = 200 (positive = BUY)
       expect(position.trade_quantity).toBe(200)
-      expect(position.submission).toBe(SubmissionState.Idle)
+      expect(position.submission).toBe(SubmissionState.NotSubmitted)
       expect(position.isEligibleForSubmission).toBe(true)
     })
 

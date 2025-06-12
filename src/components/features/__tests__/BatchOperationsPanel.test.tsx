@@ -1,6 +1,7 @@
 import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import BatchOperationsPanel from '../BatchOperationsPanel'
 import { RebalanceWithSubmission } from '@/types/rebalance'
 import { TooltipProvider } from '@/components/ui/tooltip'
@@ -115,11 +116,22 @@ const mockRebalances: RebalanceWithSubmission[] = [
   }
 ]
 
-const TestWrapper = ({ children }: { children: React.ReactNode }) => (
-  <TooltipProvider>
-    {children}
-  </TooltipProvider>
-)
+const TestWrapper = ({ children }: { children: React.ReactNode }) => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false }
+    }
+  })
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        {children}
+      </TooltipProvider>
+    </QueryClientProvider>
+  )
+}
 
 describe('BatchOperationsPanel', () => {
   const mockOnOperationComplete = jest.fn()

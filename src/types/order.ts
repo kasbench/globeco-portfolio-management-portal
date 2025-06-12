@@ -72,7 +72,8 @@ export interface OrderListResponseDTO {
 
 // Submission State Management Types
 export enum SubmissionState {
-  Idle = 'idle',
+  NotSubmitted = 'not_submitted',
+  Pending = 'pending',
   Submitting = 'submitting', 
   Submitted = 'submitted',
   PartiallySubmitted = 'partially_submitted',

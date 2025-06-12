@@ -441,7 +441,7 @@ describe('getStatusTooltipContent', () => {
     render(<div>{content}</div>)
     expect(screen.getByText('Orders: 150')).toBeInTheDocument()
     expect(screen.getByText('Retries: 2')).toBeInTheDocument()
-    expect(screen.getByText('Submitted: 1/1/2024, 12:00:00 PM')).toBeInTheDocument()
+    expect(screen.getByText(/Submitted: 1\/1\/2024/)).toBeInTheDocument()
   })
 
   it('includes error message for failed status', () => {

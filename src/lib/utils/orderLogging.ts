@@ -394,6 +394,25 @@ class OrderLogger {
       return acc
     }, {} as Record<string, number>)
   }
+
+  /**
+   * Get logging statistics (for testing)
+   */
+  getStatistics() {
+    const totalRequests = this.logs.filter(log => log.operation === 'request').length
+    const totalErrors = this.logs.filter(log => log.level === LogLevel.ERROR).length
+    const responseTimes = this.logs
+      .filter(log => log.operation === 'response' && typeof log.duration === 'number')
+      .map(log => log.duration as number)
+    const averageResponseTime = responseTimes.length > 0
+      ? responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length
+      : 0
+    return {
+      totalRequests,
+      totalErrors,
+      averageResponseTime
+    }
+  }
 }
 
 // Singleton logger instance
