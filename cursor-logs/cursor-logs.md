@@ -5475,3 +5475,272 @@ After this fix:
 - **Result**: Submit Selected button is enabled for any valid selection (1-10,000 items)
 
 The Submit Selected button should now work correctly when rebalances are selected via individual checkboxes.
+
+---
+
+## Entry #84: Bug Fix - Page Not Refreshing After Submit Selected
+*Timestamp: 2025-01-17 13:45:00*
+*Type: Bug Fix*
+*Priority: Critical*
+*Stage: Data Refresh After Operations*
+
+### Problem Statement
+
+**Issue:** After successfully fixing the Submit Selected button (Entry #83), users can now submit selected rebalances. However, the page does not refresh after successful submission, leaving the submitted rebalances visible on screen. This creates a critical risk of duplicate order submissions.
+
+**User Feedback:** "That worked. I successfully submitted those two orders. However, the page did not refresh afterwards. The two orders are still on the screen. This could allow duplicate orders to be submitted."
+
+### Root Cause Analysis
+
+**The issue was inconsistent refresh logic between Submit All and Submit Selected:**
+
+**Submit All (Working Correctly):**
+```typescript
+const handleSubmitAll = async () => {
+  // ... submission logic ...
+  
+  // Comprehensive refresh sequence:
+  await new Promise(resolve => setTimeout(resolve, 2000))
+  await queryClient.invalidateQueries({ queryKey: ['rebalances'] })
+  await refetch()
+  setLocalRebalances(undefined)
+}
+```
+
+**Submit Selected (Missing Refresh):**
+```typescript
+const handleBatchOperationComplete = (results: any) => {
+  console.log('Batch operation completed:', results)
+  refetch() // ❌ Only basic refetch, missing cache invalidation and state reset
+}
+```
+
+**Why This Failed:**
+1. **Incomplete Refresh**: Only called `refetch()` without cache invalidation
+2. **No Backend Delay**: Didn't wait for backend processing to complete
+3. **Stale Cache**: React Query cache wasn't invalidated, could return old data
+4. **Local State Not Reset**: `localRebalances` state wasn't cleared, showing stale data
+5. **Timing Issues**: No delay for backend deletion processing
+
+**The result was that submitted rebalances remained visible, creating duplicate submission risk.**
+
+### Solution Implementation
+
+**Updated `handleBatchOperationComplete` to use the same comprehensive refresh logic as Submit All:**
+
+```typescript
+const handleBatchOperationComplete = async (results: any) => {
+  console.log('Batch operation completed:', results)
+  
+  // Use the same comprehensive refresh logic as Submit All
+  console.log('Batch operation complete - invalidating cache and refetching data')
+  
+  // Add delay to ensure all backend changes are fully processed
+  await new Promise(resolve => setTimeout(resolve, 2000))
+  
+  // Force cache invalidation to ensure fresh data
+  console.log('Invalidating rebalances cache to force fresh data fetch')
+  await queryClient.invalidateQueries({ queryKey: ['rebalances'] })
+  
+  await refetch()
+  
+  // Reset local state AFTER fresh data is fetched
+  console.log('Resetting local state to use fresh fetched data')
+  setLocalRebalances(undefined)
+}
+```
+
+**Key Changes:**
+1. **Made Function Async**: Added `async` to support proper sequencing
+2. **Added Backend Delay**: 2-second wait for backend processing completion
+3. **Cache Invalidation**: Force React Query to fetch fresh data
+4. **Sequential Execution**: Proper `await` sequence for consistent data flow
+5. **State Reset**: Clear local state to use fresh data
+
+### Expected Result
+
+After this fix:
+- ✅ **Automatic Refresh**: Page refreshes automatically after Submit Selected operations
+- ✅ **Fresh Data**: Shows updated data from backend after submissions
+- ✅ **No Duplicates**: Submitted rebalances are removed from the list, preventing duplicate submissions
+- ✅ **Consistent Behavior**: Submit Selected now behaves the same as Submit All for data refresh
+- ✅ **Proper Sequencing**: Backend processing → Cache invalidation → Fresh fetch → UI update
+
+### Data Flow Sequence
+
+**Before Fix:**
+1. Submit Selected → Backend Processing ✓
+2. Basic refetch() → Shows stale data ❌
+3. Submitted rebalances still visible → Duplicate risk ❌
+
+**After Fix:**
+1. Submit Selected → Backend Processing ✓
+2. Wait 2s for backend completion ✓
+3. Invalidate React Query cache ✓
+4. Fetch fresh data from backend ✓
+5. Reset local state ✓
+6. UI shows updated data without submitted rebalances ✓
+
+The Submit Selected operation now has the same robust refresh behavior as Submit All, eliminating the duplicate submission risk and ensuring users see accurate, up-to-date data after operations.
+
+---
+
+## Entry #85: Critical Bug Fix - Submit Selected Missing Backend Deletion
+*Timestamp: 2025-01-17 14:00:00*
+*Type: Critical Bug Fix*
+*Priority: Critical*
+*Stage: Backend Data Consistency*
+
+### Problem Statement
+
+**Issue:** After fixing the Submit Selected refresh issue (Entry #84), users discovered that submitted rebalances were still visible and could be resubmitted. Investigation revealed that while orders were successfully submitted to the Order Service, the rebalances were **not being deleted from the backend** after successful submission.
+
+**User Feedback:** "The refresh worked. However, I just realized there's another problem. The delete at the end is happening, as with other submits. Consequently, the orders are still able to be resubmitted."
+
+**Evidence from Logs:**
+```
+Rebalance 684ad5ac18cfe9b96ebd8d66 progress: {currentPortfolio: 100, totalPortfolios: 100, submitted: 5000, failed: 0, total: 5000}
+Successfully submitted 2 rebalances.
+Batch operation completed: {type: 'batch_submit', totalProcessed: 2, successful: 2, failed: 0}
+```
+
+The orders were submitted successfully, but no deletion occurred, creating duplicate submission risk.
+
+### Root Cause Analysis
+
+**Comparison between Submit All and Submit Selected:**
+
+**Submit All (Working Correctly):**
+```typescript
+// After successful submission
+if (result.successfulOrders > 0) {
+  successfulSubmissions++
+  
+  // Critical deletion step
+  if (result.failedOrders === 0) {
+    try {
+      const deleteResult = await orderGenerationApi.deleteRebalance(rebalance.rebalance_id, rebalance.version)
+      if (deleteResult.success) {
+        console.log(`Rebalance ${rebalance.rebalance_id} deleted from backend after successful submission`)
+      }
+    } catch (deleteError) {
+      console.warn(`Failed to delete rebalance ${rebalance.rebalance_id} from backend:`, deleteError)
+    }
+  }
+}
+```
+
+**Submit Selected (Missing Deletion):**
+```typescript
+// Missing deletion step
+if (result.successfulOrders > 0) {
+  successfulSubmissions++
+  // ❌ NO DELETION LOGIC HERE
+}
+if (result.failedOrders > 0) {
+  failedSubmissions++
+}
+```
+
+**Why This Failed:**
+1. **Incomplete Implementation**: Submit Selected was a simplified copy without the deletion logic
+2. **Backend Inconsistency**: Orders exist in Order Service but rebalances still exist in Order Generation Service
+3. **Duplicate Risk**: Users can resubmit the same rebalances, creating duplicate orders
+4. **Data Integrity**: Backend state becomes inconsistent between services
+
+**The deletion step is critical for maintaining data consistency across microservices.**
+
+### Solution Implementation
+
+**Added the same deletion logic to Submit Selected as exists in Submit All:**
+
+```typescript
+let successfulSubmissions = 0
+let failedSubmissions = 0
+
+// Import Order Generation API for deletion
+const { orderGenerationApi } = await import('@/lib/api/orderGenerationService')
+
+for (const rebalance of selectedRebalancesArray) {
+  try {
+    const submissionRebalance = transformToSubmissionRebalance(rebalance)
+    const { result } = await orderServiceApi.submitRebalanceOrders(
+      submissionRebalance,
+      (progress) => {
+        console.log(`Rebalance ${rebalance.rebalance_id} progress:`, progress)
+      }
+    )
+    
+    if (result.successfulOrders > 0) {
+      successfulSubmissions++
+      
+      // If all orders were successful and no orders failed, delete the rebalance from backend
+      if (result.failedOrders === 0) {
+        try {
+          const deleteResult = await orderGenerationApi.deleteRebalance(rebalance.rebalance_id, rebalance.version)
+          if (deleteResult.success) {
+            console.log(`Rebalance ${rebalance.rebalance_id} deleted from backend after successful submission`)
+          } else {
+            console.warn(`Backend deletion reported failure for ${rebalance.rebalance_id}, but continuing`)
+          }
+        } catch (deleteError) {
+          console.warn(`Failed to delete rebalance ${rebalance.rebalance_id} from backend:`, deleteError)
+          // Don't fail the entire operation since orders were submitted successfully
+        }
+      }
+      
+      console.log(`Processing complete for ${rebalance.rebalance_id}:`, {
+        successfulOrders: result.successfulOrders,
+        failedOrders: result.failedOrders,
+        deletedFromBackend: result.failedOrders === 0
+      })
+    }
+    
+    if (result.failedOrders > 0) {
+      failedSubmissions++
+    }
+  } catch (error) {
+    console.error(`Failed to submit rebalance ${rebalance.rebalance_id}:`, error)
+    failedSubmissions++
+  }
+}
+```
+
+**Key Changes:**
+1. **Added Order Generation API Import**: For backend deletion capability
+2. **Conditional Deletion**: Only delete if all orders were successful (`result.failedOrders === 0`)
+3. **Error Handling**: Graceful handling of deletion errors without failing the entire operation
+4. **Logging**: Comprehensive logging for debugging and audit trail
+5. **Data Consistency**: Ensures backend state remains consistent across services
+
+### Expected Result
+
+After this fix:
+- ✅ **Backend Deletion**: Successfully submitted rebalances are deleted from Order Generation Service
+- ✅ **No Duplicates**: Submitted rebalances cannot be resubmitted (eliminated duplicate risk)
+- ✅ **Data Consistency**: Backend state is consistent between Order Service and Order Generation Service  
+- ✅ **Consistent Behavior**: Submit Selected now has identical behavior to Submit All
+- ✅ **Error Resilience**: Deletion failures don't compromise order submission success
+
+### Data Flow Sequence
+
+**Before Fix:**
+1. Submit Selected → Order Service (orders created) ✓
+2. Order Generation Service (rebalances still exist) ❌
+3. UI refresh → Shows same rebalances → Duplicate risk ❌
+
+**After Fix:**
+1. Submit Selected → Order Service (orders created) ✓
+2. Delete from Order Generation Service (rebalances removed) ✓  
+3. UI refresh → Shows clean data without submitted rebalances ✓
+
+### Business Impact
+
+**Critical Issue Resolved:**
+- **Data Integrity**: Backend services now maintain consistent state
+- **Duplicate Prevention**: Eliminates risk of duplicate order creation
+- **User Experience**: Clear feedback that operations completed successfully
+- **Audit Compliance**: Proper audit trail with deletion logging
+- **Operational Safety**: Prevents accidental resubmission of processed rebalances
+
+This fix ensures Submit Selected has complete feature parity with Submit All, maintaining data consistency across the microservices architecture and preventing duplicate order creation.

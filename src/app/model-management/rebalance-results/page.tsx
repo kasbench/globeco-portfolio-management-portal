@@ -231,10 +231,24 @@ export default function RebalanceResultsPage() {
     }
   }
 
-  const handleBatchOperationComplete = (results: any) => {
+  const handleBatchOperationComplete = async (results: any) => {
     console.log('Batch operation completed:', results)
-    // Refresh data after batch operations
-    refetch()
+    
+    // Use the same comprehensive refresh logic as Submit All
+    console.log('Batch operation complete - invalidating cache and refetching data')
+    
+    // Add delay to ensure all backend changes are fully processed
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    
+    // Force cache invalidation to ensure fresh data
+    console.log('Invalidating rebalances cache to force fresh data fetch')
+    await queryClient.invalidateQueries({ queryKey: ['rebalances'] })
+    
+    await refetch()
+    
+    // Reset local state AFTER fresh data is fetched
+    console.log('Resetting local state to use fresh fetched data')
+    setLocalRebalances(undefined)
   }
 
   const handleDataChange = useCallback(async () => {

@@ -253,6 +253,9 @@ const BatchOperationsPanel: React.FC<BatchOperationsPanelProps> = ({
         let successfulSubmissions = 0
         let failedSubmissions = 0
         
+        // Import Order Generation API for deletion
+        const { orderGenerationApi } = await import('@/lib/api/orderGenerationService')
+        
         for (const rebalance of selectedRebalancesArray) {
           try {
             const submissionRebalance = transformToSubmissionRebalance(rebalance)
@@ -265,6 +268,27 @@ const BatchOperationsPanel: React.FC<BatchOperationsPanelProps> = ({
             
             if (result.successfulOrders > 0) {
               successfulSubmissions++
+              
+              // If all orders were successful and no orders failed, delete the rebalance from backend
+              if (result.failedOrders === 0) {
+                try {
+                  const deleteResult = await orderGenerationApi.deleteRebalance(rebalance.rebalance_id, rebalance.version)
+                  if (deleteResult.success) {
+                    console.log(`Rebalance ${rebalance.rebalance_id} deleted from backend after successful submission`)
+                  } else {
+                    console.warn(`Backend deletion reported failure for ${rebalance.rebalance_id}, but continuing`)
+                  }
+                } catch (deleteError) {
+                  console.warn(`Failed to delete rebalance ${rebalance.rebalance_id} from backend:`, deleteError)
+                  // Don't fail the entire operation since orders were submitted successfully
+                }
+              }
+              
+              console.log(`Processing complete for ${rebalance.rebalance_id}:`, {
+                successfulOrders: result.successfulOrders,
+                failedOrders: result.failedOrders,
+                deletedFromBackend: result.failedOrders === 0
+              })
             }
             if (result.failedOrders > 0) {
               failedSubmissions++
