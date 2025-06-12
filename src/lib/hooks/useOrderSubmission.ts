@@ -12,7 +12,7 @@ import {
   RebalancePositionWithSubmission 
 } from '@/types/rebalance'
 import { SubmissionState, OrderSubmissionResult } from '@/types/order'
-import { orderServiceClient } from '@/lib/api/orderService'
+import { orderServiceApi } from '@/lib/api/orderService'
 import { dataTransformationService } from '@/lib/services/dataTransformationService'
 import { responseProcessingService } from '@/lib/services/responseProcessingService'
 import { 
@@ -324,24 +324,45 @@ export function useOrderSubmission(): UseOrderSubmissionReturn {
           })
 
           try {
-            // Use request throttling for API calls
-            const submissionResult = await globalRequestThrottler.throttle(
-              () => orderServiceClient.submitRebalancePositions(
-                rebalance,
-                `submission-${Date.now()}-${batchIndex}`,
-                (progress) => {
-                  updateState({
-                    submissionProgress: {
-                      currentBatch: batchIndex + 1,
-                      totalBatches: submissionRebalances.length,
-                      currentRebalance: rebalance.rebalance_id,
-                      currentPortfolio: progress.currentItem
-                    }
-                  })
-                }
-              ),
-              1 // Normal priority
-            )
+            // Submit each portfolio in the rebalance separately to maintain portfolio context
+            let rebalanceResult: OrderSubmissionResult = {
+              totalOrders: 0,
+              successfulOrders: 0,
+              failedOrders: 0,
+              errors: [],
+              submittedOrderIds: [],
+              failedPositions: []
+            }
+
+            for (const portfolio of rebalance.portfolios) {
+              const portfolioResult = await globalRequestThrottler.throttle(
+                () => orderServiceApi.submitRebalancePositions(
+                  portfolio.positions,
+                  portfolio.portfolio_id,
+                  (progress) => {
+                    updateState({
+                      submissionProgress: {
+                        currentBatch: batchIndex + 1,
+                        totalBatches: submissionRebalances.length,
+                        currentRebalance: rebalance.rebalance_id,
+                        currentPortfolio: portfolio.portfolio_id
+                      }
+                    })
+                  }
+                ),
+                1 // Normal priority
+              )
+
+              // Aggregate results
+              rebalanceResult.totalOrders += portfolioResult.totalOrders
+              rebalanceResult.successfulOrders += portfolioResult.successfulOrders
+              rebalanceResult.failedOrders += portfolioResult.failedOrders
+              rebalanceResult.errors.push(...portfolioResult.errors)
+              rebalanceResult.submittedOrderIds.push(...portfolioResult.submittedOrderIds)
+              rebalanceResult.failedPositions.push(...portfolioResult.failedPositions)
+            }
+
+            const submissionResult = rebalanceResult
 
             results.push(submissionResult)
             

@@ -399,10 +399,14 @@ export class DataCleanupService {
   /**
    * Extract position ID from order ID (implementation depends on order ID format)
    */
-  private extractPositionIdFromOrderId(orderId: string): string {
-    // This would need to be implemented based on the actual order ID format
-    // For now, assume the order ID contains the security ID
-    return orderId.split('_')[0] || orderId
+  private extractPositionIdFromOrderId(orderId: string | number): string {
+    // Convert to string first in case orderId is a number
+    const orderIdStr = String(orderId)
+    
+    // For now, since the Order Service returns numeric IDs that don't directly map to security IDs,
+    // we'll return the order ID itself as the position identifier
+    // In a real implementation, this would need to be mapped based on the order submission context
+    return orderIdStr
   }
 
   /**

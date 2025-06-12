@@ -237,6 +237,33 @@ export const orderGenerationApi = {
     }
   },
 
+  // Verify if rebalance exists (silent - no error logging for 404)
+  verifyRebalanceExists: async (rebalanceId: string): Promise<boolean> => {
+    try {
+      // Create a custom axios instance without error interceptors for silent verification
+      const silentClient = axios.create({
+        baseURL: apiClient.defaults.baseURL,
+        timeout: apiClient.defaults.timeout,
+        headers: apiClient.defaults.headers,
+      })
+      
+      // Add only the request interceptor (for logging), not the response interceptor
+      silentClient.interceptors.request.use(
+        (config) => {
+          console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`, config.params)
+          return config
+        }
+      )
+      
+      await silentClient.get(`/api/v1/rebalance/${rebalanceId}`)
+      return true // Rebalance exists
+    } catch (error) {
+      // 404 means rebalance doesn't exist (successfully deleted)
+      // Any other error also means we can't verify it exists
+      return false
+    }
+  },
+
   // Get portfolios for a specific rebalance (for lazy loading)
   getRebalancePortfolios: async (rebalanceId: string): Promise<RebalancePortfolio[]> => {
     if (process.env.NODE_ENV === 'development') {
@@ -279,6 +306,80 @@ export const orderGenerationApi = {
         `/api/v1/rebalance/${rebalanceId}/portfolio/${portfolioId}/positions`
       )
       return response.data
+    }
+  },
+
+  // Delete rebalance by ID with version for optimistic locking
+  deleteRebalance: async (rebalanceId: string, version: number): Promise<{ success: boolean; message: string }> => {
+    try {
+      const response: AxiosResponse<any> = await apiClient.delete(
+        `/api/v1/rebalance/${rebalanceId}`,
+        {
+          params: {
+            version: version
+          }
+        }
+      )
+      
+      // The API returns 200 status for successful deletion
+      // The response body format may vary, so we check the status code
+      if (response.status === 200) {
+        return {
+          success: true,
+          message: response.data?.message || `Rebalance ${rebalanceId} deleted successfully`
+        }
+      } else {
+        return {
+          success: false,
+          message: response.data?.message || `Failed to delete rebalance ${rebalanceId}`
+        }
+      }
+    } catch (error) {
+      if (process.env.NODE_ENV === 'development') {
+        // Simulate successful deletion in development
+        console.warn('Order Generation Service not available, simulating deletion:', error)
+        return {
+          success: true,
+          message: `Rebalance ${rebalanceId} deleted successfully (simulated)`
+        }
+      } else {
+        // If we get here, it's likely a network error or 4xx/5xx response
+        return {
+          success: false,
+          message: error instanceof Error ? error.message : `Failed to delete rebalance ${rebalanceId}`
+        }
+      }
+    }
+  },
+
+  // Delete multiple rebalances in batch
+  deleteRebalances: async (deletions: { rebalanceId: string; version: number }[]): Promise<{
+    successful: string[]
+    failed: { rebalanceId: string; error: string }[]
+    totalDeleted: number
+    totalFailed: number
+  }> => {
+    const successful: string[] = []
+    const failed: { rebalanceId: string; error: string }[] = []
+
+    // Process deletions sequentially to avoid overwhelming the service
+    for (const deletion of deletions) {
+      try {
+        await orderGenerationApi.deleteRebalance(deletion.rebalanceId, deletion.version)
+        successful.push(deletion.rebalanceId)
+      } catch (error) {
+        failed.push({
+          rebalanceId: deletion.rebalanceId,
+          error: error instanceof Error ? error.message : 'Unknown error'
+        })
+      }
+    }
+
+    return {
+      successful,
+      failed,
+      totalDeleted: successful.length,
+      totalFailed: failed.length
     }
   },
 }

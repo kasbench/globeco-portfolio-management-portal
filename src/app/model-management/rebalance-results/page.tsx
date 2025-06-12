@@ -1,6 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
+import React from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { BarChart3, AlertCircle, RefreshCw, Loader2, HelpCircle, Info, Send, Trash2 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -8,9 +10,13 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { TooltipProvider, HelpTooltip } from '@/components/ui/tooltip'
 import { ErrorBoundary, ErrorDisplay } from '@/components/ui/error-boundary'
-
+import { toast } from 'sonner'
 
 import { useRebalances } from '@/lib/hooks/useRebalances'
+import { orderServiceApi } from '@/lib/api/orderService'
+import { orderGenerationApi } from '@/lib/api/orderGenerationService'
+import { transformToSubmissionRebalance } from '@/lib/utils/rebalanceTransform'
+import { OrderSubmissionResult, SubmissionState } from '@/types/order'
 import RebalanceTable from '@/components/tables/RebalanceTable'
 import BatchOperationsPanel from '@/components/features/BatchOperationsPanel'
 import { 
@@ -22,14 +28,23 @@ import {
 } from '@/components/ui/confirmation-dialog'
 
 export default function RebalanceResultsPage() {
+  const queryClient = useQueryClient()
   const [isSubmittingAll, setIsSubmittingAll] = useState(false)
   const [showSubmissionDialog, setShowSubmissionDialog] = useState(false)
   const [showDeletionDialog, setShowDeletionDialog] = useState(false)
   const [submissionPreview, setSubmissionPreview] = useState<SubmissionPreview | null>(null)
   const [deletionPreview, setDeletionPreview] = useState<DeletionPreview | null>(null)
+  const [submissionProgress, setSubmissionProgress] = useState<{
+    current: number
+    total: number
+    currentRebalance?: string
+  } | null>(null)
+  const [localRebalances, setLocalRebalances] = useState<any[] | undefined>(undefined)
+  
+
   
   const {
-    rebalances,
+    rebalances: fetchedRebalances,
     isLoading,
     isError,
     error,
@@ -40,6 +55,17 @@ export default function RebalanceResultsPage() {
     handleSort,
     refetch
   } = useRebalances()
+
+  // Use local rebalances if available, otherwise use fetched data
+  const rebalances = localRebalances ?? fetchedRebalances
+  
+  // Update local rebalances when fetched data changes or when local state is reset
+  React.useEffect(() => {
+    if (fetchedRebalances && localRebalances === undefined) {
+      console.log('Updating local rebalances with fresh data:', fetchedRebalances.length, 'rebalances')
+      setLocalRebalances(fetchedRebalances)
+    }
+  }, [fetchedRebalances, localRebalances])
 
   const { createPreview: createSubmissionPreview } = useSubmissionPreview()
   const { createPreview: createDeletionPreview } = useDeletionPreview()
@@ -71,21 +97,153 @@ export default function RebalanceResultsPage() {
       setShowSubmissionDialog(true)
     } catch (error) {
       console.error('Failed to create submission preview:', error)
+      toast.error('Failed to create submission preview. Please try again.')
     }
   }
 
   const handleConfirmSubmitAll = async () => {
+    if (!rebalances) return
+    
     setIsSubmittingAll(true)
     setShowSubmissionDialog(false)
+    setSubmissionProgress({ current: 0, total: rebalances.length })
     
     try {
-      // TODO: Implement actual submission logic
-      await new Promise(resolve => setTimeout(resolve, 2000)) // Simulate API call
-      console.log('Submitting all rebalances')
+      // Transform rebalances to submission format
+      const submissionRebalances = rebalances.map(transformToSubmissionRebalance)
+      
+      let successfulSubmissions = 0
+      let failedSubmissions = 0
+      const allResults: OrderSubmissionResult[] = []
+      let updatedRebalances = [...submissionRebalances]
+      
+      // Process each rebalance
+      for (let i = 0; i < submissionRebalances.length; i++) {
+        const rebalance = submissionRebalances[i]
+        
+        setSubmissionProgress({
+          current: i + 1,
+          total: submissionRebalances.length,
+          currentRebalance: rebalance.rebalance_id
+        })
+        
+        try {
+          // Submit the rebalance using the Order Service API
+          const { rebalance: updatedRebalance, result } = await orderServiceApi.submitRebalanceOrders(
+            rebalance,
+            (progress) => {
+              console.log(`Rebalance ${rebalance.rebalance_id} progress:`, progress)
+            }
+          )
+          
+          allResults.push(result)
+          
+          if (result.successfulOrders > 0) {
+            successfulSubmissions++
+            
+            // Use the updated rebalance that already has proper submission states
+            // Filter out empty portfolios and positions that were successfully submitted
+            const cleanedPortfolios = updatedRebalance.portfolios.filter(portfolio => {
+              // Keep portfolios that have positions not marked as submitted
+              const remainingPositions = portfolio.positions.filter(pos => 
+                pos.submission !== SubmissionState.Submitted || pos.trade_quantity === 0
+              )
+              return remainingPositions.length > 0
+            })
+            
+            if (cleanedPortfolios.length > 0) {
+              // Update with cleaned portfolios
+              updatedRebalances[i] = {
+                ...updatedRebalance,
+                portfolios: cleanedPortfolios,
+                number_of_portfolios: cleanedPortfolios.length
+              }
+            } else {
+              // All portfolios were successfully submitted - delete the rebalance from backend
+              if (result.failedOrders === 0) {
+                try {
+                  const deleteResult = await orderGenerationApi.deleteRebalance(rebalance.rebalance_id, rebalance.version)
+                  if (deleteResult.success) {
+                    console.log(`Rebalance ${rebalance.rebalance_id} deleted from backend after successful submission`)
+                  }
+                } catch (deleteError) {
+                  console.warn(`Failed to delete rebalance ${rebalance.rebalance_id} from backend:`, deleteError)
+                  // Don't fail the entire operation since orders were submitted successfully
+                }
+              }
+              
+              // Remove entire rebalance from local state
+              updatedRebalances.splice(i, 1)
+              i-- // Adjust index since we removed an item
+            }
+            
+            console.log(`Cleanup complete for ${rebalance.rebalance_id}:`, {
+              originalPortfolios: rebalance.portfolios.length,
+              remainingPortfolios: cleanedPortfolios.length,
+              successfulOrders: result.successfulOrders,
+              deletedFromBackend: cleanedPortfolios.length === 0 && result.failedOrders === 0
+            })
+          } else {
+            // Keep the original rebalance if no orders were successful
+            updatedRebalances[i] = updatedRebalance
+          }
+          
+          if (result.failedOrders > 0) {
+            failedSubmissions++
+          }
+          
+        } catch (error) {
+          console.error(`Failed to submit rebalance ${rebalance.rebalance_id}:`, error)
+          failedSubmissions++
+          
+          // Create a failed result entry
+          allResults.push({
+            totalOrders: 0,
+            successfulOrders: 0,
+            failedOrders: 1,
+            errors: [error instanceof Error ? error.message : 'Unknown error'],
+            submittedOrderIds: [],
+            failedPositions: []
+          })
+        }
+      }
+      
+      // Show completion toast
+      const totalSuccessful = allResults.reduce((sum, r) => sum + r.successfulOrders, 0)
+      const totalFailed = allResults.reduce((sum, r) => sum + r.failedOrders, 0)
+      
+      if (totalSuccessful > 0) {
+        if (totalFailed === 0) {
+          toast.success(`Successfully submitted ${totalSuccessful} orders.`)
+        } else {
+          toast.warning(`Submitted ${totalSuccessful} orders, ${totalFailed} failed.`)
+        }
+      } else {
+        toast.error(`No orders were successfully submitted. ${totalFailed} orders failed.`)
+      }
+      
+      // Refresh data to reflect backend changes
+      console.log('Submit All complete - invalidating cache and refetching data')
+      
+      // Increased delay to ensure all backend deletions are fully processed
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      
+      // Force cache invalidation to ensure fresh data
+      console.log('Invalidating rebalances cache to force fresh data fetch')
+      await queryClient.invalidateQueries({ queryKey: ['rebalances'] })
+      
+      await refetch()
+      
+      // Reset local state AFTER fresh data is fetched
+      console.log('Resetting local state to use fresh fetched data')
+      setLocalRebalances(undefined)
+      
     } catch (error) {
       console.error('Failed to submit all rebalances:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to submit orders. Please try again.')
     } finally {
       setIsSubmittingAll(false)
+      setSubmissionProgress(null)
     }
   }
 
@@ -95,8 +253,38 @@ export default function RebalanceResultsPage() {
     refetch()
   }
 
-  const handleRetry = () => {
-    refetch()
+  const handleDataChange = useCallback(async () => {
+    console.log('Data change callback triggered - invalidating cache and refetching data')
+    
+    // Add a small additional delay before refetch to ensure backend consistency
+    console.log('Waiting additional 1000ms before refetch to ensure backend consistency')
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    
+    // Force cache invalidation to ensure fresh data BEFORE refetch
+    console.log('Invalidating rebalances cache to force fresh data fetch')
+    await queryClient.invalidateQueries({ queryKey: ['rebalances'] })
+    
+    // Now refetch with invalidated cache
+    console.log('Refetching data after cache invalidation')
+    await refetch()
+    
+    // Reset local state AFTER fresh data is fetched to use the new data
+    console.log('Resetting local state to use fresh fetched data')
+    setLocalRebalances(undefined)
+  }, [refetch, queryClient])
+
+  const handleRetry = async () => {
+    console.log('Refresh button clicked - invalidating cache and refetching data')
+    
+    // Force cache invalidation for manual refresh
+    console.log('Manual refresh - invalidating rebalances cache')
+    await queryClient.invalidateQueries({ queryKey: ['rebalances'] })
+    
+    await refetch()
+    
+    // Reset local state AFTER fresh data is fetched
+    console.log('Resetting local state to use fresh fetched data')
+    setLocalRebalances(undefined)
   }
 
   if (isLoading) {
@@ -196,7 +384,12 @@ export default function RebalanceResultsPage() {
                       {isSubmittingAll ? (
                         <>
                           <Loader2 className="h-4 w-4 animate-spin" />
-                          <span>Submitting...</span>
+                          <span>
+                            {submissionProgress 
+                              ? `Submitting ${submissionProgress.current}/${submissionProgress.total}...`
+                              : 'Submitting...'
+                            }
+                          </span>
                         </>
                       ) : (
                         <>
@@ -258,6 +451,7 @@ export default function RebalanceResultsPage() {
                 onSort={handleSort}
                 selectedRebalances={new Set()} // Managed by BatchOperationsPanel now
                 onSelectRebalance={() => {}} // Managed by BatchOperationsPanel now
+                onDataChange={handleDataChange}
               />
             </ErrorBoundary>
           </CardContent>

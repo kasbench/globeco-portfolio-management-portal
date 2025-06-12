@@ -30,6 +30,10 @@ import {
 import { Rebalance, RebalanceSortField, RebalanceSortConfig } from '@/types/rebalance'
 import { useRebalancePortfolios } from '@/lib/hooks/useRebalances'
 import { useRebalancePortfolios as usePortfolios } from '@/lib/hooks/usePortfolios'
+import { orderServiceApi } from '@/lib/api/orderService'
+import { orderGenerationApi } from '@/lib/api/orderGenerationService'
+import { transformToSubmissionRebalance } from '@/lib/utils/rebalanceTransform'
+import { toast } from 'sonner'
 
 interface RebalanceTableProps {
   rebalances: Rebalance[]
@@ -43,6 +47,7 @@ interface RebalanceTableProps {
   onSort: (field: RebalanceSortField) => void
   selectedRebalances: Set<string>
   onSelectRebalance: (rebalanceId: string, selected: boolean) => void
+  onDataChange?: () => void
 }
 
 const RebalanceTable = React.memo(function RebalanceTable({
@@ -56,7 +61,8 @@ const RebalanceTable = React.memo(function RebalanceTable({
   sortConfig,
   onSort,
   selectedRebalances,
-  onSelectRebalance
+  onSelectRebalance,
+  onDataChange
 }: RebalanceTableProps) {
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set())
   const [submittingRebalances, setSubmittingRebalances] = useState<Set<string>>(new Set())
@@ -78,11 +84,85 @@ const RebalanceTable = React.memo(function RebalanceTable({
     setShowSubmissionDialog(false)
     
     try {
-      // TODO: Implement actual submission logic
-      await new Promise(resolve => setTimeout(resolve, 2000)) // Simulate API call
-      console.log('Submitting rebalance:', currentRebalanceId)
+      // Find the rebalance being submitted
+      const rebalance = rebalances.find(r => r.rebalance_id === currentRebalanceId)
+      if (!rebalance) {
+        throw new Error('Rebalance not found')
+      }
+      
+      // Transform to submission format
+      const submissionRebalance = transformToSubmissionRebalance(rebalance)
+      
+      // Submit the rebalance using the Order Service API
+      const { rebalance: updatedRebalance, result } = await orderServiceApi.submitRebalanceOrders(
+        submissionRebalance,
+        (progress) => {
+          console.log(`Rebalance ${currentRebalanceId} progress:`, progress)
+        }
+      )
+      
+      // Process successful submissions and show toast
+      if (result.successfulOrders > 0) {
+        toast.success(`Successfully submitted ${result.successfulOrders} orders${result.failedOrders > 0 ? `, ${result.failedOrders} failed` : ''}.`)
+        
+        console.log(`Submission complete for ${currentRebalanceId}:`, {
+          successfulOrders: result.successfulOrders,
+          failedOrders: result.failedOrders
+        })
+        
+        // If all orders were successful, delete the rebalance from Order Generation Service
+        if (result.failedOrders === 0) {
+          try {
+            const deleteResult = await orderGenerationApi.deleteRebalance(currentRebalanceId, rebalance.version)
+            if (deleteResult.success) {
+              console.log(`Rebalance ${currentRebalanceId} deleted successfully after submission`)
+              
+              // Refresh data after successful backend deletion
+              if (onDataChange) {
+                console.log(`Triggering data refresh after successful deletion of ${currentRebalanceId}`)
+                // Increased delay to ensure backend has fully processed the deletion
+                setTimeout(async () => {
+                  console.log(`Executing delayed refresh for ${currentRebalanceId} after 2000ms`)
+                  
+                  // Verify deletion by checking if rebalance still exists (silent - no error logging)
+                  const stillExists = await orderGenerationApi.verifyRebalanceExists(currentRebalanceId)
+                  if (stillExists) {
+                    console.warn(`Rebalance ${currentRebalanceId} still exists after deletion - backend may have caching or async processing`)
+                  } else {
+                    console.log(`Rebalance ${currentRebalanceId} confirmed deleted - no longer exists in backend`)
+                  }
+                  
+                  onDataChange()
+                }, 2000)
+              }
+            } else {
+              console.warn(`Backend deletion failed for ${currentRebalanceId}, but orders were submitted successfully`)
+              // Still refresh to show any partial changes
+              if (onDataChange) {
+                onDataChange()
+              }
+            }
+          } catch (deleteError) {
+            console.warn(`Failed to delete rebalance ${currentRebalanceId} after successful submission:`, deleteError)
+            // Don't show error to user since orders were submitted successfully
+            // Still refresh to show any partial changes
+            if (onDataChange) {
+              onDataChange()
+            }
+          }
+        } else {
+          // Some orders failed, refresh to show updated state
+          if (onDataChange) {
+            onDataChange()
+          }
+        }
+      } else {
+        toast.error(`Failed to submit orders: ${result.errors.join(', ')}`)
+      }
+      
     } catch (error) {
       console.error('Failed to submit rebalance:', error)
+      toast.error(`Submission failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
       setSubmittingRebalances(prev => {
         const newSet = new Set(prev)
@@ -99,10 +179,24 @@ const RebalanceTable = React.memo(function RebalanceTable({
     setShowDeletionDialog(false)
     
     try {
-      // TODO: Implement actual deletion logic
-      console.log('Deleting rebalance:', currentRebalanceId)
+      // Find the rebalance being deleted to get its version
+      const rebalance = rebalances.find(r => r.rebalance_id === currentRebalanceId)
+      if (!rebalance) {
+        throw new Error('Rebalance not found')
+      }
+      
+      // Delete the rebalance using the Order Generation Service API
+      const result = await orderGenerationApi.deleteRebalance(currentRebalanceId, rebalance.version)
+      
+      if (result.success) {
+        toast.success(`Rebalance deleted successfully: ${result.message}`)
+      } else {
+        toast.error('Failed to delete rebalance')
+      }
+      
     } catch (error) {
       console.error('Failed to delete rebalance:', error)
+      toast.error(`Deletion failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
       setCurrentRebalanceId(null)
     }

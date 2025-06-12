@@ -295,6 +295,7 @@ export const orderServiceApi = {
    */
   submitRebalancePositions: async (
     positions: RebalancePositionWithSubmission[],
+    portfolioId: string,
     onProgress?: (progress: { submitted: number; failed: number; total: number }) => void
   ): Promise<OrderSubmissionResult> => {
     const result: OrderSubmissionResult = {
@@ -310,7 +311,7 @@ export const orderServiceApi = {
     const eligiblePositions = positions.filter(pos => {
       const eligibility = validateOrderEligibility(pos)
       if (!eligibility.isEligible) {
-        result.errors.push(`Position ${pos.security_id} in portfolio ${pos.portfolio_id}: ${eligibility.reasons.join(', ')}`)
+        result.errors.push(`Position ${pos.security_id} in portfolio ${portfolioId}: ${eligibility.reasons.join(', ')}`)
         return false
       }
       return true
@@ -323,8 +324,8 @@ export const orderServiceApi = {
     }
 
     try {
-      // Transform positions to orders
-      const orders = eligiblePositions.map(pos => mapPositionToOrder(pos))
+      // Transform positions to orders with portfolio ID
+      const orders = eligiblePositions.map(pos => mapPositionToOrder(pos, portfolioId))
       
       // Submit orders with batching
       const responses = await orderServiceApi.submitOrdersWithBatching(orders, (batchIndex, totalBatches, batchResult) => {
@@ -374,7 +375,7 @@ export const orderServiceApi = {
     const updatedPortfolio = markPositionsAsSubmitting(portfolio)
     
     try {
-      const result = await orderServiceApi.submitRebalancePositions(updatedPortfolio.positions, onProgress)
+      const result = await orderServiceApi.submitRebalancePositions(updatedPortfolio.positions, portfolio.portfolio_id, onProgress)
       
       // Update portfolio based on results
       const finalPortfolio = result.successfulOrders > 0 

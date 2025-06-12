@@ -12,6 +12,7 @@ import {
   OrderPostDTO 
 } from '@/types/order'
 import { orderServiceApi } from '@/lib/api/orderService'
+import { orderGenerationApi } from '@/lib/api/orderGenerationService'
 import { validateOrderEligibility } from '@/lib/utils/orderMapping'
 import { logOrderSubmission } from '@/lib/utils/orderLogging'
 
@@ -539,18 +540,39 @@ export function useBatchOperations(
         })
 
         try {
-          const result = await orderServiceApi.submitRebalancePositions(
-            rebalance.portfolios?.flatMap(p => p.positions || []) || [],
-            (progress) => {
-              updateProgress({
-                statusMessage: `Processing ${progress.submitted}/${progress.total} orders...`
-              })
-            }
-          )
+          // Process each portfolio separately to maintain portfolio context
+          let rebalanceResult: OrderSubmissionResult = {
+            totalOrders: 0,
+            successfulOrders: 0,
+            failedOrders: 0,
+            errors: [],
+            submittedOrderIds: [],
+            failedPositions: []
+          }
 
-          results.push(result)
-          totalSuccessful += result.successfulOrders
-          totalFailed += result.failedOrders
+          for (const portfolio of rebalance.portfolios) {
+            const portfolioResult = await orderServiceApi.submitRebalancePositions(
+              portfolio.positions,
+              portfolio.portfolio_id,
+              (progress) => {
+                updateProgress({
+                  statusMessage: `Processing portfolio ${portfolio.portfolio_id}: ${progress.submitted}/${progress.total} orders...`
+                })
+              }
+            )
+
+            // Aggregate results
+            rebalanceResult.totalOrders += portfolioResult.totalOrders
+            rebalanceResult.successfulOrders += portfolioResult.successfulOrders
+            rebalanceResult.failedOrders += portfolioResult.failedOrders
+            rebalanceResult.errors.push(...portfolioResult.errors)
+            rebalanceResult.submittedOrderIds.push(...portfolioResult.submittedOrderIds)
+            rebalanceResult.failedPositions.push(...portfolioResult.failedPositions)
+          }
+
+          results.push(rebalanceResult)
+          totalSuccessful += rebalanceResult.successfulOrders
+          totalFailed += rebalanceResult.failedOrders
 
           updateProgress({
             successCount: totalSuccessful,
@@ -613,32 +635,105 @@ export function useBatchOperations(
   const batchDelete = useCallback(async (
     operationOptions?: Partial<BatchOperationOptions>
   ): Promise<BatchSubmissionResult> => {
-    // Implementation similar to batchSubmit but for deletion
+    const opts = { ...mergedOptions, ...operationOptions }
     setIsProcessing(true)
+    setCanCancel(true)
+    setCancelRequested(false)
+    
     const startTime = new Date()
     const requestId = `batch-delete-${Date.now()}`
-
+    
     try {
-      // TODO: Implement batch deletion logic
-      await new Promise(resolve => setTimeout(resolve, 1000)) // Simulate processing
-      
+      // Initialize progress tracking
+      if (opts.enableProgressTracking) {
+        setProgress({
+          currentBatch: 0,
+          totalBatches: 0,
+          currentItemType: 'rebalance',
+          processedItems: 0,
+          totalItems: selectionState.selectedRebalances.size,
+          startTime,
+          successCount: 0,
+          failureCount: 0,
+          currentPhase: 'preparing',
+          statusMessage: 'Preparing deletion...'
+        })
+      }
+
+      // Get selected rebalances with their versions
+      const selectedRebalances = rebalances.filter(r => 
+        selectionState.selectedRebalances.has(r.rebalance_id)
+      )
+
+      if (selectedRebalances.length === 0) {
+        throw new Error('No rebalances selected for deletion')
+      }
+
+      // Create deletion requests with version for optimistic locking
+      const deletionRequests = selectedRebalances.map(rebalance => ({
+        rebalanceId: rebalance.rebalance_id,
+        version: rebalance.version
+      }))
+
+      updateProgress({
+        currentPhase: 'processing',
+        statusMessage: 'Deleting rebalances...'
+      })
+
+      // Use the batch deletion API
+      const deletionResult = await orderGenerationApi.deleteRebalances(deletionRequests)
+
+      updateProgress({
+        currentPhase: 'cleanup',
+        statusMessage: 'Cleaning up...',
+        successCount: deletionResult.totalDeleted,
+        failureCount: deletionResult.totalFailed
+      })
+
+      // Invalidate queries to refresh data
+      await queryClient.invalidateQueries({ queryKey: ['rebalances'] })
+
+      updateProgress({
+        currentPhase: 'complete',
+        statusMessage: 'Deletion complete'
+      })
+
       return {
         request: {
           requestId,
           type: 'batch_delete',
-          rebalanceIds: Array.from(selectionState.selectedRebalances),
+          rebalanceIds: deletionRequests.map(r => r.rebalanceId),
           submittedAt: startTime
         },
-        overallStatus: 'success',
-        results: [],
-        totalProcessed: selectionState.selectedRebalances.size,
-        totalSuccessful: selectionState.selectedRebalances.size,
-        totalFailed: 0
+        overallStatus: deletionResult.totalFailed === 0 ? 'success' : 
+                      deletionResult.totalDeleted > 0 ? 'partial' : 'failed',
+        results: [
+          ...deletionResult.successful.map(rebalanceId => ({
+            rebalanceId,
+            status: 'success' as const,
+            message: 'Rebalance deleted successfully'
+          })),
+          ...deletionResult.failed.map(failure => ({
+            rebalanceId: failure.rebalanceId,
+            status: 'failed' as const,
+            message: failure.error
+          }))
+        ],
+        totalProcessed: deletionRequests.length,
+        totalSuccessful: deletionResult.totalDeleted,
+        totalFailed: deletionResult.totalFailed
       }
+
+    } catch (error) {
+      console.error('Batch deletion failed:', error)
+      throw error
     } finally {
       setIsProcessing(false)
+      setCanCancel(false)
+      setCancelRequested(false)
+      setProgress(null)
     }
-  }, [selectionState])
+  }, [rebalances, selectionState, mergedOptions, queryClient, updateProgress])
 
   const batchRetry = useCallback(async (
     previousResults: OrderSubmissionResult[],

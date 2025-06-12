@@ -41,6 +41,7 @@
     "react-hook-form": "^7.57.0",
     "react-window": "^1.8.11",
     "react-window-infinite-loader": "^1.0.10",
+    "sonner": "^2.0.5",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
     "zod": "^3.25.56",
