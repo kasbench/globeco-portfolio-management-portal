@@ -1681,6 +1681,145 @@ This fix resolves a critical production issue that could cause:
 - Poor user experience with unresponsive UI
 
 The solution is robust, well-tested, and maintains backward compatibility while eliminating the root cause of the infinite loop.
+
+---
+
+## Entry #79: Bug Fix - Rebalance Results Page Not Auto-Loading Data
+*Timestamp: 2025-01-17 12:50:00*
+*Type: Bug Fix*
+*Priority: Medium*
+*Stage: Data Loading & UX*
+
+### Problem Statement
+
+**Issue:** When navigating to the rebalance results page, it does not automatically populate with data. Users have to manually click the refresh button to see any data.
+
+**User Impact:** 
+- Poor user experience requiring manual action
+- Inconsistent with expected behavior of data loading automatically
+- Makes the page appear broken or empty on first visit
+
+### Root Cause Analysis
+
+**The issue was in the React Query configuration in `useRebalances` hook:**
+
+**Problematic Configuration:**
+```typescript
+useInfiniteQuery({
+  queryKey: ['rebalances', sortString],
+  queryFn: async ({ pageParam = 0 }) => { /* ... */ },
+  // ... other config ...
+  refetchOnMount: false, // ← This prevented automatic data loading
+  // ... 
+})
+```
+
+**Why This Caused the Problem:**
+1. `refetchOnMount: false` tells React Query to NOT fetch data when the component mounts
+2. For new users or cleared cache, there's no cached data available
+3. Without cached data + `refetchOnMount: false` → NO DATA LOADS
+4. User sees empty page and must manually click refresh
+
+**Expected vs Actual Behavior:**
+
+**Expected:**
+1. User navigates to /rebalance-results
+2. Page shows loading spinner
+3. Data automatically fetches and displays
+4. User sees populated table
+
+**Actual (Before Fix):**
+1. User navigates to /rebalance-results  
+2. Page shows empty state
+3. No automatic data fetch occurs
+4. User must click "Refresh" to trigger data load
+
+### Implementation Solution
+
+**Fixed the React Query configuration:**
+
+**File: `src/lib/hooks/useRebalances.ts`**
+
+**Before:**
+```typescript
+useInfiniteQuery({
+  // ... other config ...
+  refetchOnMount: false, // Use cached data if available
+  // ...
+})
+```
+
+**After:**
+```typescript
+useInfiniteQuery({
+  // ... other config ...
+  refetchOnMount: true, // Always fetch fresh data on component mount
+  // ...
+})
+```
+
+### Behavior Analysis
+
+#### React Query's `refetchOnMount` Options:
+- **`false`**: Never refetch on mount, only use cached data
+- **`true`**: Always refetch on mount to ensure fresh data
+- **`'always'`**: Refetch on every mount, regardless of data freshness
+
+#### Why `true` is the Right Choice:
+1. **Ensures Fresh Data**: Critical for financial data that changes frequently
+2. **Better UX**: Automatic loading without user intervention
+3. **Handles Cache Misses**: Works correctly for new users or cleared cache
+4. **Predictable Behavior**: Consistent loading pattern across the app
+
+#### Performance Considerations:
+- **Stale Time**: Set to 5 minutes, so cached data is used if fresh enough
+- **Network Optimization**: Only fetches if truly needed
+- **Background Updates**: Uses React Query's intelligent background refetching
+
+### Impact Assessment
+
+**Before Fix:**
+- ❌ Empty page on first visit
+- ❌ Manual refresh required
+- ❌ Poor user experience
+- ❌ Inconsistent loading behavior
+
+**After Fix:**
+- ✅ Automatic data loading on page navigation
+- ✅ Loading spinner shows while fetching
+- ✅ Consistent user experience
+- ✅ Works for both new and returning users
+- ✅ Respects cache when data is fresh
+
+### Testing Validation
+
+**Test Scenarios:**
+1. **New User Visit**: Navigate to page → Should show loading → Display data
+2. **Return Visit**: Navigate to page → Use cached data if fresh, or refetch if stale
+3. **Cache Cleared**: Navigate to page → Should automatically fetch fresh data
+4. **Network Issues**: Navigate to page → Should show loading, then error handling
+
+**Expected Console Flow:**
+```
+1. Component mounts
+2. React Query triggers queryFn
+3. API call to orderGenerationApi.getRebalances()
+4. Data loads and displays in table
+```
+
+### Files Modified
+
+- `src/lib/hooks/useRebalances.ts` - Changed `refetchOnMount: false` to `refetchOnMount: true`
+
+### Production Impact
+
+This fix ensures that:
+- Users get immediate data when navigating to the page
+- The application behaves predictably and professionally
+- No manual intervention required for normal operation
+- Financial data is kept reasonably fresh (respecting 5-minute stale time)
+
+The change is minimal and safe, only affecting the initial data loading behavior without changing any other functionality.
         params: {
           version: version
         }

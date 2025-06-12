@@ -62,6 +62,8 @@ import { formatCurrency, formatNumber, formatDuration } from '@/lib/utils/format
 
 interface BatchOperationsPanelProps {
   rebalances: RebalanceWithSubmission[]
+  selectedRebalances?: Set<string>
+  onSelectRebalance?: (rebalanceId: string, selected: boolean) => void
   onOperationComplete?: (results: any) => void
   className?: string
 }
@@ -76,6 +78,8 @@ interface SmartSelectionPreset {
 
 const BatchOperationsPanel: React.FC<BatchOperationsPanelProps> = ({
   rebalances,
+  selectedRebalances: externalSelectedRebalances,
+  onSelectRebalance: externalOnSelectRebalance,
   onOperationComplete,
   className = ''
 }) => {
@@ -97,11 +101,11 @@ const BatchOperationsPanel: React.FC<BatchOperationsPanelProps> = ({
   const [previousResults, setPreviousResults] = useState<OrderSubmissionResult[]>([])
 
   const {
-    selectionState,
+    selectionState: internalSelectionState,
     availableFilters,
     getFilteredItems,
-    selectAll,
-    selectNone,
+    selectAll: internalSelectAll,
+    selectNone: internalSelectNone,
     selectEligibleOnly,
     selectByValue,
     invertSelection,
@@ -121,16 +125,47 @@ const BatchOperationsPanel: React.FC<BatchOperationsPanelProps> = ({
     importSelection
   } = batchOps
 
-  // Calculate summary statistics
+  // Use external selection state if provided, otherwise use internal state
+  const selectedRebalancesSet = externalSelectedRebalances || internalSelectionState.selectedRebalances
+  
+  // Create wrapper functions for selection that work with external or internal state
+  const selectAll = React.useCallback((itemType?: 'rebalance' | 'portfolio' | 'position', filtered = true) => {
+    if (externalSelectedRebalances && externalOnSelectRebalance && itemType === 'rebalance') {
+      // Use external selection for rebalances
+      const items = filtered ? getFilteredItems() : { rebalances }
+      items.rebalances.forEach(rebalance => {
+        if (!selectedRebalancesSet.has(rebalance.rebalance_id)) {
+          externalOnSelectRebalance(rebalance.rebalance_id, true)
+        }
+      })
+    } else {
+      // Fall back to internal selection
+      internalSelectAll(itemType, filtered)
+    }
+  }, [externalSelectedRebalances, externalOnSelectRebalance, getFilteredItems, rebalances, selectedRebalancesSet, internalSelectAll])
+
+  const selectNone = React.useCallback((itemType?: 'rebalance' | 'portfolio' | 'position') => {
+    if (externalSelectedRebalances && externalOnSelectRebalance && itemType === 'rebalance') {
+      // Use external selection for rebalances
+      selectedRebalancesSet.forEach(rebalanceId => {
+        externalOnSelectRebalance(rebalanceId, false)
+      })
+    } else {
+      // Fall back to internal selection
+      internalSelectNone(itemType)
+    }
+  }, [externalSelectedRebalances, externalOnSelectRebalance, selectedRebalancesSet, internalSelectNone])
+
+  // Calculate summary statistics using the correct selection state
   const filteredItems = getFilteredItems()
-  const selectedCount = selectionState.selectedRebalances.size
+  const selectedCount = selectedRebalancesSet.size
   const totalCount = filteredItems.rebalances.length
   const allSelected = selectedCount > 0 && selectedCount === totalCount
   const someSelected = selectedCount > 0 && selectedCount < totalCount
   
   // Estimate values and counts
   const estimatedPortfolios = filteredItems.rebalances
-    .filter(r => selectionState.selectedRebalances.has(r.rebalance_id))
+    .filter(r => selectedRebalancesSet.has(r.rebalance_id))
     .reduce((sum, r) => sum + (r.portfolios?.length || 0), 0)
   
   const estimatedOrders = estimatedPortfolios * 50 // Rough estimate
@@ -455,12 +490,12 @@ const BatchOperationsPanel: React.FC<BatchOperationsPanelProps> = ({
                   <div
                     key={filter.id}
                     className={`p-3 border rounded-lg cursor-pointer transition-colors ${
-                      selectionState.activeFilterId === filter.id
+                      internalSelectionState.activeFilterId === filter.id
                         ? 'border-blue-500 bg-blue-50'
                         : 'border-gray-200 hover:border-gray-300'
                     }`}
                     onClick={() => 
-                      selectionState.activeFilterId === filter.id 
+                      internalSelectionState.activeFilterId === filter.id 
                         ? clearFilter() 
                         : applyFilter(filter.id)
                     }
@@ -470,7 +505,7 @@ const BatchOperationsPanel: React.FC<BatchOperationsPanelProps> = ({
                         <div className="font-medium text-sm">{filter.name}</div>
                         <div className="text-xs text-gray-500">{filter.description}</div>
                       </div>
-                      {selectionState.activeFilterId === filter.id && (
+                      {internalSelectionState.activeFilterId === filter.id && (
                         <Badge variant="secondary">Active</Badge>
                       )}
                     </div>

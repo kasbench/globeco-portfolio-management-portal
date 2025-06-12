@@ -40,6 +40,7 @@ export default function RebalanceResultsPage() {
     currentRebalance?: string
   } | null>(null)
   const [localRebalances, setLocalRebalances] = useState<any[] | undefined>(undefined)
+  const [selectedRebalances, setSelectedRebalances] = useState<Set<string>>(new Set())
   
 
   
@@ -61,11 +62,11 @@ export default function RebalanceResultsPage() {
   
   // Update local rebalances when fetched data changes or when local state is reset
   React.useEffect(() => {
-    if (fetchedRebalances && localRebalances === undefined) {
+    if (fetchedRebalances && !isLoading) {
       console.log('Updating local rebalances with fresh data:', fetchedRebalances.length, 'rebalances')
       setLocalRebalances(fetchedRebalances)
     }
-  }, [fetchedRebalances, localRebalances])
+  }, [fetchedRebalances, isLoading])
 
   const { createPreview: createSubmissionPreview } = useSubmissionPreview()
   const { createPreview: createDeletionPreview } = useDeletionPreview()
@@ -394,6 +395,14 @@ export default function RebalanceResultsPage() {
           <BatchOperationsPanel
             rebalances={rebalances}
             onOperationComplete={handleBatchOperationComplete}
+            selectedRebalances={selectedRebalances}
+            onSelectRebalance={(rebalanceId, selected) => {
+              if (selected) {
+                setSelectedRebalances(prev => new Set(prev).add(rebalanceId))
+              } else {
+                setSelectedRebalances(prev => new Set(prev).delete(rebalanceId))
+              }
+            }}
           />
         )}
 
@@ -432,8 +441,18 @@ export default function RebalanceResultsPage() {
                 loadMore={loadMore}
                 sortConfig={sortConfig}
                 onSort={handleSort}
-                selectedRebalances={new Set()} // Managed by BatchOperationsPanel now
-                onSelectRebalance={() => {}} // Managed by BatchOperationsPanel now
+                selectedRebalances={selectedRebalances}
+                onSelectRebalance={(rebalanceId, selected) => {
+                  if (selected) {
+                    setSelectedRebalances(prev => new Set(prev).add(rebalanceId))
+                  } else {
+                    setSelectedRebalances(prev => {
+                      const newSet = new Set(prev)
+                      newSet.delete(rebalanceId)
+                      return newSet
+                    })
+                  }
+                }}
                 onDataChange={handleDataChange}
               />
             </ErrorBoundary>

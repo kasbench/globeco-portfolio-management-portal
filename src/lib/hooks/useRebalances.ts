@@ -61,7 +61,7 @@ export function useRebalances() {
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
     refetchOnWindowFocus: false, // Prevent unnecessary refetches
-    refetchOnMount: false, // Use cached data if available
+    refetchOnMount: true, // Always fetch fresh data on component mount
     retry: 3, // Retry failed requests
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
   })
