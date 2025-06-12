@@ -115,11 +115,19 @@ export default function RebalanceResultsPage() {
       let successfulSubmissions = 0
       let failedSubmissions = 0
       const allResults: OrderSubmissionResult[] = []
-      let updatedRebalances = [...submissionRebalances]
+      const processedRebalanceIds = new Set<string>() // Track processed rebalances to prevent duplicates
       
-      // Process each rebalance
+      // Process each rebalance sequentially - DO NOT modify the array during iteration
       for (let i = 0; i < submissionRebalances.length; i++) {
         const rebalance = submissionRebalances[i]
+        
+        // Skip if already processed (safety check)
+        if (processedRebalanceIds.has(rebalance.rebalance_id)) {
+          console.warn(`Skipping already processed rebalance: ${rebalance.rebalance_id}`)
+          continue
+        }
+        
+        processedRebalanceIds.add(rebalance.rebalance_id)
         
         setSubmissionProgress({
           current: i + 1,
@@ -141,51 +149,26 @@ export default function RebalanceResultsPage() {
           if (result.successfulOrders > 0) {
             successfulSubmissions++
             
-            // Use the updated rebalance that already has proper submission states
-            // Filter out empty portfolios and positions that were successfully submitted
-            const cleanedPortfolios = updatedRebalance.portfolios.filter(portfolio => {
-              // Keep portfolios that have positions not marked as submitted
-              const remainingPositions = portfolio.positions.filter(pos => 
-                pos.submission !== SubmissionState.Submitted || pos.trade_quantity === 0
-              )
-              return remainingPositions.length > 0
-            })
-            
-            if (cleanedPortfolios.length > 0) {
-              // Update with cleaned portfolios
-              updatedRebalances[i] = {
-                ...updatedRebalance,
-                portfolios: cleanedPortfolios,
-                number_of_portfolios: cleanedPortfolios.length
-              }
-            } else {
-              // All portfolios were successfully submitted - delete the rebalance from backend
-              if (result.failedOrders === 0) {
-                try {
-                  const deleteResult = await orderGenerationApi.deleteRebalance(rebalance.rebalance_id, rebalance.version)
-                  if (deleteResult.success) {
-                    console.log(`Rebalance ${rebalance.rebalance_id} deleted from backend after successful submission`)
-                  }
-                } catch (deleteError) {
-                  console.warn(`Failed to delete rebalance ${rebalance.rebalance_id} from backend:`, deleteError)
-                  // Don't fail the entire operation since orders were submitted successfully
+            // If all orders were successful and no orders failed, delete the rebalance from backend
+            if (result.failedOrders === 0) {
+              try {
+                const deleteResult = await orderGenerationApi.deleteRebalance(rebalance.rebalance_id, rebalance.version)
+                if (deleteResult.success) {
+                  console.log(`Rebalance ${rebalance.rebalance_id} deleted from backend after successful submission`)
+                } else {
+                  console.warn(`Backend deletion reported failure for ${rebalance.rebalance_id}, but continuing`)
                 }
+              } catch (deleteError) {
+                console.warn(`Failed to delete rebalance ${rebalance.rebalance_id} from backend:`, deleteError)
+                // Don't fail the entire operation since orders were submitted successfully
               }
-              
-              // Remove entire rebalance from local state
-              updatedRebalances.splice(i, 1)
-              i-- // Adjust index since we removed an item
             }
             
-            console.log(`Cleanup complete for ${rebalance.rebalance_id}:`, {
-              originalPortfolios: rebalance.portfolios.length,
-              remainingPortfolios: cleanedPortfolios.length,
+            console.log(`Processing complete for ${rebalance.rebalance_id}:`, {
               successfulOrders: result.successfulOrders,
-              deletedFromBackend: cleanedPortfolios.length === 0 && result.failedOrders === 0
+              failedOrders: result.failedOrders,
+              deletedFromBackend: result.failedOrders === 0
             })
-          } else {
-            // Keep the original rebalance if no orders were successful
-            updatedRebalances[i] = updatedRebalance
           }
           
           if (result.failedOrders > 0) {
