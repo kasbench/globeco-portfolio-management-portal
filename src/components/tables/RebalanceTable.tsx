@@ -139,7 +139,10 @@ const RebalanceTable = React.memo(function RebalanceTable({
               console.warn(`Backend deletion failed for ${currentRebalanceId}, but orders were submitted successfully`)
               // Still refresh to show any partial changes
               if (onDataChange) {
-                onDataChange()
+                setTimeout(() => {
+                  console.log(`Executing delayed refresh for ${currentRebalanceId} after backend deletion failure`)
+                  onDataChange()
+                }, 1000) // Delay for consistency with other refresh scenarios
               }
             }
           } catch (deleteError) {
@@ -147,17 +150,34 @@ const RebalanceTable = React.memo(function RebalanceTable({
             // Don't show error to user since orders were submitted successfully
             // Still refresh to show any partial changes
             if (onDataChange) {
-              onDataChange()
+              setTimeout(() => {
+                console.log(`Executing delayed refresh for ${currentRebalanceId} after deletion error`)
+                onDataChange()
+              }, 1000) // Delay for consistency with other refresh scenarios
             }
           }
         } else {
           // Some orders failed, refresh to show updated state
+          console.log(`Partial success for ${currentRebalanceId}: ${result.successfulOrders} successful, ${result.failedOrders} failed`)
           if (onDataChange) {
-            onDataChange()
+            // Add delay for partial success to ensure backend consistency
+            setTimeout(() => {
+              console.log(`Executing delayed refresh for partial success of ${currentRebalanceId}`)
+              onDataChange()
+            }, 1000) // Shorter delay since no backend deletion involved
           }
         }
       } else {
+        console.log(`Complete failure for ${currentRebalanceId}: ${result.errors.join(', ')}`)
         toast.error(`Failed to submit orders: ${result.errors.join(', ')}`)
+        
+        // Refresh even on complete failure to ensure UI shows current backend state
+        if (onDataChange) {
+          setTimeout(() => {
+            console.log(`Executing delayed refresh for failed submission of ${currentRebalanceId}`)
+            onDataChange()
+          }, 500) // Short delay for failure case
+        }
       }
       
     } catch (error) {
@@ -190,13 +210,37 @@ const RebalanceTable = React.memo(function RebalanceTable({
       
       if (result.success) {
         toast.success(`Rebalance deleted successfully: ${result.message}`)
+        
+        // Refresh data after successful standalone deletion
+        if (onDataChange) {
+          setTimeout(() => {
+            console.log(`Executing delayed refresh after standalone deletion of ${currentRebalanceId}`)
+            onDataChange()
+          }, 1000) // Delay to ensure backend consistency
+        }
       } else {
         toast.error('Failed to delete rebalance')
+        
+        // Refresh even on failure to ensure UI shows current backend state
+        if (onDataChange) {
+          setTimeout(() => {
+            console.log(`Executing delayed refresh after failed standalone deletion of ${currentRebalanceId}`)
+            onDataChange()
+          }, 500) // Short delay for failure case
+        }
       }
       
     } catch (error) {
       console.error('Failed to delete rebalance:', error)
       toast.error(`Deletion failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      
+      // Refresh even on error to ensure UI shows current backend state
+      if (onDataChange) {
+        setTimeout(() => {
+          console.log(`Executing delayed refresh after standalone deletion error for ${currentRebalanceId}`)
+          onDataChange()
+        }, 500) // Short delay for error case
+      }
     } finally {
       setCurrentRebalanceId(null)
     }

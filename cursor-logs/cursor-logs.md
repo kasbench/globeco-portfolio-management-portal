@@ -2899,6 +2899,299 @@ This fix eliminates the confusing error messages that appear during the deletion
 
 ---
 
+## Entry #83: Bug Fix - Apply State Management Timing Fixes to All Scenarios
+*Timestamp: 2025-01-17 01:00:00*
+*Type: Bug Fix*
+*Priority: High*
+*Stage: Order Submission Integration Debugging*
+
+### Problem Statement
+
+After fixing the state management timing issues for the SUCCESS scenario (Entry #81), the user asked whether the same fixes need to be applied to FAILURE and PARTIAL scenarios. Upon analysis, several additional timing issues were discovered across all submission and deletion scenarios.
+
+**Root Cause Analysis:**
+The state management order of operations fix (Entry #81) was only applied to the SUCCESS scenario with full backend deletion. However, there are multiple other scenarios that also call `onDataChange()` immediately without proper timing delays, which could cause the same race condition issues.
+
+### Comprehensive Scenario Analysis
+
+#### 1. **SUCCESS Scenario** (Complete Success + Backend Deletion)
+- ✅ **Already Fixed** - Uses `verifyRebalanceExists()` with 2000ms + 1000ms delays
+- ✅ **Proper State Management** - Cache invalidation → Fresh fetch → State reset
+
+#### 2. **PARTIAL Success Scenario** (Some Orders Failed)
+- ❌ **Issue Found**: Called `onDataChange()` immediately without timing delays
+- ❌ **Risk**: Same state management race condition as original bug
+- ✅ **Fixed**: Added 1000ms delay for backend consistency
+
+#### 3. **FAILURE Scenario** (All Orders Failed)
+- ❌ **Issue Found**: No refresh at all - UI doesn't reflect potential backend state changes
+- ❌ **Risk**: UI shows stale data if backend state changed during failed submission
+- ✅ **Fixed**: Added 500ms delay refresh to ensure UI consistency
+
+#### 4. **SUCCESS Edge Cases** (Orders Succeeded but Backend Deletion Failed)
+- ❌ **Issue Found**: Two immediate `onDataChange()` calls without timing delays
+- ❌ **Risk**: Same state management race condition
+- ✅ **Fixed**: Added 1000ms delays for consistency
+
+#### 5. **Standalone Deletion Scenario** (Direct Delete Button)
+- ❌ **Critical Issue Found**: No refresh calls at all in any case (success, failure, error)
+- ❌ **Risk**: UI never updates after standalone deletions
+- ✅ **Fixed**: Added refresh calls with timing delays for all cases
+
+### Implementation Details
+
+#### 1. Fixed PARTIAL Success Scenario
+
+**File: `src/components/tables/RebalanceTable.tsx`**
+
+**Before:**
+```typescript
+} else {
+  // Some orders failed, refresh to show updated state
+  if (onDataChange) {
+    onDataChange() // ← Immediate call, race condition risk
+  }
+}
+```
+
+**After:**
+```typescript
+} else {
+  // Some orders failed, refresh to show updated state
+  console.log(`Partial success for ${currentRebalanceId}: ${result.successfulOrders} successful, ${result.failedOrders} failed`)
+  if (onDataChange) {
+    // Add delay for partial success to ensure backend consistency
+    setTimeout(() => {
+      console.log(`Executing delayed refresh for partial success of ${currentRebalanceId}`)
+      onDataChange()
+    }, 1000) // Shorter delay since no backend deletion involved
+  }
+}
+```
+
+#### 2. Fixed FAILURE Scenario
+
+**Before:**
+```typescript
+} else {
+  toast.error(`Failed to submit orders: ${result.errors.join(', ')}`)
+  // ← No refresh at all!
+}
+```
+
+**After:**
+```typescript
+} else {
+  console.log(`Complete failure for ${currentRebalanceId}: ${result.errors.join(', ')}`)
+  toast.error(`Failed to submit orders: ${result.errors.join(', ')}`)
+  
+  // Refresh even on complete failure to ensure UI shows current backend state
+  if (onDataChange) {
+    setTimeout(() => {
+      console.log(`Executing delayed refresh for failed submission of ${currentRebalanceId}`)
+      onDataChange()
+    }, 500) // Short delay for failure case
+  }
+}
+```
+
+#### 3. Fixed SUCCESS Edge Cases
+
+**Backend Deletion Failed:**
+```typescript
+} else {
+  console.warn(`Backend deletion failed for ${currentRebalanceId}, but orders were submitted successfully`)
+  // Still refresh to show any partial changes
+  if (onDataChange) {
+    setTimeout(() => {
+      console.log(`Executing delayed refresh for ${currentRebalanceId} after backend deletion failure`)
+      onDataChange()
+    }, 1000) // Delay for consistency with other refresh scenarios
+  }
+}
+```
+
+**Deletion Error Catch Block:**
+```typescript
+} catch (deleteError) {
+  console.warn(`Failed to delete rebalance ${currentRebalanceId} after successful submission:`, deleteError)
+  // Don't show error to user since orders were submitted successfully
+  // Still refresh to show any partial changes
+  if (onDataChange) {
+    setTimeout(() => {
+      console.log(`Executing delayed refresh for ${currentRebalanceId} after deletion error`)
+      onDataChange()
+    }, 1000) // Delay for consistency with other refresh scenarios
+  }
+}
+```
+
+#### 4. Fixed Standalone Deletion Scenario
+
+**Critical Issue**: The `handleConfirmDelete` function (standalone deletion) had **no refresh calls at all**.
+
+**Before:**
+```typescript
+const handleConfirmDelete = async () => {
+  // ... deletion logic ...
+  
+  if (result.success) {
+    toast.success(`Rebalance deleted successfully: ${result.message}`)
+    // ← No refresh!
+  } else {
+    toast.error('Failed to delete rebalance')
+    // ← No refresh!
+  }
+  
+} catch (error) {
+  console.error('Failed to delete rebalance:', error)
+  toast.error(`Deletion failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+  // ← No refresh!
+}
+```
+
+**After:**
+```typescript
+if (result.success) {
+  toast.success(`Rebalance deleted successfully: ${result.message}`)
+  
+  // Refresh data after successful standalone deletion
+  if (onDataChange) {
+    setTimeout(() => {
+      console.log(`Executing delayed refresh after standalone deletion of ${currentRebalanceId}`)
+      onDataChange()
+    }, 1000) // Delay to ensure backend consistency
+  }
+} else {
+  toast.error('Failed to delete rebalance')
+  
+  // Refresh even on failure to ensure UI shows current backend state
+  if (onDataChange) {
+    setTimeout(() => {
+      console.log(`Executing delayed refresh after failed standalone deletion of ${currentRebalanceId}`)
+      onDataChange()
+    }, 500) // Short delay for failure case
+  }
+}
+
+} catch (error) {
+  console.error('Failed to delete rebalance:', error)
+  toast.error(`Deletion failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+  
+  // Refresh even on error to ensure UI shows current backend state
+  if (onDataChange) {
+    setTimeout(() => {
+      console.log(`Executing delayed refresh after standalone deletion error for ${currentRebalanceId}`)
+      onDataChange()
+    }, 500) // Short delay for error case
+  }
+}
+```
+
+### Timing Strategy Applied
+
+#### **Delay Durations by Scenario:**
+
+1. **SUCCESS with Backend Deletion**: 2000ms + 1000ms (3000ms total)
+   - Longest delay for complex backend deletion + verification process
+
+2. **PARTIAL Success**: 1000ms
+   - Medium delay since some backend state changes occurred
+
+3. **SUCCESS Edge Cases**: 1000ms  
+   - Medium delay for consistency with partial success
+
+4. **FAILURE Cases**: 500ms
+   - Short delay since minimal backend changes expected
+
+5. **Standalone Deletion Success**: 1000ms
+   - Medium delay for backend deletion consistency
+
+6. **Standalone Deletion Failure/Error**: 500ms
+   - Short delay for failure cases
+
+#### **Rationale for Different Delays:**
+
+- **Longer Delays**: More complex backend operations need more time to propagate
+- **Shorter Delays**: Failure cases need quick feedback but still benefit from timing buffer
+- **Consistent Patterns**: Similar operations use similar delays for predictable behavior
+
+### Expected Behavior After Fix
+
+#### **All Scenarios Now Have Proper Refresh Timing:**
+
+**PARTIAL Success Console Logs:**
+```
+✅ Partial success for {id}: X successful, Y failed
+⏱️  [1000ms delay]
+✅ Executing delayed refresh for partial success of {id}
+✅ Data change callback triggered - invalidating cache and refetching data
+✅ [State management sequence...]
+```
+
+**FAILURE Console Logs:**
+```
+✅ Complete failure for {id}: [error messages]
+⏱️  [500ms delay]
+✅ Executing delayed refresh for failed submission of {id}
+✅ Data change callback triggered - invalidating cache and refetching data
+✅ [State management sequence...]
+```
+
+**Standalone Deletion Console Logs:**
+```
+✅ Rebalance deleted successfully: [message]
+⏱️  [1000ms delay]
+✅ Executing delayed refresh after standalone deletion of {id}
+✅ Data change callback triggered - invalidating cache and refetching data
+✅ [State management sequence...]
+```
+
+### Benefits of Comprehensive Fix
+
+#### 1. **Consistent State Management**
+- All scenarios now use the same state management pattern
+- No more immediate `onDataChange()` calls that cause race conditions
+- Predictable timing across all user interactions
+
+#### 2. **Complete UI Refresh Coverage**
+- **Before**: Only SUCCESS scenario refreshed properly
+- **After**: All scenarios (SUCCESS, PARTIAL, FAILURE, STANDALONE) refresh with proper timing
+
+#### 3. **Better Error Recovery**
+- Even failure cases now refresh to show current backend state
+- Users see accurate data regardless of operation outcome
+- No stale data after failed operations
+
+#### 4. **Improved Debugging**
+- Clear console logs for each scenario type
+- Timing delays are logged for debugging
+- Easy to identify which scenario triggered a refresh
+
+#### 5. **User Experience Consistency**
+- All operations provide visual feedback through refresh
+- No scenarios leave users wondering if something happened
+- Consistent behavior builds user confidence
+
+### Testing Validation
+
+**Success Criteria for Each Scenario:**
+
+1. **PARTIAL Success**: Shows updated positions (some submitted, some failed)
+2. **FAILURE**: Shows unchanged data but confirms current backend state
+3. **SUCCESS Edge Cases**: Shows submitted positions even if backend deletion failed
+4. **Standalone Deletion**: Rebalance disappears from UI after successful deletion
+
+**Diagnostic Verification:**
+- **Timing Logs**: Each scenario shows appropriate delay logs
+- **State Management**: All scenarios use cache invalidation → fresh fetch → state reset pattern
+- **No Race Conditions**: No "stale data" issues in any scenario
+- **Complete Coverage**: Every user action results in appropriate UI refresh
+
+This comprehensive fix ensures that all submission and deletion scenarios use consistent state management timing, eliminating race conditions and providing reliable UI updates regardless of operation outcome.
+
+---
+
 ## Build Error Resolution - Rebalance Results Page
 **Date**: 2025-01-11  
 **Prompt**: "Please address the errors at http://localhost:3000/model-management/rebalance-results"
