@@ -54,6 +54,7 @@ import {
 } from '@/components/ui/dialog'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { TooltipProvider, HelpTooltip } from '@/components/ui/tooltip'
+import { toast } from 'sonner'
 
 import { useBatchOperations, type SmartFilter, type FilterCriteria, type RetryStrategy } from '@/lib/hooks/useBatchOperations'
 import { RebalanceWithSubmission } from '@/types/rebalance'
@@ -171,6 +172,32 @@ const BatchOperationsPanel: React.FC<BatchOperationsPanelProps> = ({
   const estimatedOrders = estimatedPortfolios * 50 // Rough estimate
   const estimatedValue = estimatedOrders * 10000 // $10k average per order
 
+  // Custom validation for external selection state
+  const externalValidationResults = React.useMemo(() => {
+    if (externalSelectedRebalances) {
+      const errors: string[] = []
+      const warnings: string[] = []
+      
+      if (externalSelectedRebalances.size === 0) {
+        errors.push('No items selected for processing')
+      }
+      
+      if (externalSelectedRebalances.size > 10000) {
+        warnings.push('Large selection may take significant time to process')
+      }
+      
+      return {
+        valid: errors.length === 0,
+        errors,
+        warnings
+      }
+    }
+    return null
+  }, [externalSelectedRebalances])
+
+  // Use external validation if available, otherwise use internal validation
+  const effectiveValidationResults = externalValidationResults || validationResults
+
   // Smart selection presets
   const smartSelectionPresets: SmartSelectionPreset[] = [
     {
@@ -200,11 +227,83 @@ const BatchOperationsPanel: React.FC<BatchOperationsPanelProps> = ({
   const validationResults = useMemo(() => validateSelection(), [validateSelection])
   const estimatedTime = useMemo(() => estimateProcessingTime(), [estimateProcessingTime])
 
+  // Custom handlers that work with external selection state when provided
   const handleBatchSubmit = async () => {
     try {
-      const result = await batchSubmit()
-      if (onOperationComplete) {
-        onOperationComplete(result)
+      // If using external selection state, we need to handle submission differently
+      if (externalSelectedRebalances && externalSelectedRebalances.size > 0) {
+        // Use a custom submission approach with external selection
+        const selectedRebalancesArray = rebalances.filter(r => 
+          externalSelectedRebalances.has(r.rebalance_id)
+        )
+        
+        if (selectedRebalancesArray.length === 0) {
+          throw new Error('No rebalances selected for submission')
+        }
+
+        // Use the same submission logic as the main "Submit All" button
+        // Import the necessary functions at the top of the file and implement here
+        console.log(`Submitting ${selectedRebalancesArray.length} selected rebalances:`, 
+          selectedRebalancesArray.map(r => r.rebalance_id))
+        
+        // For now, let's use the OrderService API directly for each selected rebalance
+        const { orderServiceApi } = await import('@/lib/api/orderService')
+        const { transformToSubmissionRebalance } = await import('@/lib/utils/rebalanceTransform')
+        
+        let successfulSubmissions = 0
+        let failedSubmissions = 0
+        
+        for (const rebalance of selectedRebalancesArray) {
+          try {
+            const submissionRebalance = transformToSubmissionRebalance(rebalance)
+            const { result } = await orderServiceApi.submitRebalanceOrders(
+              submissionRebalance,
+              (progress) => {
+                console.log(`Rebalance ${rebalance.rebalance_id} progress:`, progress)
+              }
+            )
+            
+            if (result.successfulOrders > 0) {
+              successfulSubmissions++
+            }
+            if (result.failedOrders > 0) {
+              failedSubmissions++
+            }
+          } catch (error) {
+            console.error(`Failed to submit rebalance ${rebalance.rebalance_id}:`, error)
+            failedSubmissions++
+          }
+        }
+        
+        // Show completion message
+        if (successfulSubmissions > 0) {
+          if (failedSubmissions === 0) {
+            console.log(`Successfully submitted ${successfulSubmissions} rebalances.`)
+            toast.success(`Successfully submitted ${successfulSubmissions} rebalances.`)
+          } else {
+            console.log(`Submitted ${successfulSubmissions} rebalances, ${failedSubmissions} failed.`)
+            toast.warning(`Submitted ${successfulSubmissions} rebalances, ${failedSubmissions} failed.`)
+          }
+        } else {
+          console.error(`No rebalances were successfully submitted. ${failedSubmissions} failed.`)
+          toast.error(`No rebalances were successfully submitted. ${failedSubmissions} failed.`)
+        }
+        
+        // Trigger completion callback
+        if (onOperationComplete) {
+          onOperationComplete({
+            type: 'batch_submit',
+            totalProcessed: selectedRebalancesArray.length,
+            successful: successfulSubmissions,
+            failed: failedSubmissions
+          })
+        }
+      } else {
+        // Fall back to internal batch submit
+        const result = await batchSubmit()
+        if (onOperationComplete) {
+          onOperationComplete(result)
+        }
       }
     } catch (error) {
       console.error('Batch submit failed:', error)
@@ -213,9 +312,57 @@ const BatchOperationsPanel: React.FC<BatchOperationsPanelProps> = ({
 
   const handleBatchDelete = async () => {
     try {
-      const result = await batchDelete()
-      if (onOperationComplete) {
-        onOperationComplete(result)
+      // If using external selection state, we need to handle deletion differently
+      if (externalSelectedRebalances && externalSelectedRebalances.size > 0) {
+        const selectedRebalancesArray = rebalances.filter(r => 
+          externalSelectedRebalances.has(r.rebalance_id)
+        )
+        
+        if (selectedRebalancesArray.length === 0) {
+          throw new Error('No rebalances selected for deletion')
+        }
+
+        console.log(`Deleting ${selectedRebalancesArray.length} selected rebalances:`, 
+          selectedRebalancesArray.map(r => r.rebalance_id))
+        
+        // Use the Order Generation API for deletion
+        const { orderGenerationApi } = await import('@/lib/api/orderGenerationService')
+        
+        const deletionRequests = selectedRebalancesArray.map(rebalance => ({
+          rebalanceId: rebalance.rebalance_id,
+          version: rebalance.version
+        }))
+
+        const deletionResult = await orderGenerationApi.deleteRebalances(deletionRequests)
+        
+        console.log(`Deletion complete: ${deletionResult.totalDeleted} successful, ${deletionResult.totalFailed} failed`)
+        
+        // Show completion message
+        if (deletionResult.totalDeleted > 0) {
+          if (deletionResult.totalFailed === 0) {
+            toast.success(`Successfully deleted ${deletionResult.totalDeleted} rebalances.`)
+          } else {
+            toast.warning(`Deleted ${deletionResult.totalDeleted} rebalances, ${deletionResult.totalFailed} failed.`)
+          }
+        } else {
+          toast.error(`No rebalances were deleted. ${deletionResult.totalFailed} failed.`)
+        }
+        
+        // Trigger completion callback
+        if (onOperationComplete) {
+          onOperationComplete({
+            type: 'batch_delete',
+            totalProcessed: deletionRequests.length,
+            successful: deletionResult.totalDeleted,
+            failed: deletionResult.totalFailed
+          })
+        }
+      } else {
+        // Fall back to internal batch delete
+        const result = await batchDelete()
+        if (onOperationComplete) {
+          onOperationComplete(result)
+        }
       }
     } catch (error) {
       console.error('Batch delete failed:', error)
@@ -414,13 +561,13 @@ const BatchOperationsPanel: React.FC<BatchOperationsPanelProps> = ({
               )}
 
               {/* Validation Results */}
-              {!validationResults.valid && (
+              {!effectiveValidationResults?.valid && (
                 <Alert>
                   <AlertTriangle className="h-4 w-4" />
                   <AlertDescription>
                     <strong>Validation Issues:</strong>
                     <ul className="list-disc list-inside mt-1">
-                      {validationResults.errors.map((error, i) => (
+                      {effectiveValidationResults?.errors.map((error, i) => (
                         <li key={i} className="text-sm">{error}</li>
                       ))}
                     </ul>
@@ -428,13 +575,13 @@ const BatchOperationsPanel: React.FC<BatchOperationsPanelProps> = ({
                 </Alert>
               )}
 
-              {validationResults.warnings.length > 0 && (
+              {effectiveValidationResults?.warnings.length > 0 && (
                 <Alert>
                   <Info className="h-4 w-4" />
                   <AlertDescription>
                     <strong>Warnings:</strong>
                     <ul className="list-disc list-inside mt-1">
-                      {validationResults.warnings.map((warning, i) => (
+                      {effectiveValidationResults.warnings.map((warning, i) => (
                         <li key={i} className="text-sm">{warning}</li>
                       ))}
                     </ul>
@@ -524,7 +671,7 @@ const BatchOperationsPanel: React.FC<BatchOperationsPanelProps> = ({
                   <div className="grid grid-cols-1 gap-3">
                     <Button
                       onClick={handleBatchSubmit}
-                      disabled={selectedCount === 0 || !validationResults.valid || isProcessing}
+                      disabled={selectedCount === 0 || !effectiveValidationResults?.valid || isProcessing}
                       className="flex items-center justify-between p-4 h-auto"
                     >
                       <div className="flex items-center space-x-3">
