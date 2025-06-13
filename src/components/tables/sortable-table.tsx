@@ -40,17 +40,7 @@ export function SortableTable<T>({
   emptyMessage = 'No data available',
   className = ''
 }: SortableTableProps<T>) {
-  console.log('SortableTable render:', {
-    dataLength: data.length,
-    columnsLength: columns.length,
-    sortLength: sort.length,
-    loading,
-    emptyMessage,
-    className
-  })
-
   const handleSort = (key: string) => {
-    console.log('SortableTable handleSort called with key:', key)
     const existingSort = sort.find(s => s.field === key)
     let newSort: OrderSortConfig[]
     
@@ -64,7 +54,6 @@ export function SortableTable<T>({
       newSort = [...sort, { field: key, direction: 'asc' as const }]
     }
     
-    console.log('SortableTable calling onSortChange with:', newSort)
     onSortChange(newSort)
   }
 

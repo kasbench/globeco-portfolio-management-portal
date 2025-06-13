@@ -26,19 +26,8 @@ export function Pagination({
   onPageSizeChange,
   className = ''
 }: PaginationProps) {
-  console.log('Pagination render:', { 
-    className, 
-    paginationOffset: pagination.offset,
-    paginationPageSize: pagination.pageSize,
-    paginationTotal: pagination.totalElements,
-    hasNext: pagination.hasNext,
-    hasPrevious: pagination.hasPrevious
-  })
-  
   const currentPage = Math.floor(pagination.offset / pagination.pageSize) + 1
   const totalPages = Math.ceil(pagination.totalElements / pagination.pageSize)
-  
-  console.log('Pagination calculated:', { currentPage, totalPages })
   
   const startItem = pagination.offset + 1
   const endItem = Math.min(pagination.offset + pagination.pageSize, pagination.totalElements)

@@ -199,6 +199,50 @@ Created comprehensive type definitions in `error-display.tsx`:
 - **Configurable Retry Logic**: Custom retry configuration with backoff multipliers
 - **Smart Retry Recommendations**: Context-aware retry suggestions with expected success rates
 
+## 2025-01-27 15:30 - Debugging Logs Cleanup Completed
+
+**User Request**: Remove all debugging logs that were added to solve the infinite re-render problem.
+
+**Actions Taken**:
+1. **useOrders Hook** (`src/lib/hooks/useOrders.ts`): Removed all console.log statements from:
+   - URL parameter parsing useMemo hooks
+   - fetchOrders function calls and parameters
+   - toggleOrderSelection function
+   - All useEffect hooks (initial load, auto-refresh, URL sync, URL parameter changes)
+
+2. **OrderManagementContent** (`src/app/order-management/page.tsx`): Removed all console.log statements from:
+   - Component render tracking
+   - useOrders result logging
+   - JSX creation lifecycle logging
+
+3. **SortableTable** (`src/components/tables/sortable-table.tsx`): Removed all console.log statements from:
+   - Component render tracking with props
+   - handleSort function calls
+
+4. **Pagination** (`src/components/ui/pagination.tsx`): Removed all console.log statements from:
+   - Component render tracking with pagination metadata
+   - Calculated values logging
+
+5. **Select Components** (`src/components/ui/select.tsx`): Removed all console.log statements from:
+   - SelectTrigger render tracking
+   - SelectScrollUpButton, SelectScrollDownButton render tracking
+   - SelectContent render tracking with props
+   - SelectLabel render tracking
+   - SelectItem render tracking with values
+   - SelectSeparator render tracking
+   - Fixed syntax error in SelectTrigger (missing closing parenthesis)
+
+6. **Checkbox** (`src/components/ui/checkbox.tsx`): Removed all console.log statements from:
+   - Component render tracking with props
+   - Fixed syntax to use arrow function properly
+
+**Verification**: 
+- Confirmed no remaining console.log statements in any of the modified files
+- Fixed syntax errors that occurred during log removal
+- All components now have clean, production-ready code
+
+**Status**: ✅ **COMPLETED** - All debugging logs successfully removed from the infinite re-render bug fix. Application should now run without excessive console output.
+
 ## 2024-12-30 - Debugging Infinite Re-render Issue
 
 **Problem**: Getting "Maximum update depth exceeded" error on Order Management page, specifically in the Pagination component with Select components from @radix-ui/react-popper library.

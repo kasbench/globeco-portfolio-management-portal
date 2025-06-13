@@ -85,35 +85,25 @@ export function useOrders(options: UseOrdersOptions = {}): UseOrdersReturn {
   // Parse URL parameters for filters and sort
   const filtersFromUrl = useMemo(() => {
     const filtersParam = searchParams.get('filters')
-    console.log('filtersFromUrl useMemo triggered, filtersParam:', filtersParam)
     if (filtersParam) {
       try {
-        const parsed = JSON.parse(decodeURIComponent(filtersParam)) as OrderFilter[]
-        console.log('filtersFromUrl returning parsed:', parsed)
-        return parsed
+        return JSON.parse(decodeURIComponent(filtersParam)) as OrderFilter[]
       } catch {
-        console.log('filtersFromUrl returning defaultFilters due to parse error')
         return defaultFilters
       }
     }
-    console.log('filtersFromUrl returning defaultFilters (no param)')
     return defaultFilters
   }, [searchParams, defaultFilters])
 
   const sortFromUrl = useMemo(() => {
     const sortParam = searchParams.get('sort')
-    console.log('sortFromUrl useMemo triggered, sortParam:', sortParam)
     if (sortParam) {
       try {
-        const parsed = JSON.parse(decodeURIComponent(sortParam)) as OrderSortConfig[]
-        console.log('sortFromUrl returning parsed:', parsed)
-        return parsed
+        return JSON.parse(decodeURIComponent(sortParam)) as OrderSortConfig[]
       } catch {
-        console.log('sortFromUrl returning defaultSort due to parse error')
         return defaultSort
       }
     }
-    console.log('sortFromUrl returning defaultSort (no param)')
     return defaultSort
   }, [searchParams, defaultSort])
 
@@ -180,25 +170,11 @@ export function useOrders(options: UseOrdersOptions = {}): UseOrdersReturn {
     page?: number,
     pageSize?: number
   ) => {
-    console.log('fetchOrders called with:', {
-      currentFilters: currentFilters?.length || 'using ref',
-      currentSort: currentSort?.length || 'using ref', 
-      page: page || 'using ref',
-      pageSize: pageSize || 'using ref'
-    })
-    
     // Use provided values or current ref values
     const filtersToUse = currentFilters || currentFiltersRef.current
     const sortToUse = currentSort || currentSortRef.current
     const pageToUse = page || currentPageRef.current
     const pageSizeToUse = pageSize || currentPageSizeRef.current
-
-    console.log('fetchOrders using values:', {
-      filtersToUse: filtersToUse.length,
-      sortToUse: sortToUse.length,
-      pageToUse,
-      pageSizeToUse
-    })
 
     setLoading(true)
     setError(null)
@@ -287,13 +263,10 @@ export function useOrders(options: UseOrdersOptions = {}): UseOrdersReturn {
 
   // Selection management
   const toggleOrderSelection = useCallback((orderId: number) => {
-    console.log('toggleOrderSelection called with orderId:', orderId)
     setSelectedOrderIds(prev => {
-      const newSelection = prev.includes(orderId) 
+      return prev.includes(orderId) 
         ? prev.filter(id => id !== orderId)
         : [...prev, orderId]
-      console.log('toggleOrderSelection updating from:', prev, 'to:', newSelection)
-      return newSelection
     })
   }, [])
 
@@ -314,21 +287,17 @@ export function useOrders(options: UseOrdersOptions = {}): UseOrdersReturn {
 
   // Initial load - only run once on mount
   useEffect(() => {
-    console.log('useOrders initial load useEffect triggered, initialLoadRef.current:', initialLoadRef.current)
     if (!initialLoadRef.current) {
       initialLoadRef.current = true
-      console.log('useOrders calling fetchOrders for initial load')
       fetchOrders()
     }
   }, []) // Empty dependency array - only run on mount
 
   // Auto-refresh functionality
   useEffect(() => {
-    console.log('useOrders auto-refresh useEffect triggered, autoRefresh:', autoRefresh)
     if (!autoRefresh) return
 
     const interval = setInterval(() => {
-      console.log('useOrders auto-refresh interval triggered, loading:', loading)
       if (!loading) {
         fetchOrders()
       }
@@ -339,12 +308,10 @@ export function useOrders(options: UseOrdersOptions = {}): UseOrdersReturn {
 
   // Sync state with URL changes - but don't trigger fetches here
   useEffect(() => {
-    console.log('useOrders filtersFromUrl sync useEffect triggered, filtersFromUrl:', filtersFromUrl)
     setFiltersState(filtersFromUrl)
   }, [filtersFromUrl])
 
   useEffect(() => {
-    console.log('useOrders sortFromUrl sync useEffect triggered, sortFromUrl:', sortFromUrl)
     setSortState(sortFromUrl)
   }, [sortFromUrl])
 
@@ -355,17 +322,8 @@ export function useOrders(options: UseOrdersOptions = {}): UseOrdersReturn {
   useEffect(() => {
     const currentUrlParams = `${JSON.stringify(filtersFromUrl)}-${JSON.stringify(sortFromUrl)}-${pageFromUrl}-${pageSizeFromUrl}`
     
-    console.log('useOrders URL params change useEffect triggered:', {
-      currentUrlParams,
-      prevUrlParams: prevUrlParamsRef.current,
-      initialLoadDone: initialLoadRef.current,
-      urlsEqual: prevUrlParamsRef.current === currentUrlParams
-    })
-    
     // Only fetch if this is not the initial load and URL actually changed
     if (initialLoadRef.current && prevUrlParamsRef.current !== '' && prevUrlParamsRef.current !== currentUrlParams) {
-      console.log('useOrders URL changed, scheduling fetch with timeout')
-      
       // Clear any existing timeout
       if (urlChangeTimeoutRef.current) {
         clearTimeout(urlChangeTimeoutRef.current)
@@ -374,11 +332,8 @@ export function useOrders(options: UseOrdersOptions = {}): UseOrdersReturn {
       // URL changed, fetch with new parameters
       // Use a timeout to debounce rapid URL changes
       urlChangeTimeoutRef.current = setTimeout(() => {
-        console.log('useOrders executing delayed fetch due to URL change')
         fetchOrders(filtersFromUrl, sortFromUrl, pageFromUrl, pageSizeFromUrl)
       }, 10)
-    } else {
-      console.log('useOrders skipping fetch - no URL change or initial load')
     }
     
     prevUrlParamsRef.current = currentUrlParams

@@ -35,8 +35,6 @@ import { OrderWithDetailsDTO, OrderFilter } from '@/types/order'
 import orderServiceApi from '@/lib/api/orderService'
 
 function OrderManagementContent() {
-  console.log('OrderManagementContent render start')
-  
   const {
     orders,
     pagination,
@@ -57,18 +55,6 @@ function OrderManagementContent() {
     defaultPageSize: 50,
     autoRefresh: false
   })
-
-  console.log('OrderManagementContent useOrders result:', {
-    ordersLength: orders.length,
-    loading,
-    error: !!error,
-    paginationTotal: pagination?.total,
-    selectedOrderIdsLength: selectedOrderIds.length,
-    filtersLength: filters.length,
-    sortLength: sort.length
-  })
-
-  console.log('OrderManagementContent about to render JSX')
 
   // Loading states for individual actions
   const [actionLoading, setActionLoading] = useState<{
@@ -391,7 +377,6 @@ function OrderManagementContent() {
   const newOrdersCount = orders.filter(order => order.status.abbreviation === 'NEW').length
   const selectedNewOrdersCount = selectedOrderIds.length
 
-  console.log('OrderManagementContent JSX created, about to return')
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="container mx-auto px-4 py-6">
