@@ -90,7 +90,7 @@ export default function RebalanceResultsPage() {
         rebalances,
         portfolios: rebalances.flatMap(r => r.portfolios || []),
         positions: rebalances.flatMap(r => 
-          (r.portfolios || []).flatMap(p => p.positions || [])
+          (r.portfolios || []).flatMap((p: any) => p.positions || [])
         )
       })
       
@@ -111,7 +111,7 @@ export default function RebalanceResultsPage() {
     
     try {
       // Transform rebalances to submission format
-      const submissionRebalances = rebalances.map(transformToSubmissionRebalance)
+      const submissionRebalances = rebalances.map((rebalance: any) => transformToSubmissionRebalance(rebalance))
       
       let successfulSubmissions = 0
       let failedSubmissions = 0
@@ -414,7 +414,11 @@ export default function RebalanceResultsPage() {
               if (selected) {
                 setSelectedRebalances(prev => new Set(prev).add(rebalanceId))
               } else {
-                setSelectedRebalances(prev => new Set(prev).delete(rebalanceId))
+                setSelectedRebalances(prev => {
+                  const newSet = new Set(prev)
+                  newSet.delete(rebalanceId)
+                  return newSet
+                })
               }
             }}
           />

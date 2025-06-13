@@ -15,7 +15,7 @@ import {
   RebalancePortfolioWithSubmission,
   RebalanceWithSubmission 
 } from '@/types/rebalance'
-import { OrderLogger } from '@/lib/utils/orderLogging'
+import { orderLogger } from '@/lib/utils/orderLogging'
 
 /**
  * Individual order processing result
@@ -96,11 +96,10 @@ export interface SubmissionAuditEntry {
  * Handles all aspects of Order Service response processing
  */
 export class ResponseProcessingService {
-  private logger: OrderLogger
+  private logger = orderLogger
   private retryConfig: RetryConfig
 
   constructor(retryConfig?: Partial<RetryConfig>) {
-    this.logger = new OrderLogger()
     this.retryConfig = {
       maxRetries: 3,
       retryDelay: 1000,
@@ -168,7 +167,7 @@ export class ResponseProcessingService {
           result.successfulOrders = this.processCompleteSuccess(response.data, originalOrders)
       }
     } catch (error) {
-      result.errors.push(`Response parsing error: ${error.message}`)
+      result.errors.push(`Response parsing error: ${error instanceof Error ? error.message : 'Unknown error'}`)
       result.failedOrders = originalOrders.map(order => this.createFailedOrderResult(
         order, 
         'Response parsing failed', 

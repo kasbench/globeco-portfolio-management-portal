@@ -6,8 +6,7 @@ import {
   RebalancePortfolioWithSubmission,
   RebalancePositionWithSubmission,
 } from '@/types/rebalance'
-import { SubmissionState } from '@/types/order'
-import { OrderSubmissionResult } from '@/lib/api/orderService'
+import { SubmissionState, OrderSubmissionResult } from '@/types/order'
 
 /**
  * Transaction context for atomic operations
@@ -347,7 +346,7 @@ export class DataCleanupService {
 
     // If no eligible positions remain, check what happened to the positions
     if (eligiblePositions.length === 0) {
-      return submittedPositions.length > 0 ? SubmissionState.Submitted : SubmissionState.Idle
+      return submittedPositions.length > 0 ? SubmissionState.Submitted : SubmissionState.NotSubmitted
     }
 
     // If we have both submitted and failed positions, it's partial
@@ -370,7 +369,7 @@ export class DataCleanupService {
       return SubmissionState.Failed
     }
 
-    return SubmissionState.Idle
+    return SubmissionState.NotSubmitted
   }
 
   /**
@@ -397,7 +396,7 @@ export class DataCleanupService {
       return SubmissionState.Failed
     }
 
-    return SubmissionState.Idle
+    return SubmissionState.NotSubmitted
   }
 
   /**

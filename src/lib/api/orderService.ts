@@ -358,7 +358,7 @@ export const orderServiceApi = {
               result.submittedOrderIds.push(order.orderId)
             } else {
               result.failedOrders++
-              result.errors.push(`Failed to create order: ${order.error || 'Unknown error'}`)
+              result.errors.push(`Failed to create order: ${order.errorCode || 'Unknown error'}`)
             }
           }
         }
@@ -461,13 +461,9 @@ export const orderServiceApi = {
     const updatedRebalance: RebalanceWithSubmission = {
       ...rebalance,
       portfolios: updatedPortfolios,
-      submissionState: {
-        state: aggregatedResult.failedOrders === 0 ? SubmissionState.Submitted : 
-               aggregatedResult.successfulOrders > 0 ? SubmissionState.PartiallySubmitted : 
-               SubmissionState.Failed,
-        submittedAt: aggregatedResult.successfulOrders > 0 ? new Date().toISOString() : undefined,
-        error: aggregatedResult.errors.length > 0 ? aggregatedResult.errors.join('; ') : undefined
-      }
+      submission: aggregatedResult.failedOrders === 0 ? SubmissionState.Submitted : 
+                 aggregatedResult.successfulOrders > 0 ? SubmissionState.PartiallySubmitted : 
+                 SubmissionState.Failed
     }
 
     return { rebalance: updatedRebalance, result: aggregatedResult }

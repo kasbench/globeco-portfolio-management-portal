@@ -17,7 +17,7 @@ import { isPositionEligibleForSubmission, countEligibleOrders } from './orderMap
  * Validates if a position is eligible for order submission
  * This is a simplified version of the orderMapping validation for testing purposes
  */
-export function validateOrderEligibility(position: RebalancePosition): boolean {
+export function validateOrderEligibility(position: RebalancePositionWithSubmission): boolean {
   return (
     (position.transaction_type === 'BUY' || position.transaction_type === 'SELL') &&
     position.trade_quantity !== 0 &&
@@ -31,9 +31,15 @@ export function validateOrderEligibility(position: RebalancePosition): boolean {
  * This function adds the required submission tracking fields
  */
 export function transformPositionToSubmission(position: RebalancePosition): RebalancePositionWithSubmission {
-  // Use the original transaction_type and trade_quantity if provided
-  const transaction_type = position.transaction_type || 'HOLD'
-  const trade_quantity = position.trade_quantity || 0
+  // Calculate transaction type based on quantity difference
+  let transaction_type: 'BUY' | 'SELL' | 'HOLD' = 'HOLD'
+  const trade_quantity = position.adjusted_quantity - position.original_quantity
+  
+  if (trade_quantity > 0) {
+    transaction_type = 'BUY'
+  } else if (trade_quantity < 0) {
+    transaction_type = 'SELL'
+  }
   
   const enhancedPosition: RebalancePositionWithSubmission = {
     ...position,
@@ -110,7 +116,7 @@ export function transformRebalanceToSubmission(rebalance: Rebalance): RebalanceW
  * Transform multiple rebalances to submission-enhanced rebalances
  */
 export function transformRebalancesToSubmission(rebalances: Rebalance[]): RebalanceWithSubmission[] {
-  return rebalances.map(transformToSubmissionRebalance)
+  return rebalances.map(rebalance => transformToSubmissionRebalance(rebalance))
 }
 
 /**

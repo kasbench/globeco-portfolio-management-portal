@@ -47,6 +47,68 @@ import {
 } from '@/lib/services/errorStateService'
 
 // ============================================================================
+// Error Handling Types
+// ============================================================================
+
+export enum ErrorSeverity {
+  LOW = 'low',
+  MEDIUM = 'medium',
+  HIGH = 'high',
+  CRITICAL = 'critical'
+}
+
+export enum ErrorCategory {
+  VALIDATION = 'validation',
+  AUTHORIZATION = 'authorization',
+  NETWORK = 'network',
+  TIMEOUT = 'timeout',
+  SERVICE_ERROR = 'service_error',
+  RATE_LIMIT = 'rate_limit',
+  BUSINESS_RULE = 'business_rule',
+  UNKNOWN = 'unknown'
+}
+
+export interface ErrorInfo {
+  id: string
+  message: string
+  code?: string
+  details?: string
+  category: ErrorCategory
+  severity: ErrorSeverity
+  retryable: boolean
+  retryCount: number
+  timestamp: Date
+  lastRetryAt?: Date
+  context?: {
+    itemId?: string
+    batchId?: string
+    operation?: string
+    additionalContext?: Record<string, any>
+  }
+  suggestedAction?: string
+  helpTopicId?: string
+  affectedItems?: string[]
+  originalError?: any
+}
+
+export interface BatchErrorSummary {
+  batchId: string
+  totalErrors: number
+  errorsByCategory: Record<ErrorCategory, number>
+  errorsBySeverity: Record<ErrorSeverity, number>
+  retryableCount: number
+  criticalCount: number
+  mostCommonCategory: ErrorCategory
+  recommendedAction: string
+  errors: ErrorInfo[]
+  retryableErrors: number
+  nonRetryableErrors: number
+  firstError: Date
+  lastError: Date
+  affectedItems: string[]
+}
+
+// ============================================================================
 // Error Level Badge Component
 // ============================================================================
 

@@ -297,9 +297,10 @@ export function ProgressIndicator({
       <Progress 
         value={percentage} 
         className={cn(
-          size === 'sm' ? 'h-2' : size === 'lg' ? 'h-4' : 'h-3'
+          size === 'sm' ? 'h-2' : size === 'lg' ? 'h-4' : 'h-3',
+          className,
+          variantConfig[variant]
         )}
-        indicatorClassName={variantConfig[variant]}
       />
     </div>
   )

@@ -164,7 +164,7 @@ export function OrderActionMenu({
                 {order.limitPrice && ` at $${order.limitPrice}`}
               </span>
               <br />
-              Once submitted, the order status will change to "SENT" and cannot be modified.
+              Once submitted, the order status will change to &quot;SENT&quot; and cannot be modified.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

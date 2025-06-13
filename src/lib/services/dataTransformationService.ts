@@ -94,8 +94,7 @@ export class DataTransformationService {
           day: '2-digit',
           hour: '2-digit',
           minute: '2-digit',
-          second: '2-digit',
-          fractionalSecondDigits: 3
+          second: '2-digit'
         }).replace(' ', 'T') + 'Z'
       } catch (error) {
         console.warn(`Invalid timezone ${timezone}, using UTC`)
@@ -160,7 +159,7 @@ export class DataTransformationService {
         
         orders.push(...portfolioOrders)
       } catch (error) {
-        warnings.push(`Failed to map positions for portfolio ${portfolioId}: ${error.message}`)
+        warnings.push(`Failed to map positions for portfolio ${portfolioId}: ${error instanceof Error ? error.message : 'Unknown error'}`)
       }
     }
 
@@ -169,7 +168,7 @@ export class DataTransformationService {
     const summary = generateOrderSubmissionSummary(allEligiblePositions, portfolioIds, this.config)
 
     // Validate orders if requested
-    let validationResults = { isValid: true, errors: [], batchErrors: [] }
+    let validationResults: ReturnType<typeof validateOrderBatch> = { isValid: true, errors: [], batchErrors: [] }
     if (opts.validateBeforeMapping && orders.length > 0) {
       validationResults = validateOrderBatch(orders)
       

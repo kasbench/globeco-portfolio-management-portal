@@ -195,6 +195,9 @@ const BatchOperationsPanel: React.FC<BatchOperationsPanelProps> = ({
     return null
   }, [externalSelectedRebalances])
 
+  // Validation results
+  const validationResults = useMemo(() => validateSelection(), [validateSelection])
+
   // Use external validation if available, otherwise use internal validation
   const effectiveValidationResults = externalValidationResults || validationResults
 
@@ -222,9 +225,6 @@ const BatchOperationsPanel: React.FC<BatchOperationsPanelProps> = ({
       action: () => invertSelection('rebalance')
     }
   ]
-
-  // Validation results
-  const validationResults = useMemo(() => validateSelection(), [validateSelection])
   const estimatedTime = useMemo(() => estimateProcessingTime(), [estimateProcessingTime])
 
   // Custom handlers that work with external selection state when provided

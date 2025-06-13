@@ -444,24 +444,15 @@ export function getContextualHelp(context: {
 /**
  * Format help content for tooltip display
  */
-export function formatHelpTooltip(content: HelpContent): React.ReactNode {
-  return (
-    <div className="space-y-2 max-w-sm">
-      <div className="font-medium text-slate-900">{content.title}</div>
-      <div className="text-sm text-slate-600">{content.description}</div>
-      
-      {content.examples && content.examples.length > 0 && (
-        <div className="text-xs text-slate-500">
-          <div className="font-medium mb-1">Examples:</div>
-          <ul className="list-disc list-inside space-y-0.5">
-            {content.examples.slice(0, 2).map((example, index) => (
-              <li key={index}>{example}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </div>
-  )
+export function formatHelpTooltip(content: HelpContent): string {
+  let result = `${content.title}\n\n${content.description}`
+  
+  if (content.examples && content.examples.length > 0) {
+    result += '\n\nExamples:\n'
+    result += content.examples.slice(0, 2).map(example => `• ${example}`).join('\n')
+  }
+  
+  return result
 }
 
 /**

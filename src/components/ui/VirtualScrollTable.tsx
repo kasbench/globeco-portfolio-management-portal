@@ -56,11 +56,11 @@ interface RowProps<T> {
 }
 
 // Memoized row component for performance
-const VirtualTableRow = React.memo(<T,>({ 
+const VirtualTableRow = React.memo(function VirtualTableRow<T>({ 
   index, 
   style, 
   data: { items, columns, onRowClick, onRowSelect, selectedItems, selectable, multiSelect } 
-}: RowProps<T>) => {
+}: RowProps<T>) {
   const item = items[index]
   const isSelected = selectedItems?.has(index) || false
 
@@ -108,7 +108,7 @@ const VirtualTableRow = React.memo(<T,>({
       </div>
     </div>
   )
-}, areEqual) as <T>(props: RowProps<T>) => JSX.Element
+}, areEqual) as <T>(props: RowProps<T>) => React.ReactElement
 
 // Header component
 interface HeaderProps<T> {
@@ -123,7 +123,7 @@ interface HeaderProps<T> {
   sortDirection?: 'asc' | 'desc'
 }
 
-const VirtualTableHeader = React.memo(<T,>({
+const VirtualTableHeader = React.memo(function VirtualTableHeader<T>({
   columns,
   selectable,
   multiSelect,
@@ -133,7 +133,7 @@ const VirtualTableHeader = React.memo(<T,>({
   onSort,
   sortColumn,
   sortDirection,
-}: HeaderProps<T>) => {
+}: HeaderProps<T>) {
   const handleSelectAllChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     onSelectAll?.(e.target.checked)
   }, [onSelectAll])
@@ -155,7 +155,7 @@ const VirtualTableHeader = React.memo(<T,>({
             checked={allSelected}
             ref={(input) => {
               if (input) {
-                input.indeterminate = someSelected && !allSelected
+                input.indeterminate = Boolean(someSelected && !allSelected)
               }
             }}
             onChange={handleSelectAllChange}
@@ -185,7 +185,7 @@ const VirtualTableHeader = React.memo(<T,>({
       ))}
     </div>
   )
-}) as <T>(props: HeaderProps<T>) => JSX.Element
+}) as <T>(props: HeaderProps<T>) => React.ReactElement
 
 // Main virtual table component
 export function VirtualScrollTable<T>({
@@ -208,7 +208,7 @@ export function VirtualScrollTable<T>({
   estimatedRowHeight = 40,
   cacheKey
 }: VirtualTableProps<T>) {
-  const listRef = useRef<List | VariableSizeList>(null)
+  const listRef = useRef<any>(null)
   const [selectedIndices, setSelectedIndices] = useState<Set<number>>(selectedItems)
   const [sortColumn, setSortColumn] = useState<string>()
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
@@ -288,8 +288,8 @@ export function VirtualScrollTable<T>({
   }, [onRowSelect])
 
   // Scroll handler
-  const handleScroll = useCallback(({ scrollTop, scrollLeft }: { scrollTop: number; scrollLeft: number }) => {
-    onScroll?.(scrollTop, scrollLeft)
+  const handleScroll = useCallback((props: any) => {
+    onScroll?.(props.scrollTop, props.scrollLeft)
   }, [onScroll])
 
   // Dynamic row height function
@@ -349,9 +349,10 @@ export function VirtualScrollTable<T>({
           <VariableSizeList
             ref={listRef}
             height={listHeight}
+            width="100%"
             itemCount={sortedData.length}
             itemSize={getRowHeight}
-            itemData={rowData}
+            itemData={rowData as any}
             overscanCount={overscan}
             onScroll={handleScroll}
             estimatedItemSize={estimatedRowHeight}
@@ -362,9 +363,10 @@ export function VirtualScrollTable<T>({
           <List
             ref={listRef}
             height={listHeight}
+            width="100%"
             itemCount={sortedData.length}
             itemSize={rowHeight as number}
-            itemData={rowData}
+            itemData={rowData as any}
             overscanCount={overscan}
             onScroll={handleScroll}
           >

@@ -88,6 +88,45 @@ export class PerformanceMonitor {
   clear() {
     this.metrics.clear()
   }
+
+  // Time a function execution
+  public time<T>(label: string, fn: () => T): T
+  public time<T>(label: string, fn: () => Promise<T>): Promise<T>
+  public time<T>(label: string, fn: () => T | Promise<T>): T | Promise<T> {
+    const start = performance.now()
+    
+    const finish = (result: T) => {
+      const duration = performance.now() - start
+      this.trackAPICall(label, duration, 0) // Use existing trackAPICall method
+      return result
+    }
+
+    try {
+      const result = fn()
+      
+      if (result instanceof Promise) {
+        return result.then(finish).catch(error => {
+          const duration = performance.now() - start
+          this.trackAPICall(label, duration, 0)
+          throw error
+        })
+      } else {
+        return finish(result)
+      }
+    } catch (error) {
+      const duration = performance.now() - start
+      this.trackAPICall(label, duration, 0)
+      throw error
+    }
+  }
+
+  // Get performance stats (compatible with the removed duplicate class)
+  public getStats(label?: string): any {
+    if (label) {
+      return this.getAveragePerformance(label)
+    }
+    return this.getAllMetrics()
+  }
 }
 
 // Global performance monitor instance
@@ -436,113 +475,6 @@ export class ChunkedProcessor<T, R> {
     return chunks
   }
 }
-
-/**
- * Performance monitoring utility
- */
-export class PerformanceMonitor {
-  private measurements: Map<string, {
-    count: number
-    totalTime: number
-    minTime: number
-    maxTime: number
-    lastTime: number
-  }> = new Map()
-
-  public time<T>(label: string, fn: () => T): T
-  public time<T>(label: string, fn: () => Promise<T>): Promise<T>
-  public time<T>(label: string, fn: () => T | Promise<T>): T | Promise<T> {
-    const start = performance.now()
-    
-    const finish = (result: T) => {
-      const duration = performance.now() - start
-      this.recordMeasurement(label, duration)
-      return result
-    }
-
-    try {
-      const result = fn()
-      
-      if (result instanceof Promise) {
-        return result.then(finish).catch(error => {
-          const duration = performance.now() - start
-          this.recordMeasurement(label, duration)
-          throw error
-        })
-      } else {
-        return finish(result)
-      }
-    } catch (error) {
-      const duration = performance.now() - start
-      this.recordMeasurement(label, duration)
-      throw error
-    }
-  }
-
-  private recordMeasurement(label: string, duration: number): void {
-    const existing = this.measurements.get(label)
-    
-    if (existing) {
-      existing.count++
-      existing.totalTime += duration
-      existing.minTime = Math.min(existing.minTime, duration)
-      existing.maxTime = Math.max(existing.maxTime, duration)
-      existing.lastTime = duration
-    } else {
-      this.measurements.set(label, {
-        count: 1,
-        totalTime: duration,
-        minTime: duration,
-        maxTime: duration,
-        lastTime: duration
-      })
-    }
-  }
-
-  public getStats(label?: string): any {
-    if (label) {
-      const measurement = this.measurements.get(label)
-      if (!measurement) return null
-      
-      return {
-        label,
-        count: measurement.count,
-        averageTime: measurement.totalTime / measurement.count,
-        minTime: measurement.minTime,
-        maxTime: measurement.maxTime,
-        lastTime: measurement.lastTime,
-        totalTime: measurement.totalTime
-      }
-    }
-
-    // Return all stats
-    const allStats: any = {}
-    for (const [label, measurement] of this.measurements) {
-      allStats[label] = {
-        count: measurement.count,
-        averageTime: measurement.totalTime / measurement.count,
-        minTime: measurement.minTime,
-        maxTime: measurement.maxTime,
-        lastTime: measurement.lastTime,
-        totalTime: measurement.totalTime
-      }
-    }
-    return allStats
-  }
-
-  public clear(label?: string): void {
-    if (label) {
-      this.measurements.delete(label)
-    } else {
-      this.measurements.clear()
-    }
-  }
-}
-
-/**
- * Global performance monitor instance
- */
-export const performanceMonitor = new PerformanceMonitor()
 
 /**
  * Global request throttler instance

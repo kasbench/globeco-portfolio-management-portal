@@ -519,7 +519,7 @@ export function useDeletionPreview() {
     const childPositions = data.childPositions || []
 
     // Calculate cascading effects
-    let willDeleteRebalances = 0
+    const willDeleteRebalances = 0
     let willDeletePortfolios = 0
     let willDeletePositions = 0
 

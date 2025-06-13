@@ -10,7 +10,8 @@ import {
   ValidationError,
   PositionValidationResult,
   OrderValidationResult,
-  OrderMappingConfig
+  OrderMappingConfig,
+  SubmissionState
 } from '@/types/order'
 import { getOrderServiceConfig } from '@/lib/api/orderService'
 import { validateOrder, validateOrderBatch } from './orderMapping'
@@ -252,7 +253,7 @@ export function validateOrderMapping(
       blotterId: mappingConfig.defaultBlotterId,
       statusId: mappingConfig.defaultStatusId,
       portfolioId: portfolioId,
-      orderTypeId: mappingConfig.orderTypeMapping[position.transaction_type],
+      orderTypeId: mappingConfig.orderTypeMapping[position.transaction_type as keyof typeof mappingConfig.orderTypeMapping],
       securityId: position.security_id,
       quantity: Math.abs(position.trade_quantity),
       limitPrice: null,
@@ -301,22 +302,22 @@ export function validateSubmissionState(
       // Check if position is marked as eligible but has failed submission
       if (position.isEligibleForSubmission && 
           position.submission && 
-          position.submission.status === 'failed') {
+          position.submission === SubmissionState.Failed) {
         warnings.push({
           field: 'submission_state',
           message: `Position ${position.security_id} is eligible but has failed submission status`,
-          value: position.submission.status
+          value: position.submission
         })
       }
 
       // Check if position is not eligible but has pending/success submission
       if (!position.isEligibleForSubmission && 
           position.submission && 
-          ['pending', 'success'].includes(position.submission.status)) {
+          [SubmissionState.Pending, SubmissionState.Submitted].includes(position.submission)) {
         errors.push({
           field: 'submission_state',
-          message: `Position ${position.security_id} is not eligible but has ${position.submission.status} submission status`,
-          value: position.submission.status
+          message: `Position ${position.security_id} is not eligible but has ${position.submission} submission status`,
+          value: position.submission
         })
       }
     })

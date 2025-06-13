@@ -7,9 +7,8 @@ import {
   RebalancePortfolioWithSubmission,
   RebalancePositionWithSubmission
 } from '@/types/rebalance'
-import { SubmissionState } from '@/types/order'
+import { SubmissionState, OrderSubmissionResult } from '@/types/order'
 import { CleanupResult } from './dataCleanupService'
-import { OrderSubmissionResult } from '@/lib/api/orderService'
 import { EventEmitter } from 'events'
 
 /**

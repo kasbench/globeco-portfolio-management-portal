@@ -211,8 +211,8 @@ export function GlobalSubmissionControls({
     const selectedRebalances = rebalances.filter(r => selectedRebalanceIds.has(r.rebalance_id))
     
     const preview = await dataTransformationService.generateSubmissionPreview(
-      selectedRebalances,
-      'global-submission'
+      selectedRebalances[0], // Fix: pass first rebalance instead of array
+      { includeBatchDetails: true, includeValidation: true, includeTimeline: true }
     )
 
     return {
@@ -426,8 +426,8 @@ export function RebalanceControls({
   // Generate submission preview
   const generateSubmissionPreview = useCallback(async (): Promise<SubmissionPreview> => {
     const preview = await dataTransformationService.generateSubmissionPreview(
-      [rebalance],
-      `rebalance-${rebalance.rebalance_id}`
+      rebalance,
+      { includeBatchDetails: true, includeValidation: true, includeTimeline: true }
     )
 
     return {

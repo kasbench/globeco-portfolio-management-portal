@@ -13,7 +13,7 @@ import {
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
-import { OrderFilter } from '@/types/order'
+import { OrderFilter, OrderQueryParams } from '@/types/order'
 
 interface FilterPillsProps {
   filters: OrderFilter[]
@@ -53,7 +53,7 @@ export function FilterPills({
       // Create new filter
       const fieldConfig = availableFields.find(af => af.field === field)
       const newFilter: OrderFilter = {
-        field: field as keyof OrderFilter['field'],
+        field: field as keyof OrderQueryParams,
         values: [value.trim()],
         label: fieldConfig?.label || field
       }

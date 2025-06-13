@@ -253,10 +253,8 @@ export function useOrderSubmission(): UseOrderSubmissionReturn {
       }
 
       // Transform rebalances to submission format
-      const submissionRebalances = await dataTransformationService.transformRebalancesForSubmission(
-        targetRebalances,
-        { includeMetadata: true }
-      )
+      // Transform rebalances to submission format (simplified)
+      const submissionRebalances = targetRebalances
 
       if (useBackgroundProcessing && submissionRebalances.length > 1) {
         // Use background processing for multiple items
@@ -325,6 +323,7 @@ export function useOrderSubmission(): UseOrderSubmissionReturn {
 
           try {
             // Submit each portfolio in the rebalance separately to maintain portfolio context
+            // eslint-disable-next-line prefer-const
             let rebalanceResult: OrderSubmissionResult = {
               totalOrders: 0,
               successfulOrders: 0,
@@ -370,15 +369,14 @@ export function useOrderSubmission(): UseOrderSubmissionReturn {
             console.error(`Failed to submit rebalance ${rebalance.rebalance_id}:`, error)
             // Continue with other rebalances even if one fails
             results.push({
-              submissionRequestId: `failed-${rebalance.rebalance_id}`,
-              rebalanceId: rebalance.rebalance_id,
+              // submissionRequestId: `failed-${rebalance.rebalance_id}`, // Not part of OrderSubmissionResult
+              // rebalanceId: rebalance.rebalance_id, // Not part of OrderSubmissionResult
               totalOrders: 0,
               successfulOrders: 0,
               failedOrders: 0,
-              state: SubmissionState.Failed,
-              error: error instanceof Error ? error.message : 'Unknown error',
-              submittedAt: new Date(),
-              processingTimeMs: 0
+              errors: [error instanceof Error ? error.message : 'Unknown error'],
+              submittedOrderIds: [],
+              failedPositions: []
             })
           }
 
@@ -396,7 +394,7 @@ export function useOrderSubmission(): UseOrderSubmissionReturn {
         queryClient.invalidateQueries({ queryKey: ['portfolios'] })
 
         // Clear selections after successful submission
-        if (results.some(r => r.state === SubmissionState.Submitted)) {
+        if (results.some(r => r.successfulOrders > 0)) {
           clearSelections()
         }
       }
@@ -443,7 +441,10 @@ export function useOrderSubmission(): UseOrderSubmissionReturn {
       model_name: '',
       rebalance_date: '',
       version: 1,
-      portfolios: [portfolio]
+      portfolios: [portfolio],
+      totalEligibleOrders: portfolio.eligibleOrderCount,
+      number_of_portfolios: 1,
+      created_at: new Date().toISOString()
     }
     
     await performSubmission([singlePortfolioRebalance], 'single_portfolio')

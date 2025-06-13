@@ -260,7 +260,7 @@ export function useDragAndDrop({
           index: parseInt(element.dataset.dragIndex || '0'),
           data: element.dataset.dragData ? JSON.parse(element.dataset.dragData) : null
         }
-        startDrag(item, event)
+        startDrag(item, event as any)
       }
       
       const handleTouchStart = (event: TouchEvent) => {
@@ -270,7 +270,7 @@ export function useDragAndDrop({
           index: parseInt(element.dataset.dragIndex || '0'),
           data: element.dataset.dragData ? JSON.parse(element.dataset.dragData) : null
         }
-        startDrag(item, event)
+        startDrag(item, event as any)
       }
       
       element.addEventListener('mousedown', handleMouseDown)
@@ -366,7 +366,7 @@ export function useDragAndDrop({
     isOver,
     dragItem,
     dropTarget,
-    dragPreview: dragPreviewRef,
+    dragPreview: dragPreviewRef as React.RefObject<HTMLDivElement>,
     startDrag,
     endDrag,
     handleDrop

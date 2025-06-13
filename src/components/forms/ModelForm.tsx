@@ -255,7 +255,7 @@ export default function ModelForm({ model, isOpen, onClose, onSubmit, isLoading 
             <CardContent>
               {positionFields.length === 0 ? (
                 <p className="text-gray-500 text-center py-4">
-                  No positions added. Click "Add Position" to start.
+                  No positions added. Click &quot;Add Position&quot; to start.
                 </p>
               ) : (
                 <div className="space-y-4">

@@ -95,13 +95,15 @@ const createWrapper = () => {
     }
   })
 
-  return ({ children }: { children: React.ReactNode }) => (
+  const TestWrapper = ({ children }: { children: React.ReactNode }) => (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         {children}
       </TooltipProvider>
     </QueryClientProvider>
   )
+  
+  return TestWrapper
 }
 
 describe('GlobalSubmissionControls', () => {

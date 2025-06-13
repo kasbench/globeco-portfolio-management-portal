@@ -88,9 +88,9 @@ export function mapPositionToOrder(
   }
 
   // Map transaction type to order type ID
-  const orderTypeId = config.orderTypeMapping[position.transaction_type]
+  const orderTypeId = config.orderTypeMapping[position.transaction_type as keyof typeof config.orderTypeMapping]
   if (!orderTypeId) {
-    throw new Error(`Invalid transaction type: ${position.transaction_type}`)
+    throw new Error(`Invalid transaction type: ${position.transaction_type}. Only BUY and SELL positions are eligible for order submission.`)
   }
 
   // Generate current timestamp in ISO 8601 format with enhanced precision
@@ -200,8 +200,7 @@ export function generateOrderTimestamp(timezone?: string): string {
         day: '2-digit',
         hour: '2-digit',
         minute: '2-digit',
-        second: '2-digit',
-        fractionalSecondDigits: 3
+        second: '2-digit'
       }).replace(' ', 'T') + 'Z'
     } catch (error) {
       console.warn(`Invalid timezone ${timezone}, using UTC`)

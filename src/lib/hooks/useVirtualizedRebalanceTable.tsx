@@ -3,7 +3,7 @@
 
 'use client'
 
-import { useMemo, useCallback, useState, useEffect } from 'react'
+import React, { useMemo, useCallback, useState, useEffect } from 'react'
 import { VirtualTableColumn } from '@/components/ui/VirtualScrollTable'
 import { 
   RebalanceWithSubmission,
@@ -169,9 +169,10 @@ export function useVirtualizedRebalanceTable(
       header: 'Status',
       width: 120,
       render: (rebalance) => {
-        const status = rebalance.submission || SubmissionState.Idle
+        const status = rebalance.submission || SubmissionState.NotSubmitted
         const statusColors = {
-          [SubmissionState.Idle]: 'bg-gray-100 text-gray-800',
+          [SubmissionState.NotSubmitted]: 'bg-gray-100 text-gray-800',
+          [SubmissionState.Pending]: 'bg-blue-100 text-blue-800',
           [SubmissionState.Submitting]: 'bg-yellow-100 text-yellow-800',
           [SubmissionState.Submitted]: 'bg-green-100 text-green-800',
           [SubmissionState.PartiallySubmitted]: 'bg-orange-100 text-orange-800',
@@ -229,9 +230,10 @@ export function useVirtualizedRebalanceTable(
       header: 'Status',
       width: 120,
       render: (portfolio) => {
-        const status = portfolio.submission || SubmissionState.Idle
+        const status = portfolio.submission || SubmissionState.NotSubmitted
         const statusColors = {
-          [SubmissionState.Idle]: 'bg-gray-100 text-gray-800',
+          [SubmissionState.NotSubmitted]: 'bg-gray-100 text-gray-800',
+          [SubmissionState.Pending]: 'bg-blue-100 text-blue-800',
           [SubmissionState.Submitting]: 'bg-yellow-100 text-yellow-800',
           [SubmissionState.Submitted]: 'bg-green-100 text-green-800',
           [SubmissionState.PartiallySubmitted]: 'bg-orange-100 text-orange-800',

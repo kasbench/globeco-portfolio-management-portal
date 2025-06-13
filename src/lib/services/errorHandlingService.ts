@@ -494,11 +494,22 @@ export class ErrorHandlingService {
     const firstError = new Date(Math.min(...timestamps.map(t => t.getTime())))
     const lastError = new Date(Math.max(...timestamps.map(t => t.getTime())))
 
+    // Calculate additional properties
+    const criticalCount = batchErrors.filter(error => error.severity === ErrorSeverity.CRITICAL).length
+    const mostCommonCategory = Object.entries(errorsByCategory)
+      .reduce((a, b) => errorsByCategory[a[0] as ErrorCategory] > errorsByCategory[b[0] as ErrorCategory] ? a : b)[0] as ErrorCategory
+    const recommendedAction = this.generateSuggestedAction(mostCommonCategory, ErrorSeverity.HIGH, null)
+
     return {
       batchId,
       totalErrors,
       errorsByCategory,
       errorsBySeverity,
+      retryableCount: retryableErrors,
+      criticalCount,
+      mostCommonCategory,
+      recommendedAction,
+      errors: batchErrors,
       retryableErrors,
       nonRetryableErrors,
       firstError,

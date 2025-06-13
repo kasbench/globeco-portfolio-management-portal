@@ -144,7 +144,7 @@ export function UserExperienceShowcase({ className }: UserExperienceShowcaseProp
       created_at: new Date().toISOString()
     }))
 
-    exportRebalancePositions(mockPositions, { 
+    exportRebalancePositions(mockPositions as any, { 
       format,
       title: `Order Export - ${format.toUpperCase()}`,
       description: 'Sample order data for demonstration'

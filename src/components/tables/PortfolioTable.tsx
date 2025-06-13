@@ -79,7 +79,7 @@ const ExpandedPortfolioContent = ({
   // Calculate eligible positions (BUY/SELL with non-zero quantities)
   const getEligiblePositionsCount = () => {
     if (!positions) return 0
-    return positions.filter(p => 
+    return positions.filter((p: any) => 
       (p.transaction_type === 'BUY' || p.transaction_type === 'SELL') && 
       p.trade_quantity !== 0
     ).length

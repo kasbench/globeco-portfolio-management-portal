@@ -48,7 +48,7 @@ export interface PartialSuccessResult {
 
 export interface ErrorAnnotation {
   entityId: string
-  entityType: 'position' | 'portfolio' | 'rebalance'
+  entityType: 'position' | 'portfolio' | 'rebalance' | 'global'
   errors: SubmissionError[]
   isRetryable: boolean
   lastErrorAt: Date
