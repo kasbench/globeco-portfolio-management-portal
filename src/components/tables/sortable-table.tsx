@@ -31,7 +31,7 @@ interface SortableTableProps {
   className?: string
 }
 
-export function SortableTable({
+export function SortableTable<T>({
   columns,
   data,
   sort,
@@ -39,27 +39,33 @@ export function SortableTable({
   loading = false,
   emptyMessage = 'No data available',
   className = ''
-}: SortableTableProps) {
-  const handleSort = (field: string) => {
-    const existingSort = sort.find(s => s.field === field)
+}: SortableTableProps<T>) {
+  console.log('SortableTable render:', {
+    dataLength: data.length,
+    columnsLength: columns.length,
+    sortLength: sort.length,
+    loading,
+    emptyMessage,
+    className
+  })
+
+  const handleSort = (key: string) => {
+    console.log('SortableTable handleSort called with key:', key)
+    const existingSort = sort.find(s => s.field === key)
+    let newSort: OrderSortConfig[]
     
     if (existingSort) {
       if (existingSort.direction === 'asc') {
-        // Change to descending
-        const newSort = sort.map(s => 
-          s.field === field ? { ...s, direction: 'desc' as const } : s
-        )
-        onSortChange(newSort)
+        newSort = sort.map(s => s.field === key ? { ...s, direction: 'desc' as const } : s)
       } else {
-        // Remove sort
-        const newSort = sort.filter(s => s.field !== field)
-        onSortChange(newSort)
+        newSort = sort.filter(s => s.field !== key)
       }
     } else {
-      // Add ascending sort
-      const newSort = [...sort, { field, direction: 'asc' as const }]
-      onSortChange(newSort)
+      newSort = [...sort, { field: key, direction: 'asc' as const }]
     }
+    
+    console.log('SortableTable calling onSortChange with:', newSort)
+    onSortChange(newSort)
   }
 
   const getSortIcon = (field: string) => {
@@ -82,10 +88,18 @@ export function SortableTable({
   }
 
   const renderCellValue = (column: SortableColumn, row: any) => {
+    // Safety check for undefined row during loading
+    if (!row) return null
+    
     const value = getNestedValue(row, column.key)
     
     if (column.render) {
-      return column.render(value, row)
+      try {
+        return column.render(value, row)
+      } catch (error) {
+        console.warn('Error rendering cell value:', error)
+        return null
+      }
     }
     
     return value

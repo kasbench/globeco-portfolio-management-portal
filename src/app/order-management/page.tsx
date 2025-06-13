@@ -35,6 +35,8 @@ import { OrderWithDetailsDTO, OrderFilter } from '@/types/order'
 import orderServiceApi from '@/lib/api/orderService'
 
 function OrderManagementContent() {
+  console.log('OrderManagementContent render start')
+  
   const {
     orders,
     pagination,
@@ -55,6 +57,18 @@ function OrderManagementContent() {
     defaultPageSize: 50,
     autoRefresh: false
   })
+
+  console.log('OrderManagementContent useOrders result:', {
+    ordersLength: orders.length,
+    loading,
+    error: !!error,
+    paginationTotal: pagination?.total,
+    selectedOrderIdsLength: selectedOrderIds.length,
+    filtersLength: filters.length,
+    sortLength: sort.length
+  })
+
+  console.log('OrderManagementContent about to render JSX')
 
   // Loading states for individual actions
   const [actionLoading, setActionLoading] = useState<{
@@ -104,18 +118,31 @@ function OrderManagementContent() {
       label: '',
       className: 'w-12',
       render: (_, order: OrderWithDetailsDTO) => {
-        const isNewOrder = order.status.abbreviation === 'NEW'
-        const isSelected = selectedOrderIds.includes(order.id)
+        // Safety checks to prevent infinite re-renders
+        if (!order) return null
+        if (typeof order !== 'object') return null
+        if (!order.hasOwnProperty('id')) return null
+        if (!order.id) return null
+        if (!order.status) return null
+        if (!order.status.abbreviation) return null
         
-        if (!isNewOrder) return null
-        
-        return (
-          <Checkbox
-            checked={isSelected}
-            onCheckedChange={() => toggleOrderSelection(order.id)}
-            aria-label={`Select order ${order.id}`}
-          />
-        )
+        try {
+          const isNewOrder = order.status.abbreviation === 'NEW'
+          const isSelected = selectedOrderIds.includes(order.id)
+          
+          if (!isNewOrder) return null
+          
+          return (
+            <Checkbox
+              checked={isSelected}
+              onCheckedChange={() => toggleOrderSelection(order.id)}
+              aria-label={`Select order ${order.id}`}
+            />
+          )
+        } catch (error) {
+          console.warn('Error rendering selection checkbox:', error)
+          return null
+        }
       }
     },
     {
@@ -129,11 +156,14 @@ function OrderManagementContent() {
       label: 'Security',
       sortable: true,
       className: 'font-medium',
-      render: (value) => (
-        <Badge variant="outline" className="font-mono">
-          {value}
-        </Badge>
-      )
+      render: (value) => {
+        if (!value) return null
+        return (
+          <Badge variant="outline" className="font-mono">
+            {value}
+          </Badge>
+        )
+      }
     },
     {
       key: 'portfolio.name',
@@ -150,6 +180,7 @@ function OrderManagementContent() {
       label: 'Status',
       sortable: true,
       render: (value) => {
+        if (!value) return null
         const variant = value === 'NEW' ? 'default' : 
                       value === 'SENT' ? 'secondary' : 
                       value === 'FILLED' ? 'outline' : 'destructive'
@@ -160,18 +191,24 @@ function OrderManagementContent() {
       key: 'orderType.abbreviation',
       label: 'Type',
       sortable: true,
-      render: (value) => (
-        <Badge variant={value === 'BUY' ? 'outline' : 'destructive'}>
-          {value}
-        </Badge>
-      )
+      render: (value) => {
+        if (!value) return null
+        return (
+          <Badge variant={value === 'BUY' ? 'outline' : 'destructive'}>
+            {value}
+          </Badge>
+        )
+      }
     },
     {
       key: 'quantity',
       label: 'Quantity',
       sortable: true,
       className: 'text-right font-mono',
-      render: (value) => value?.toLocaleString()
+      render: (value) => {
+        if (value === null || value === undefined) return '-'
+        return value.toLocaleString()
+      }
     },
     {
       key: 'limitPrice',
@@ -184,25 +221,58 @@ function OrderManagementContent() {
       label: 'Order Time',
       sortable: true,
       className: 'text-sm',
-      render: (value) => format(new Date(value), 'MMM dd, HH:mm')
+      render: (value) => {
+        if (!value) return '-'
+        try {
+          return format(new Date(value), 'MMM dd, HH:mm')
+        } catch (error) {
+          return '-'
+        }
+      }
     },
     {
       key: 'actions',
       label: 'Actions',
       className: 'w-16',
-      render: (_, order: OrderWithDetailsDTO) => (
-        <OrderActionMenu
-          order={order}
-          onView={handleViewOrder}
-          onEdit={handleEditOrder}
-          onDelete={handleDeleteOrder}
-          onSubmit={handleSubmitOrder}
-          loading={{
-            submit: actionLoading.submit[order.id],
-            delete: actionLoading.delete[order.id]
-          }}
-        />
-      )
+      render: (_, order: OrderWithDetailsDTO) => {
+        // Multiple safety checks to prevent infinite re-renders
+        if (!order) return null
+        if (typeof order !== 'object') return null
+        if (!order.hasOwnProperty('id')) return null
+        if (!order.id) return null
+        if (!order.status) return null
+        if (!order.orderType) return null
+        if (!order.security) return null
+        
+        // Additional safety check for required nested properties
+        try {
+          const hasRequiredProps = 
+            order.status?.abbreviation &&
+            order.orderType?.abbreviation &&
+            order.security?.ticker &&
+            typeof order.quantity === 'number'
+          
+          if (!hasRequiredProps) return null
+          
+          return (
+            <OrderActionMenu
+              order={order}
+              onView={handleViewOrder}
+              onEdit={handleEditOrder}
+              onDelete={handleDeleteOrder}
+              onSubmit={handleSubmitOrder}
+              loading={{
+                submit: actionLoading.submit[order.id] || false,
+                delete: actionLoading.delete[order.id] || false
+              }}
+            />
+          )
+        } catch (error) {
+          // If any error occurs during rendering, return null to prevent crashes
+          console.warn('Error rendering order action menu:', error)
+          return null
+        }
+      }
     }
   ]
 
@@ -321,6 +391,7 @@ function OrderManagementContent() {
   const newOrdersCount = orders.filter(order => order.status.abbreviation === 'NEW').length
   const selectedNewOrdersCount = selectedOrderIds.length
 
+  console.log('OrderManagementContent JSX created, about to return')
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="container mx-auto px-4 py-6">

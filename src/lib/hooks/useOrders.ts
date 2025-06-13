@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import orderServiceApi from '@/lib/api/orderService'
 import {
@@ -52,11 +52,15 @@ interface UseOrdersReturn {
   refetch: () => Promise<void>
 }
 
+// Stable default values to prevent re-renders
+const STABLE_DEFAULT_FILTERS: OrderFilter[] = [{ field: 'status.abbreviation', values: ['NEW'], label: 'Status' }]
+const STABLE_DEFAULT_SORT: OrderSortConfig[] = [{ field: 'id', direction: 'asc' }]
+
 export function useOrders(options: UseOrdersOptions = {}): UseOrdersReturn {
   const {
     defaultPageSize = 50,
-    defaultFilters = [{ field: 'status.abbreviation', values: ['NEW'], label: 'Status' }],
-    defaultSort = [{ field: 'id', direction: 'asc' }],
+    defaultFilters = STABLE_DEFAULT_FILTERS,
+    defaultSort = STABLE_DEFAULT_SORT,
     autoRefresh = false,
     refreshInterval = 30000 // 30 seconds
   } = options
@@ -72,28 +76,44 @@ export function useOrders(options: UseOrdersOptions = {}): UseOrdersReturn {
   const [error, setError] = useState<string | null>(null)
   const [selectedOrderIds, setSelectedOrderIds] = useState<number[]>([])
 
+  // Use refs to track current values without causing re-renders
+  const currentFiltersRef = useRef<OrderFilter[]>(defaultFilters)
+  const currentSortRef = useRef<OrderSortConfig[]>(defaultSort)
+  const currentPageRef = useRef<number>(1)
+  const currentPageSizeRef = useRef<number>(defaultPageSize)
+
   // Parse URL parameters for filters and sort
   const filtersFromUrl = useMemo(() => {
     const filtersParam = searchParams.get('filters')
+    console.log('filtersFromUrl useMemo triggered, filtersParam:', filtersParam)
     if (filtersParam) {
       try {
-        return JSON.parse(decodeURIComponent(filtersParam)) as OrderFilter[]
+        const parsed = JSON.parse(decodeURIComponent(filtersParam)) as OrderFilter[]
+        console.log('filtersFromUrl returning parsed:', parsed)
+        return parsed
       } catch {
+        console.log('filtersFromUrl returning defaultFilters due to parse error')
         return defaultFilters
       }
     }
+    console.log('filtersFromUrl returning defaultFilters (no param)')
     return defaultFilters
   }, [searchParams, defaultFilters])
 
   const sortFromUrl = useMemo(() => {
     const sortParam = searchParams.get('sort')
+    console.log('sortFromUrl useMemo triggered, sortParam:', sortParam)
     if (sortParam) {
       try {
-        return JSON.parse(decodeURIComponent(sortParam)) as OrderSortConfig[]
+        const parsed = JSON.parse(decodeURIComponent(sortParam)) as OrderSortConfig[]
+        console.log('sortFromUrl returning parsed:', parsed)
+        return parsed
       } catch {
+        console.log('sortFromUrl returning defaultSort due to parse error')
         return defaultSort
       }
     }
+    console.log('sortFromUrl returning defaultSort (no param)')
     return defaultSort
   }, [searchParams, defaultSort])
 
@@ -110,7 +130,24 @@ export function useOrders(options: UseOrdersOptions = {}): UseOrdersReturn {
   const [filters, setFiltersState] = useState<OrderFilter[]>(filtersFromUrl)
   const [sort, setSortState] = useState<OrderSortConfig[]>(sortFromUrl)
 
-  // Update URL when state changes
+  // Update refs when state changes
+  useEffect(() => {
+    currentFiltersRef.current = filters
+  }, [filters])
+
+  useEffect(() => {
+    currentSortRef.current = sort
+  }, [sort])
+
+  useEffect(() => {
+    currentPageRef.current = pageFromUrl
+  }, [pageFromUrl])
+
+  useEffect(() => {
+    currentPageSizeRef.current = pageSizeFromUrl
+  }, [pageSizeFromUrl])
+
+  // Update URL when state changes - stable function without dependencies on changing values
   const updateUrl = useCallback((newFilters: OrderFilter[], newSort: OrderSortConfig[], page: number, pageSize: number) => {
     const params = new URLSearchParams()
     
@@ -134,49 +171,61 @@ export function useOrders(options: UseOrdersOptions = {}): UseOrdersReturn {
     router.replace(newUrl, { scroll: false })
   }, [router, pathname, defaultPageSize])
 
-  // Convert filters and sort to API query parameters
-  const buildQueryParams = useCallback((
-    currentFilters: OrderFilter[], 
-    currentSort: OrderSortConfig[], 
-    page: number, 
-    pageSize: number
-  ): OrderQueryParams => {
-    const params: OrderQueryParams = {
-      limit: pageSize,
-      offset: (page - 1) * pageSize
-    }
 
-    // Add sort parameter
-    if (currentSort.length > 0) {
-      params.sort = currentSort
-        .map(s => `${s.direction === 'desc' ? '-' : ''}${s.field}`)
-        .join(',')
-    }
 
-    // Add filter parameters
-    currentFilters.forEach(filter => {
-      if (filter.values.length > 0) {
-        const paramKey = filter.field as keyof OrderQueryParams
-        (params as any)[paramKey] = filter.values.join(',')
-      }
+  // Fetch orders from API - completely stable function
+  const fetchOrders = useCallback(async (
+    currentFilters?: OrderFilter[],
+    currentSort?: OrderSortConfig[],
+    page?: number,
+    pageSize?: number
+  ) => {
+    console.log('fetchOrders called with:', {
+      currentFilters: currentFilters?.length || 'using ref',
+      currentSort: currentSort?.length || 'using ref', 
+      page: page || 'using ref',
+      pageSize: pageSize || 'using ref'
+    })
+    
+    // Use provided values or current ref values
+    const filtersToUse = currentFilters || currentFiltersRef.current
+    const sortToUse = currentSort || currentSortRef.current
+    const pageToUse = page || currentPageRef.current
+    const pageSizeToUse = pageSize || currentPageSizeRef.current
+
+    console.log('fetchOrders using values:', {
+      filtersToUse: filtersToUse.length,
+      sortToUse: sortToUse.length,
+      pageToUse,
+      pageSizeToUse
     })
 
-    return params
-  }, [])
-
-  // Fetch orders from API
-  const fetchOrders = useCallback(async (
-    currentFilters: OrderFilter[] = filters,
-    currentSort: OrderSortConfig[] = sort,
-    page: number = pageFromUrl,
-    pageSize: number = pageSizeFromUrl
-  ) => {
     setLoading(true)
     setError(null)
 
     try {
-      const queryParams = buildQueryParams(currentFilters, currentSort, page, pageSize)
-      const response: OrderPageResponseDTO = await orderServiceApi.listOrders(queryParams)
+      // Build query params inline to avoid dependency issues
+      const params: OrderQueryParams = {
+        limit: pageSizeToUse,
+        offset: (pageToUse - 1) * pageSizeToUse
+      }
+
+      // Add sort parameter
+      if (sortToUse.length > 0) {
+        params.sort = sortToUse
+          .map(s => `${s.direction === 'desc' ? '-' : ''}${s.field}`)
+          .join(',')
+      }
+
+      // Add filter parameters
+      filtersToUse.forEach(filter => {
+        if (filter.values.length > 0) {
+          const paramKey = filter.field as keyof OrderQueryParams
+          (params as any)[paramKey] = filter.values.join(',')
+        }
+      })
+
+      const response: OrderPageResponseDTO = await orderServiceApi.listOrders(params)
       
       setOrders(response.content)
       setPagination(response.pagination)
@@ -184,37 +233,37 @@ export function useOrders(options: UseOrdersOptions = {}): UseOrdersReturn {
       // Clear selection when data changes
       setSelectedOrderIds([])
       
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch orders'
-      setError(errorMessage)
-      console.error('Error fetching orders:', err)
-    } finally {
-      setLoading(false)
-    }
-  }, [filters, sort, pageFromUrl, pageSizeFromUrl, buildQueryParams])
+          } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to fetch orders'
+        setError(errorMessage)
+        console.error('Error fetching orders:', err)
+      } finally {
+        setLoading(false)
+      }
+  }, []) // No dependencies - completely stable
 
   // Public API functions
   const setFilters = useCallback((newFilters: OrderFilter[]) => {
     setFiltersState(newFilters)
-    updateUrl(newFilters, sort, 1, pageSizeFromUrl) // Reset to page 1 when filters change
-    fetchOrders(newFilters, sort, 1, pageSizeFromUrl)
-  }, [sort, pageSizeFromUrl, updateUrl, fetchOrders])
+    updateUrl(newFilters, currentSortRef.current, 1, currentPageSizeRef.current) // Reset to page 1 when filters change
+    fetchOrders(newFilters, currentSortRef.current, 1, currentPageSizeRef.current)
+  }, [updateUrl]) // Removed fetchOrders dependency since it's stable
 
   const setSort = useCallback((newSort: OrderSortConfig[]) => {
     setSortState(newSort)
-    updateUrl(filters, newSort, pageFromUrl, pageSizeFromUrl)
-    fetchOrders(filters, newSort, pageFromUrl, pageSizeFromUrl)
-  }, [filters, pageFromUrl, pageSizeFromUrl, updateUrl, fetchOrders])
+    updateUrl(currentFiltersRef.current, newSort, currentPageRef.current, currentPageSizeRef.current)
+    fetchOrders(currentFiltersRef.current, newSort, currentPageRef.current, currentPageSizeRef.current)
+  }, [updateUrl]) // Removed fetchOrders dependency since it's stable
 
   const goToPage = useCallback((page: number) => {
-    updateUrl(filters, sort, page, pageSizeFromUrl)
-    fetchOrders(filters, sort, page, pageSizeFromUrl)
-  }, [filters, sort, pageSizeFromUrl, updateUrl, fetchOrders])
+    updateUrl(currentFiltersRef.current, currentSortRef.current, page, currentPageSizeRef.current)
+    fetchOrders(currentFiltersRef.current, currentSortRef.current, page, currentPageSizeRef.current)
+  }, [updateUrl]) // Removed fetchOrders dependency since it's stable
 
   const changePageSize = useCallback((size: number) => {
-    updateUrl(filters, sort, 1, size) // Reset to page 1 when page size changes
-    fetchOrders(filters, sort, 1, size)
-  }, [filters, sort, updateUrl, fetchOrders])
+    updateUrl(currentFiltersRef.current, currentSortRef.current, 1, size) // Reset to page 1 when page size changes
+    fetchOrders(currentFiltersRef.current, currentSortRef.current, 1, size)
+  }, [updateUrl]) // Removed fetchOrders dependency since it's stable
 
   const nextPage = useCallback(() => {
     if (pagination?.hasNext) {
@@ -232,17 +281,20 @@ export function useOrders(options: UseOrdersOptions = {}): UseOrdersReturn {
 
   const refresh = useCallback(async () => {
     await fetchOrders()
-  }, [fetchOrders])
+  }, []) // Removed fetchOrders dependency since it's stable
 
   const refetch = refresh // Alias for consistency
 
   // Selection management
   const toggleOrderSelection = useCallback((orderId: number) => {
-    setSelectedOrderIds(prev => 
-      prev.includes(orderId) 
+    console.log('toggleOrderSelection called with orderId:', orderId)
+    setSelectedOrderIds(prev => {
+      const newSelection = prev.includes(orderId) 
         ? prev.filter(id => id !== orderId)
         : [...prev, orderId]
-    )
+      console.log('toggleOrderSelection updating from:', prev, 'to:', newSelection)
+      return newSelection
+    })
   }, [])
 
   const selectAllOrders = useCallback(() => {
@@ -257,29 +309,87 @@ export function useOrders(options: UseOrdersOptions = {}): UseOrdersReturn {
     setSelectedOrderIds([])
   }, [])
 
-  // Initial load and URL sync
+  // Track if initial load has happened
+  const initialLoadRef = useRef(false)
+
+  // Initial load - only run once on mount
   useEffect(() => {
-    fetchOrders()
-  }, []) // Only run on mount
+    console.log('useOrders initial load useEffect triggered, initialLoadRef.current:', initialLoadRef.current)
+    if (!initialLoadRef.current) {
+      initialLoadRef.current = true
+      console.log('useOrders calling fetchOrders for initial load')
+      fetchOrders()
+    }
+  }, []) // Empty dependency array - only run on mount
 
   // Auto-refresh functionality
   useEffect(() => {
+    console.log('useOrders auto-refresh useEffect triggered, autoRefresh:', autoRefresh)
     if (!autoRefresh) return
 
     const interval = setInterval(() => {
+      console.log('useOrders auto-refresh interval triggered, loading:', loading)
       if (!loading) {
         fetchOrders()
       }
     }, refreshInterval)
 
     return () => clearInterval(interval)
-  }, [autoRefresh, refreshInterval, loading, fetchOrders])
+  }, [autoRefresh, refreshInterval, loading]) // Removed fetchOrders dependency since it's stable
 
-  // Sync state with URL changes
+  // Sync state with URL changes - but don't trigger fetches here
   useEffect(() => {
+    console.log('useOrders filtersFromUrl sync useEffect triggered, filtersFromUrl:', filtersFromUrl)
     setFiltersState(filtersFromUrl)
+  }, [filtersFromUrl])
+
+  useEffect(() => {
+    console.log('useOrders sortFromUrl sync useEffect triggered, sortFromUrl:', sortFromUrl)
     setSortState(sortFromUrl)
-  }, [filtersFromUrl, sortFromUrl])
+  }, [sortFromUrl])
+
+  // Only fetch when URL parameters change significantly (not on every render)
+  const prevUrlParamsRef = useRef<string>('')
+  const urlChangeTimeoutRef = useRef<NodeJS.Timeout>()
+  
+  useEffect(() => {
+    const currentUrlParams = `${JSON.stringify(filtersFromUrl)}-${JSON.stringify(sortFromUrl)}-${pageFromUrl}-${pageSizeFromUrl}`
+    
+    console.log('useOrders URL params change useEffect triggered:', {
+      currentUrlParams,
+      prevUrlParams: prevUrlParamsRef.current,
+      initialLoadDone: initialLoadRef.current,
+      urlsEqual: prevUrlParamsRef.current === currentUrlParams
+    })
+    
+    // Only fetch if this is not the initial load and URL actually changed
+    if (initialLoadRef.current && prevUrlParamsRef.current !== '' && prevUrlParamsRef.current !== currentUrlParams) {
+      console.log('useOrders URL changed, scheduling fetch with timeout')
+      
+      // Clear any existing timeout
+      if (urlChangeTimeoutRef.current) {
+        clearTimeout(urlChangeTimeoutRef.current)
+      }
+      
+      // URL changed, fetch with new parameters
+      // Use a timeout to debounce rapid URL changes
+      urlChangeTimeoutRef.current = setTimeout(() => {
+        console.log('useOrders executing delayed fetch due to URL change')
+        fetchOrders(filtersFromUrl, sortFromUrl, pageFromUrl, pageSizeFromUrl)
+      }, 10)
+    } else {
+      console.log('useOrders skipping fetch - no URL change or initial load')
+    }
+    
+    prevUrlParamsRef.current = currentUrlParams
+    
+    // Cleanup timeout on unmount
+    return () => {
+      if (urlChangeTimeoutRef.current) {
+        clearTimeout(urlChangeTimeoutRef.current)
+      }
+    }
+  }, [filtersFromUrl, sortFromUrl, pageFromUrl, pageSizeFromUrl]) // Removed fetchOrders dependency
 
   return {
     // Data

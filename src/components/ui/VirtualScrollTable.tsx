@@ -304,18 +304,19 @@ export function VirtualScrollTable<T>({
   const allSelected = selectedIndices.size === sortedData.length && sortedData.length > 0
   const someSelected = selectedIndices.size > 0 && selectedIndices.size < sortedData.length
 
-  // Reset selection when data changes
+  // Add debugging logs to track selectedItems and cacheKey
   useEffect(() => {
-    setSelectedIndices(selectedItems)
-  }, [selectedItems])
+    console.log('selectedItems changed:', selectedItems);
+    setSelectedIndices(selectedItems);
+  }, [selectedItems]);
 
-  // Handle external cache key changes
   useEffect(() => {
+    console.log('cacheKey changed:', cacheKey);
     if (cacheKey && listRef.current) {
       // Force re-render when cache key changes
-      listRef.current.scrollTo(0)
+      listRef.current.scrollTo(0);
     }
-  }, [cacheKey])
+  }, [cacheKey]);
 
   if (loading && LoadingComponent) {
     return <LoadingComponent />
