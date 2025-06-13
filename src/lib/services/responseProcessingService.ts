@@ -257,10 +257,9 @@ export class ResponseProcessingService {
           order,
           'Rate limit exceeded',
           'RATE_LIMITED',
-          true, // Retryable after delay
+          result.isRetryable, // Use the config-determined retryable status
           0
         ))
-        result.isRetryable = true
         break
 
       case 500:
@@ -272,10 +271,9 @@ export class ResponseProcessingService {
           order,
           `Server error: ${status}`,
           'SERVER_ERROR',
-          true, // Retryable
+          result.isRetryable, // Use the config-determined retryable status
           0
         ))
-        result.isRetryable = true
         break
 
       default:
@@ -285,10 +283,10 @@ export class ResponseProcessingService {
             order,
             'Network error',
             'NETWORK_ERROR',
-            true, // Retryable
+            true, // Network errors are generally retryable regardless of config
             0
           ))
-          result.isRetryable = true
+          result.isRetryable = true // Network errors are generally retryable
         } else {
           result.errors.push(`Unknown Error: ${error.message}`)
           result.failedOrders = originalOrders.map(order => this.createFailedOrderResult(

@@ -573,7 +573,7 @@ describe('ResponseProcessingService', () => {
       )
 
       expect(result.overallStatus).toBe('success')
-      expect(result.finalState).toBe('Submitted')
+      expect(result.finalState).toBe('submitted')
     })
 
     it('should determine failed status when no orders succeed', () => {
@@ -619,7 +619,7 @@ describe('ResponseProcessingService', () => {
       )
 
       expect(result.overallStatus).toBe('failed')
-      expect(result.finalState).toBe('Failed')
+      expect(result.finalState).toBe('failed')
     })
   })
 
