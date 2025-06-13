@@ -1,6 +1,6 @@
 // Types for Order Service Integration
 
-// Order Service API Types (from OpenAPI spec)
+// Order Service API Types (from OpenAPI spec v2.0.0)
 export interface OrderPostDTO {
   blotterId: number // Must exist in database, nullable
   statusId: number // Must exist in database  
@@ -14,32 +14,142 @@ export interface OrderPostDTO {
   version: number // Integer version number
 }
 
-export interface OrderWithDetailsDTO {
+// New DTOs for Order Management Page (from API v2.0.0)
+export interface StatusDTO {
   id: number
-  blotter: {
-    id: number
-    name: string
-    version: number
-  }
-  status: {
-    id: number
-    abbreviation: string
-    description: string
-    version: number
-  }
+  abbreviation: string
+  description: string
+  version: number
+}
+
+export interface OrderTypeDTO {
+  id: number
+  abbreviation: string
+  description: string
+  version: number
+}
+
+export interface BlotterDTO {
+  id: number
+  name: string
+  version: number
+}
+
+export interface SecurityDTO {
+  securityId: string
+  ticker: string
+}
+
+export interface PortfolioDTO {
   portfolioId: string
-  orderType: {
-    id: number
-    abbreviation: string
-    description: string
-    version: number
-  }
+  name: string
+}
+
+export interface OrderDTO {
+  id: number
+  blotterId: number | null
+  statusId: number
+  portfolioId: string
+  orderTypeId: number
   securityId: string
   quantity: number
   limitPrice?: number | null
   tradeOrderId?: number | null
   orderTimestamp: string
   version: number
+}
+
+export interface OrderWithDetailsDTO {
+  id: number
+  blotter: BlotterDTO
+  status: StatusDTO
+  security: SecurityDTO
+  portfolio: PortfolioDTO
+  orderType: OrderTypeDTO
+  quantity: number
+  limitPrice?: number | null
+  tradeOrderId?: number | null
+  orderTimestamp: string
+  version: number
+}
+
+// Pagination support for Order Management
+export interface PaginationMetadataDTO {
+  pageSize: number
+  offset: number
+  totalElements: number
+  hasNext: boolean
+  hasPrevious: boolean
+}
+
+export interface OrderPageResponseDTO {
+  content: OrderWithDetailsDTO[]
+  pagination: PaginationMetadataDTO
+}
+
+// Batch submission DTOs
+export interface BatchSubmitRequestDTO {
+  orderIds: number[]
+}
+
+export interface OrderSubmitResultDTO {
+  orderId: number
+  status: 'SUCCESS' | 'FAILURE'
+  message: string
+  tradeOrderId?: number | null
+  requestIndex: number
+}
+
+export interface BatchSubmitResponseDTO {
+  status: 'SUCCESS' | 'PARTIAL' | 'FAILURE'
+  message: string
+  totalRequested: number
+  successful: number
+  failed: number
+  results: OrderSubmitResultDTO[]
+}
+
+// Error response DTO
+export interface ErrorResponseDTO {
+  message: string
+  validSortFields?: string[]
+  validFilterFields?: string[]
+}
+
+// Query parameters for order listing
+export interface OrderQueryParams {
+  limit?: number
+  offset?: number
+  sort?: string
+  'security.ticker'?: string
+  'portfolio.name'?: string
+  'blotter.name'?: string
+  'status.abbreviation'?: string
+  'orderType.abbreviation'?: string
+  orderTimestamp?: string
+}
+
+// Filter state management for UI
+export interface OrderFilter {
+  field: keyof OrderQueryParams
+  values: string[]
+  label: string
+}
+
+export interface OrderSortConfig {
+  field: string
+  direction: 'asc' | 'desc'
+}
+
+// UI state management types
+export interface OrderManagementState {
+  orders: OrderWithDetailsDTO[]
+  pagination: PaginationMetadataDTO
+  filters: OrderFilter[]
+  sort: OrderSortConfig[]
+  selectedOrderIds: number[]
+  loading: boolean
+  error: string | null
 }
 
 /**

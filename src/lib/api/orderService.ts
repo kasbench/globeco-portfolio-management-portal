@@ -5,7 +5,16 @@ import {
   OrderMappingConfig,
   RetryConfig,
   OrderSubmissionResult,
-  SubmissionState 
+  SubmissionState,
+  OrderQueryParams,
+  OrderPageResponseDTO,
+  OrderWithDetailsDTO,
+  OrderDTO,
+  BatchSubmitRequestDTO,
+  BatchSubmitResponseDTO,
+  StatusDTO,
+  OrderTypeDTO,
+  BlotterDTO
 } from '@/types/order'
 import { 
   RebalancePositionWithSubmission,
@@ -488,6 +497,110 @@ export const orderServiceApi = {
    * Clear logging history (useful for testing)
    */
   clearLogs: () => logger.clearLogs(),
+
+  // Order Management Page API functions
+
+  /**
+   * List orders with pagination, filtering, and sorting
+   */
+  listOrders: async (params: OrderQueryParams = {}): Promise<OrderPageResponseDTO> => {
+    return retryRequest(async () => {
+      const response: AxiosResponse<OrderPageResponseDTO> = await apiClient.get('/api/v1/orders', { params })
+      return response.data
+    })
+  },
+
+  /**
+   * Get a single order by ID
+   */
+  getOrderById: async (id: number): Promise<OrderWithDetailsDTO> => {
+    return retryRequest(async () => {
+      const response: AxiosResponse<OrderWithDetailsDTO> = await apiClient.get(`/api/v1/order/${id}`)
+      return response.data
+    })
+  },
+
+  /**
+   * Update an existing order
+   */
+  updateOrder: async (id: number, order: OrderDTO): Promise<OrderWithDetailsDTO> => {
+    return retryRequest(async () => {
+      const response: AxiosResponse<OrderWithDetailsDTO> = await apiClient.put(`/api/v1/order/${id}`, order)
+      return response.data
+    })
+  },
+
+  /**
+   * Delete an order by ID
+   */
+  deleteOrder: async (id: number, version: number): Promise<void> => {
+    return retryRequest(async () => {
+      await apiClient.delete(`/api/v1/order/${id}`, { params: { version } })
+    })
+  },
+
+  /**
+   * Submit a single order to the trade service
+   */
+  submitOrder: async (id: number): Promise<OrderDTO> => {
+    return retryRequest(async () => {
+      const response: AxiosResponse<OrderDTO> = await apiClient.post(`/api/v1/orders/${id}/submit`)
+      return response.data
+    })
+  },
+
+  /**
+   * Submit multiple orders in batch to the trade service
+   */
+  submitOrdersBatch: async (orderIds: number[]): Promise<BatchSubmitResponseDTO> => {
+    // Validate batch size
+    if (orderIds.length === 0) {
+      throw new Error('Cannot submit empty order batch')
+    }
+    
+    if (orderIds.length > 100) {
+      throw new Error(`Batch size ${orderIds.length} exceeds maximum allowed 100`)
+    }
+
+    const request: BatchSubmitRequestDTO = { orderIds }
+
+    return retryRequest(async () => {
+      const response: AxiosResponse<BatchSubmitResponseDTO> = await apiClient.post('/api/v1/orders/batch/submit', request)
+      return response.data
+    })
+  },
+
+  // Reference data API functions
+
+  /**
+   * List all statuses
+   */
+  listStatuses: async (): Promise<StatusDTO[]> => {
+    return retryRequest(async () => {
+      const response: AxiosResponse<StatusDTO[]> = await apiClient.get('/api/v1/statuses')
+      return response.data
+    })
+  },
+
+  /**
+   * List all order types
+   */
+  listOrderTypes: async (): Promise<OrderTypeDTO[]> => {
+    return retryRequest(async () => {
+      const response: AxiosResponse<OrderTypeDTO[]> = await apiClient.get('/api/v1/orderTypes')
+      return response.data
+    })
+  },
+
+  /**
+   * List all blotters
+   */
+  listBlotters: async (): Promise<BlotterDTO[]> => {
+    return retryRequest(async () => {
+      const response: AxiosResponse<BlotterDTO[]> = await apiClient.get('/api/v1/blotters')
+      return response.data
+    })
+  },
 }
 
 // Export configuration for use in other modules
