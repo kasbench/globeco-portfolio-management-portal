@@ -159,40 +159,40 @@ Each trade order with `submitted=false` must have the following actions availabl
 ## Execution Plan
 
 ### Phase 1: Foundation and Setup
-- [ ] **1.1** Create TypeScript interfaces for Trade Service DTOs
-  - [ ] TradeOrderResponseDTO
-  - [ ] TradeOrderEnhancedResponseDTO (v2 API)
-  - [ ] TradeOrderPageResponseDTO
-  - [ ] BatchSubmitRequestDTO
-  - [ ] BatchMoveRequestDTO
-  - [ ] Execution DTOs
-- [ ] **1.2** Set up Trade Service API client
-  - [ ] Create tradeService.ts with all required v2 endpoints
-  - [ ] Implement proper error handling and response typing
-  - [ ] Add request/response interceptors for logging
-- [ ] **1.3** Create or adapt reusable UI components
-  - [ ] Reuse FilterPills component from Order Management
-  - [ ] Reuse SortableTable component with column sorting
-  - [ ] Reuse BatchActionBar component for selected items
-  - [ ] Create TradeOrderActionMenu component for individual actions
+- [x] **1.1** Create TypeScript interfaces for Trade Service DTOs
+  - [x] TradeOrderResponseDTO
+  - [x] TradeOrderEnhancedResponseDTO (v2 API)
+  - [x] TradeOrderPageResponseDTO
+  - [x] BatchSubmitRequestDTO
+  - [x] BatchMoveRequestDTO
+  - [x] Execution DTOs
+- [x] **1.2** Set up Trade Service API client
+  - [x] Create tradeService.ts with all required v2 endpoints
+  - [x] Implement proper error handling and response typing
+  - [x] Add request/response interceptors for logging
+- [x] **1.3** Create or adapt reusable UI components
+  - [x] Reuse FilterPills component from Order Management
+  - [x] Reuse SortableTable component with column sorting
+  - [x] Reuse BatchActionBar component for selected items
+  - [x] Create TradeOrderActionMenu component for individual actions
 
-### Phase 2: Core Trade Order List Implementation  
-- [ ] **2.1** Update Trading menu navigation
-  - [ ] Modify navigation to include Trading submenu
-  - [ ] Add routes for Trade Management and Execution Management
-  - [ ] Update route structure: `/trading/trade-management`
-- [ ] **2.2** Replace placeholder trade management page
-  - [ ] Remove "Coming Soon" content from trading page
-  - [ ] Implement main TradeManagementPage component
-- [ ] **2.3** Implement trade order data fetching
-  - [ ] Create useTradeOrders hook with pagination, filtering, and sorting
-  - [ ] Implement infinite scroll or pagination controls
-  - [ ] Add loading states and error handling
-- [ ] **2.4** Build trade order list table
-  - [ ] Create responsive table layout with all required columns
-  - [ ] Implement row selection checkboxes for non-submitted orders
-  - [ ] Add action buttons/menu for each non-submitted order
-  - [ ] Handle empty states and loading skeletons
+### Phase 2: Core Trade Order List Implementation ✅
+- [x] **2.1** Update Trading menu navigation
+  - [x] Modify navigation to include Trading submenu
+  - [x] Add routes for Trade Management and Execution Management
+  - [x] Update route structure: `/trading/trade-management`
+- [x] **2.2** Replace placeholder trade management page
+  - [x] Remove "Coming Soon" content from trading page
+  - [x] Implement main TradeManagementPage component
+- [x] **2.3** Implement trade order data fetching
+  - [x] Create useTradeOrders hook with pagination, filtering, and sorting
+  - [x] Implement infinite scroll or pagination controls
+  - [x] Add loading states and error handling
+- [x] **2.4** Build trade order list table
+  - [x] Create responsive table layout with all required columns
+  - [x] Implement row selection checkboxes for non-submitted orders
+  - [x] Add action buttons/menu for each non-submitted order
+  - [x] Handle empty states and loading skeletons
 
 ### Phase 3: Filtering and Sorting
 - [ ] **3.1** Implement advanced filtering

@@ -216,27 +216,24 @@ GET /api/v1/tradeOrders?limit=50&offset=100
 **Method**: GET
 
 **Pagination Parameters**:
-- `page` (Integer, default: 0): Page number (0-based)
-- `size` (Integer, default: 20, max: 1000): Items per page
+- `limit` (Integer, default: 50, max: 1000): Maximum number of results to return
+- `offset` (Integer, default: 0): Number of results to skip for pagination
 
 **Filtering Parameters**:
 - `id` (Integer): Filter by trade order ID
 - `orderId` (Integer): Filter by order ID
 - `orderType` (String): Comma-separated order types (BUY,SELL,SHORT)
-- `portfolioId` (String): Comma-separated portfolio IDs
-- `portfolioNames` (String): Comma-separated portfolio names
-- `securityId` (String): Comma-separated security IDs
-- `securityTickers` (String): Comma-separated ticker symbols
-- `minQuantity` (BigDecimal): Minimum quantity filter
-- `maxQuantity` (BigDecimal): Maximum quantity filter
-- `minQuantitySent` (BigDecimal): Minimum quantity sent filter
-- `maxQuantitySent` (BigDecimal): Maximum quantity sent filter
-- `blotterAbbreviation` (String): Comma-separated blotter abbreviations
+- `portfolio.name` (String): Comma-separated portfolio names
+- `security.ticker` (String): Comma-separated ticker symbols
+- `quantity.min` (BigDecimal): Minimum quantity filter
+- `quantity.max` (BigDecimal): Maximum quantity filter
+- `quantitySent.min` (BigDecimal): Minimum quantity sent filter
+- `quantitySent.max` (BigDecimal): Maximum quantity sent filter
+- `blotter.abbreviation` (String): Comma-separated blotter abbreviations
 - `submitted` (Boolean): Filter by submission status
 
 **Sorting Parameters**:
-- `sortBy` (String): Comma-separated field names
-- `sortDir` (String): Comma-separated directions (asc,desc)
+- `sort` (String): Comma-separated sort fields with optional '-' prefix for descending order
 
 **Available Sort Fields**:
 - `id`, `orderId`, `orderType`, `quantity`, `quantitySent`
@@ -247,7 +244,7 @@ GET /api/v1/tradeOrders?limit=50&offset=100
 
 **Example Request**:
 ```http
-GET /api/v2/tradeOrders?portfolioNames=Growth Fund,Income Fund&orderType=BUY&sortBy=quantity,security.ticker&sortDir=desc,asc&page=0&size=25
+GET /api/v2/tradeOrders?portfolio.name=Growth Fund,Income Fund&orderType=BUY&sort=-quantity,security.ticker&limit=25&offset=0
 ```
 
 **Example Response**:
@@ -381,9 +378,9 @@ Returns 20 orders starting from position 40.
 
 #### Basic Pagination (v2)
 ```http
-GET /api/v2/tradeOrders?page=2&size=20
+GET /api/v2/tradeOrders?limit=20&offset=40
 ```
-Returns page 2 with 20 items (records 40-59).
+Returns 20 items starting from position 40 (records 40-59).
 
 ### Advanced Filtering (v2 Only)
 
@@ -391,56 +388,56 @@ Returns page 2 with 20 items (records 40-59).
 ```http
 GET /api/v2/tradeOrders?orderType=BUY
 GET /api/v2/tradeOrders?submitted=false
-GET /api/v2/tradeOrders?minQuantity=100
+GET /api/v2/tradeOrders?quantity.min=100
 ```
 
 #### Multiple Value Filters (OR Logic)
 ```http
 GET /api/v2/tradeOrders?orderType=BUY,SELL
-GET /api/v2/tradeOrders?portfolioNames=Growth Fund,Income Fund
-GET /api/v2/tradeOrders?securityTickers=AAPL,MSFT,GOOGL
+GET /api/v2/tradeOrders?portfolio.name=Growth Fund,Income Fund
+GET /api/v2/tradeOrders?security.ticker=AAPL,MSFT,GOOGL
 ```
 
 #### Range Filters
 ```http
-GET /api/v2/tradeOrders?minQuantity=100&maxQuantity=1000
-GET /api/v2/tradeOrders?minQuantitySent=50&maxQuantitySent=500
+GET /api/v2/tradeOrders?quantity.min=100&quantity.max=1000
+GET /api/v2/tradeOrders?quantitySent.min=50&quantitySent.max=500
 ```
 
 #### Combined Filters
 ```http
-GET /api/v2/tradeOrders?portfolioNames=Growth Fund&orderType=BUY&submitted=false&minQuantity=100
+GET /api/v2/tradeOrders?portfolio.name=Growth Fund&orderType=BUY&submitted=false&quantity.min=100
 ```
 
 ### Sorting Patterns (v2 Only)
 
 #### Single Field Sorting
 ```http
-GET /api/v2/tradeOrders?sortBy=quantity&sortDir=desc
-GET /api/v2/tradeOrders?sortBy=security.ticker&sortDir=asc
+GET /api/v2/tradeOrders?sort=-quantity
+GET /api/v2/tradeOrders?sort=security.ticker
 ```
 
 #### Multi-Field Sorting
 ```http
-GET /api/v2/tradeOrders?sortBy=portfolio.name,quantity&sortDir=asc,desc
-GET /api/v2/tradeOrders?sortBy=orderType,security.ticker,quantity&sortDir=asc,asc,desc
+GET /api/v2/tradeOrders?sort=portfolio.name,-quantity
+GET /api/v2/tradeOrders?sort=orderType,security.ticker,-quantity
 ```
 
 ### Complex Queries (v2 Only)
 
 #### High-Value BUY Orders in Specific Portfolios
 ```http
-GET /api/v2/tradeOrders?portfolioNames=Growth Fund,Aggressive Growth&orderType=BUY&minQuantity=1000&sortBy=quantity&sortDir=desc&page=0&size=50
+GET /api/v2/tradeOrders?portfolio.name=Growth Fund,Aggressive Growth&orderType=BUY&quantity.min=1000&sort=-quantity&limit=50&offset=0
 ```
 
 #### Recent Unsubmitted Orders
 ```http
-GET /api/v2/tradeOrders?submitted=false&sortBy=tradeTimestamp&sortDir=desc&page=0&size=25
+GET /api/v2/tradeOrders?submitted=false&sort=-tradeTimestamp&limit=25&offset=0
 ```
 
 #### Technology Stock Orders
 ```http
-GET /api/v2/tradeOrders?securityTickers=AAPL,MSFT,GOOGL,AMZN,TSLA&sortBy=security.ticker,quantity&sortDir=asc,desc
+GET /api/v2/tradeOrders?security.ticker=AAPL,MSFT,GOOGL,AMZN,TSLA&sort=security.ticker,-quantity
 ```
 
 ## External Service Integration (v2 Only)
@@ -515,28 +512,28 @@ GET /api/v2/tradeOrders?securityTickers=AAPL,MSFT,GOOGL,AMZN,TSLA&sortBy=securit
 
 ### Query Optimization Tips
 
-#### Use Appropriate Page Sizes
+#### Use Appropriate Limit Sizes
 ```http
-# Good: Reasonable page size
-GET /api/v2/tradeOrders?size=50
+# Good: Reasonable limit size
+GET /api/v2/tradeOrders?limit=50
 
-# Avoid: Very large page sizes
-GET /api/v2/tradeOrders?size=1000
+# Avoid: Very large limit sizes
+GET /api/v2/tradeOrders?limit=1000
 ```
 
 #### Apply Filters to Reduce Dataset
 ```http
 # Good: Filter then sort
-GET /api/v2/tradeOrders?portfolioNames=Growth Fund&orderType=BUY&sortBy=quantity&sortDir=desc
+GET /api/v2/tradeOrders?portfolio.name=Growth Fund&orderType=BUY&sort=-quantity
 
 # Less efficient: Large unfiltered dataset
-GET /api/v2/tradeOrders?sortBy=quantity&sortDir=desc&size=1000
+GET /api/v2/tradeOrders?sort=-quantity&limit=1000
 ```
 
 #### Leverage Caching for External Data
 ```http
 # Cached data: portfolio.name and security.ticker fields
-GET /api/v2/tradeOrders?sortBy=portfolio.name,security.ticker
+GET /api/v2/tradeOrders?sort=portfolio.name,security.ticker
 ```
 
 ### Performance Benchmarks
@@ -585,27 +582,28 @@ setInterval(async () => {
 ### Efficient Pagination (v2)
 ```javascript
 // Process all pages efficiently
-let page = 0;
+let offset = 0;
+const limit = 100;
 let hasMore = true;
 
 while (hasMore) {
-  const response = await fetch(`/api/v2/tradeOrders?page=${page}&size=100`);
+  const response = await fetch(`/api/v2/tradeOrders?limit=${limit}&offset=${offset}`);
   const data = await response.json();
   
-  processOrders(data.content);
+  processOrders(data.tradeOrders);
   
-  hasMore = !data.last;
-  page++;
+  hasMore = data.tradeOrders.length === limit;
+  offset += limit;
 }
 ```
 
 ### Filtered Processing (v2)
 ```javascript
 // Process only relevant orders
-const response = await fetch('/api/v2/tradeOrders?submitted=false&orderType=BUY&minQuantity=1000&sortBy=quantity&sortDir=desc');
+const response = await fetch('/api/v2/tradeOrders?submitted=false&orderType=BUY&quantity.min=1000&sort=-quantity');
 const data = await response.json();
 
-data.content.forEach(order => {
+data.tradeOrders.forEach(order => {
   console.log(`Large BUY order: ${order.quantity} ${order.securityTicker} for ${order.portfolioName}`);
 });
 ```
@@ -656,10 +654,13 @@ console.log(`Created ${result.successCount} orders, ${result.failureCount} failu
 
 // v2 Response (Paginated Object)
 {
-  content: [{id: 1, orderId: 123, ...}],
-  totalElements: 150,
-  totalPages: 8,
-  // ... pagination metadata
+  tradeOrders: [{id: 1, orderId: 123, ...}],
+  pagination: {
+    totalElements: 150,
+    currentPage: 0,
+    pageSize: 50,
+    // ... pagination metadata
+  }
 }
 ```
 
@@ -677,8 +678,8 @@ console.log(`Created ${result.successCount} orders, ${result.failureCount} failu
 **Solutions**:
 ```http
 # Verify filters step by step
-GET /api/v2/tradeOrders?portfolioNames=Growth Fund
-GET /api/v2/tradeOrders?portfolioNames=Growth Fund&orderType=BUY
+GET /api/v2/tradeOrders?portfolio.name=Growth Fund
+GET /api/v2/tradeOrders?portfolio.name=Growth Fund&orderType=BUY
 ```
 
 #### Slow Response Times
@@ -690,19 +691,19 @@ GET /api/v2/tradeOrders?portfolioNames=Growth Fund&orderType=BUY
 
 **Solutions**:
 ```http
-# Use smaller page sizes
-GET /api/v2/tradeOrders?size=25
+# Use smaller limit sizes
+GET /api/v2/tradeOrders?limit=25
 
 # Filter before sorting
-GET /api/v2/tradeOrders?orderType=BUY&sortBy=quantity
+GET /api/v2/tradeOrders?orderType=BUY&sort=quantity
 ```
 
 #### Validation Errors
 **Symptom**: 400 Bad Request responses
 **Common Causes**:
 - Invalid sort fields
-- Page size too large (> 1000)
-- Negative page numbers
+- Limit size too large (> 1000)
+- Negative offset values
 
 ### Error Recovery Patterns
 
@@ -726,12 +727,12 @@ async function retryRequest(url, maxRetries = 3) {
 // Fall back to v1 if v2 fails
 async function getTradeOrders() {
   try {
-    const response = await fetch('/api/v2/tradeOrders?page=0&size=50');
+    const response = await fetch('/api/v2/tradeOrders?limit=50&offset=0');
     return await response.json();
   } catch (error) {
     console.warn('v2 API failed, falling back to v1');
     const response = await fetch('/api/v1/tradeOrders?limit=50');
-    return { content: await response.json() };
+    return { tradeOrders: await response.json() };
   }
 }
 ```
