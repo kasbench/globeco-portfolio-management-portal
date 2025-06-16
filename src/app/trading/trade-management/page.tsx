@@ -14,6 +14,7 @@ import { useTradeOrders } from '@/lib/hooks/useTradeOrders'
 import TradeOrderListTable from '@/components/tables/TradeOrderListTable'
 import { TradeOrderEnhancedResponseDTO, TradeOrderAction, TradeOrderFilters } from '@/types/trade'
 import { TradeOrderActionMenu } from '@/components/features/trade-order-action-menu'
+import TradeOrderDetailsModal from '@/components/features/trade-order-details-modal'
 
 // Filter configuration for Trade Orders
 const FILTER_FIELDS = [
@@ -49,6 +50,15 @@ interface TradeManagementPageContentProps {}
 const TradeManagementPageContent: React.FC<TradeManagementPageContentProps> = () => {
   const [selectedOrders, setSelectedOrders] = useState<Set<number>>(new Set())
   const [filters, setFilters] = useState<TradeOrderFilters>({})
+  const [detailsModal, setDetailsModal] = useState<{
+    isOpen: boolean
+    tradeOrder: TradeOrderEnhancedResponseDTO | null
+    mode: 'view' | 'edit'
+  }>({
+    isOpen: false,
+    tradeOrder: null,
+    mode: 'view'
+  })
 
   const {
     data: tradeOrdersData,
@@ -113,43 +123,33 @@ const TradeManagementPageContent: React.FC<TradeManagementPageContentProps> = ()
     try {
       switch (action) {
         case 'view':
-          // TODO: Open order details modal
-          toast({
-            title: 'View Trade Order',
-            description: `Opening details for Trade Order #${tradeOrder.id}`,
+          setDetailsModal({
+            isOpen: true,
+            tradeOrder: tradeOrder,
+            mode: 'view'
           })
           break
         case 'edit':
-          // TODO: Open order edit form
-          toast({
-            title: 'Edit Trade Order',
-            description: `Opening edit form for Trade Order #${tradeOrder.id}`,
+          setDetailsModal({
+            isOpen: true,
+            tradeOrder: tradeOrder,
+            mode: 'edit'
           })
           break
         case 'delete':
           // TODO: Implement delete functionality
-          toast({
-            title: 'Delete Trade Order',
-            description: `Trade Order #${tradeOrder.id} would be deleted`,
-          })
+          toast.success(`Trade Order #${tradeOrder.id} would be deleted`)
           await refetch()
           break
         case 'submit':
           // TODO: Implement submit functionality
-          toast({
-            title: 'Submit Trade Order',
-            description: `Trade Order #${tradeOrder.id} would be submitted`,
-          })
+          toast.success(`Trade Order #${tradeOrder.id} would be submitted`)
           await refetch()
           break
       }
     } catch (error) {
       console.error(`Failed to ${action} trade order:`, error)
-      toast({
-        title: 'Error',
-        description: `Failed to ${action} trade order. Please try again.`,
-        variant: 'destructive',
-      })
+      toast.error(`Failed to ${action} trade order. Please try again.`)
     }
   }
 
@@ -339,6 +339,20 @@ const TradeManagementPageContent: React.FC<TradeManagementPageContentProps> = ()
           </div>
         )}
       </div>
+
+      {/* Trade Order Details Modal */}
+      <TradeOrderDetailsModal
+        tradeOrder={detailsModal.tradeOrder}
+        mode={detailsModal.mode}
+        open={detailsModal.isOpen}
+        onOpenChange={(open) => setDetailsModal(prev => ({ ...prev, isOpen: open }))}
+        onTradeOrderUpdated={(updatedTradeOrder) => {
+          // Refresh the data when a trade order is updated
+          refetch()
+          // Close the modal
+          setDetailsModal({ isOpen: false, tradeOrder: null, mode: 'view' })
+        }}
+      />
     </div>
   )
 }

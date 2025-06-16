@@ -209,7 +209,7 @@ const TradeOrderListTable: React.FC<TradeOrderListTableProps> = ({
                       {order.limitPrice ? formatCurrency(order.limitPrice) : '—'}
                     </td>
                     <td className="p-4 text-sm text-gray-600">{order.portfolio?.name || order.portfolioName || order.portfolioId || '—'}</td>
-                    <td className="p-4 text-sm text-gray-600">{order.blotterAbbreviation}</td>
+                    <td className="p-4 text-sm text-gray-600">{order.blotter?.abbreviation || order.blotterAbbreviation || '—'}</td>
                     <td className="p-4">{formatStatus(order.submitted)}</td>
                     <td className="p-4 text-sm text-gray-600">
                       {formatDateTime(order.tradeTimestamp)}
@@ -308,7 +308,7 @@ const TradeOrderListTable: React.FC<TradeOrderListTableProps> = ({
                   </div>
 
                   <div className="mt-3 pt-3 border-t border-gray-100 text-xs text-gray-500">
-                    {order.portfolio?.name || order.portfolioName || order.portfolioId || '—'} • {order.blotterAbbreviation}
+                    {order.portfolio?.name || order.portfolioName || order.portfolioId || '—'} • {order.blotter?.abbreviation || order.blotterAbbreviation || '—'}
                   </div>
                 </div>
               )

@@ -9,7 +9,7 @@ export interface TradeOrderResponseDTO {
   quantitySent: number;
   portfolioId: string;
   securityId: string;
-  blotterId: string;
+  blotterId: number;
   blotterAbbreviation: string;
   limitPrice?: number;
   tradeTimestamp: string;
@@ -28,6 +28,12 @@ export interface TradeOrderEnhancedResponseDTO extends TradeOrderResponseDTO {
   security?: {               // Security object from external service
     ticker: string;
     securityId: string;
+  };
+  blotter?: {                // Blotter object from Trade Service (optional - fallback to blotterAbbreviation)
+    id: number;
+    abbreviation: string;
+    name: string;
+    version: number;
   };
 }
 
@@ -57,12 +63,13 @@ export interface CreateTradeOrderRequestDTO {
   quantitySent?: number;
   portfolioId: string;
   securityId: string;
-  blotterId: string;
+  blotterId: number;
   limitPrice?: number;
   tradeTimestamp: string;
 }
 
 export interface UpdateTradeOrderRequestDTO extends CreateTradeOrderRequestDTO {
+  id: number;
   version: number;
 }
 
@@ -245,6 +252,14 @@ export interface TradeOrderActionResult {
   message: string;
   affectedOrders: number[];
   errors?: Record<number, string>;
+}
+
+// Blotter types from Trade Service API
+export interface BlotterResponseDTO {
+  id: number;
+  abbreviation: string;
+  name: string;
+  version: number;
 }
 
 export interface BatchActionResult {

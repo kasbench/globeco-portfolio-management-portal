@@ -17,7 +17,8 @@ import {
   TradeOrderQueryParams,
   ExecutionQueryParams,
   TradeServiceErrorResponse,
-  SubmitOrderResponseDTO
+  SubmitOrderResponseDTO,
+  BlotterResponseDTO
 } from '@/types/trade';
 
 /**
@@ -210,10 +211,20 @@ class TradeService {
   }
 
   /**
-   * Update existing trade order (v2)
+   * Update existing trade order (v1)
    */
-  async updateTradeOrder(id: number, tradeOrder: UpdateTradeOrderRequestDTO): Promise<TradeOrderEnhancedResponseDTO> {
-    const response = await this.api.put<TradeOrderEnhancedResponseDTO>(`/api/v2/tradeOrders/${id}`, tradeOrder);
+  async updateTradeOrder(id: number, tradeOrder: UpdateTradeOrderRequestDTO): Promise<TradeOrderResponseDTO> {
+    // Debug: Log the parameters being passed to the API
+    console.log('🔍 DEBUG - TradeService.updateTradeOrder called with:', {
+      id,
+      tradeOrder,
+      url: `/api/v1/tradeOrders/${id}`,
+      portfolioId: tradeOrder.portfolioId,
+      portfolioIdType: typeof tradeOrder.portfolioId,
+      portfolioIdLength: tradeOrder.portfolioId?.length
+    })
+    
+    const response = await this.api.put<TradeOrderResponseDTO>(`/api/v1/tradeOrders/${id}`, tradeOrder);
     return response.data;
   }
 
@@ -329,6 +340,24 @@ class TradeService {
     return response.data;
   }
 
+  // ==================== BLOTTER MANAGEMENT ====================
+
+  /**
+   * Get all blotters (v1)
+   */
+  async getBlotters(): Promise<BlotterResponseDTO[]> {
+    const response = await this.api.get<BlotterResponseDTO[]>('/api/v1/blotters');
+    return response.data;
+  }
+
+  /**
+   * Get blotter by ID (v1)
+   */
+  async getBlotterById(id: number): Promise<BlotterResponseDTO> {
+    const response = await this.api.get<BlotterResponseDTO>(`/api/v1/blotters/${id}`);
+    return response.data;
+  }
+
   // ==================== UTILITY METHODS ====================
 
   /**
@@ -336,9 +365,8 @@ class TradeService {
    */
   async getBlotterAbbreviations(): Promise<string[]> {
     try {
-      // This would typically come from a blotter service or be cached
-      // For now, return common blotter abbreviations
-      return ['EQ', 'FI', 'FX', 'CMD', 'DERIV'];
+      const blotters = await this.getBlotters();
+      return blotters.map(blotter => blotter.abbreviation);
     } catch (error) {
       console.warn('Could not fetch blotter abbreviations:', error);
       return ['EQ', 'FI', 'FX'];
