@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo, Suspense } from 'react'
+import React, { useState, useMemo, useRef, useEffect, Suspense } from 'react'
 import { format } from 'date-fns'
 import { toast } from 'sonner'
 import { 
@@ -28,7 +28,6 @@ import { FilterPills } from '@/components/ui/filter-pills'
 import { SortableTable, SortableColumn } from '@/components/tables/sortable-table'
 import { BatchActionBar } from '@/components/ui/batch-action-bar'
 import { OrderActionMenu } from '@/components/ui/order-action-menu'
-import { Pagination } from '@/components/ui/pagination'
 import { OrderDetailsModal } from '@/components/features/order-details-modal'
 import { useOrders } from '@/lib/hooks/useOrders'
 import { OrderWithDetailsDTO, OrderFilter } from '@/types/order'
@@ -37,9 +36,11 @@ import orderServiceApi from '@/lib/api/orderService'
 function OrderManagementContent() {
   const {
     orders,
-    pagination,
     loading,
     error,
+    hasNextPage,
+    isFetchingNextPage,
+    loadMore,
     filters,
     sort,
     selectedOrderIds,
@@ -48,13 +49,32 @@ function OrderManagementContent() {
     toggleOrderSelection,
     selectAllOrders,
     clearSelection,
-    goToPage,
-    changePageSize,
     refresh
   } = useOrders({
-    defaultPageSize: 50,
+    defaultFilters: [{ field: 'status.abbreviation', values: ['NEW'], label: 'Status' }],
     autoRefresh: false
   })
+
+  // Ref for infinite scroll observer
+  const loadingRef = useRef<HTMLDivElement>(null)
+
+  // Infinite scroll observer
+  useEffect(() => {
+    const loadingElement = loadingRef.current
+    if (!loadingElement || !hasNextPage || isFetchingNextPage) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          loadMore()
+        }
+      },
+      { threshold: 0.1 }
+    )
+
+    observer.observe(loadingElement)
+    return () => observer.disconnect()
+  }, [hasNextPage, isFetchingNextPage, loadMore])
 
   // Loading states for individual actions
   const [actionLoading, setActionLoading] = useState<{
@@ -421,14 +441,15 @@ function OrderManagementContent() {
         </div>
 
         {/* Summary Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <div className="bg-white rounded-lg border p-4">
             <div className="flex items-center gap-2">
               <Clock className="h-5 w-5 text-blue-600" />
               <div>
-                <p className="text-sm text-slate-600">Total Orders</p>
+                <p className="text-sm text-slate-600">Loaded Orders</p>
                 <p className="text-2xl font-bold text-slate-900">
-                  {pagination?.totalElements.toLocaleString() || 0}
+                  {orders.length.toLocaleString()}
+                  {hasNextPage && <span className="text-sm text-slate-500 ml-1">(scroll for more)</span>}
                 </p>
               </div>
             </div>
@@ -453,18 +474,6 @@ function OrderManagementContent() {
                 <p className="text-sm text-slate-600">Selected</p>
                 <p className="text-2xl font-bold text-slate-900">
                   {selectedNewOrdersCount.toLocaleString()}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg border p-4">
-            <div className="flex items-center gap-2">
-              <DollarSign className="h-5 w-5 text-purple-600" />
-              <div>
-                <p className="text-sm text-slate-600">Page Size</p>
-                <p className="text-2xl font-bold text-slate-900">
-                  {pagination?.pageSize || 0}
                 </p>
               </div>
             </div>
@@ -522,14 +531,32 @@ function OrderManagementContent() {
           />
         </div>
 
-        {/* Pagination */}
-        {pagination && pagination.totalElements > 0 && (
-          <div className="mt-6">
-            <Pagination
-              pagination={pagination}
-              onPageChange={goToPage}
-              onPageSizeChange={changePageSize}
-            />
+        {/* Loading indicator for infinite scroll */}
+        {hasNextPage && (
+          <div ref={loadingRef} className="flex justify-center py-6">
+            {isFetchingNextPage ? (
+              <div className="flex items-center space-x-2 text-slate-600">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Loading more orders...</span>
+              </div>
+            ) : (
+              <Button 
+                variant="outline" 
+                onClick={loadMore}
+                className="text-slate-600 hover:text-slate-900"
+              >
+                Load More Orders
+              </Button>
+            )}
+          </div>
+        )}
+
+        {/* End of data indicator */}
+        {!hasNextPage && orders.length > 0 && (
+          <div className="flex justify-center py-4">
+            <span className="text-sm text-slate-500">
+              All orders loaded ({orders.length} total)
+            </span>
           </div>
         )}
 

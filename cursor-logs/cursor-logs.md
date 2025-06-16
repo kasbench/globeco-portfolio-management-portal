@@ -243,6 +243,66 @@ Created comprehensive type definitions in `error-display.tsx`:
 
 **Status**: ✅ **COMPLETED** - All debugging logs successfully removed from the infinite re-render bug fix. Application should now run without excessive console output.
 
+## 2025-01-27 16:00 - Order Management Converted to Infinite Scrolling
+
+**User Request**: Convert Order Management to infinite scrolling, like we have on the Investment Models page.
+
+**Analysis**: Examined the existing infinite scroll implementations in:
+- Investment Models page (`src/app/model-management/page.tsx`)
+- ModelsTable component (`src/components/tables/ModelsTable.tsx`) 
+- useModels hook (`src/lib/hooks/useModels.ts`)
+- useRebalances hook (`src/lib/hooks/useRebalances.ts`)
+
+**Implementation**:
+
+1. **Updated useOrders Hook** (`src/lib/hooks/useOrders.ts`):
+   - Converted from pagination-based to infinite scrolling using `useInfiniteQuery`
+   - Added constants: `ORDERS_PER_PAGE = 50`, `ORDERS_ADDITIONAL_PAGE_SIZE = 25`
+   - Removed pagination-related state and functions (`pagination`, `goToPage`, `changePageSize`, etc.)
+   - Added infinite scroll properties: `hasNextPage`, `isFetchingNextPage`, `loadMore`
+   - Implemented `getNextPageParam` logic to calculate next offset
+   - Added React Query configuration: staleTime, gcTime, retry logic, etc.
+   - Flattened pages into single orders array using `useMemo`
+   - Updated URL management to remove page/pageSize parameters
+   - Maintained filter and sort functionality with automatic selection clearing
+
+2. **Updated Order Management Page** (`src/app/order-management/page.tsx`):
+   - Added imports: `useRef`, `useEffect` for intersection observer
+   - Removed Pagination component import
+   - Added infinite scroll observer using `IntersectionObserver` API
+   - Updated hook destructuring to use infinite scroll properties
+   - Modified summary stats from 4 to 3 cards, removing "Page Size"
+   - Updated "Total Orders" to "Loaded Orders" with "(scroll for more)" indicator
+   - Replaced pagination section with infinite scroll loading indicator
+   - Added "Load More Orders" button and loading spinner
+   - Added "All orders loaded" indicator when no more pages available
+
+3. **UI/UX Improvements**:
+   - Intersection observer with 0.1 threshold for smooth loading
+   - Loading states: spinner for fetching next page
+   - Manual "Load More" button as fallback
+   - End-of-data indicator showing total count
+   - Maintained all existing functionality: filtering, sorting, selection, batch operations
+
+**Key Features**:
+- ✅ Automatic loading when scrolling near bottom
+- ✅ Manual "Load More" button option
+- ✅ Loading indicators and progress feedback
+- ✅ Maintains filter and sort state across loads
+- ✅ Selection clearing when filters/sort change
+- ✅ Error handling and retry logic
+- ✅ Performance optimizations (stale time, cache management)
+- ✅ Responsive design maintained
+
+**Technical Details**:
+- Uses React Query's `useInfiniteQuery` for data fetching
+- Implements intersection observer for scroll detection
+- Maintains stable references to prevent re-renders
+- Follows same pattern as Investment Models and Rebalance Results pages
+- Preserves all existing Order Management functionality
+
+**Status**: ✅ **COMPLETED** - Order Management successfully converted to infinite scrolling. Users can now scroll through orders seamlessly without pagination controls, matching the UX pattern established in other parts of the application.
+
 ## 2024-12-30 - Debugging Infinite Re-render Issue
 
 **Problem**: Getting "Maximum update depth exceeded" error on Order Management page, specifically in the Pagination component with Select components from @radix-ui/react-popper library.
@@ -6619,3 +6679,64 @@ The infinite re-render appears to be a deep issue within Radix UI's ref composit
 **Impact**: The application is partially functional - data loading works, but interactive elements (filters, actions) are compromised. The core business logic is sound, but the UI framework issue prevents full functionality.
 
 This represents a complex interaction between multiple systems (Radix UI, React, Next.js) that requires either a framework-level fix or component library replacement.
+
+---
+
+## 2025-01-27 - Filter Removal Bug Fix
+
+**Issue**: When user deleted all filters from Order Management page, got "missing required error components, refreshing..." message and infinite loop of 404 errors:
+```
+GET http://localhost:3000/order-management?sort=%255B%257B%2522field%2522%253A%2522id%2522%252C%2522direction%2522%253A%2522asc%2522%257D%255D 404 (Not Found)
+```
+
+**Root Cause**: The `useOrders` hook had default filters (`[{ field: 'status.abbreviation', values: ['NEW'], label: 'Status' }]`) that were always applied, but when user removed all filters from UI, the URL had no filters. This created a mismatch between the React Query cache key and the actual URL parameters, causing continuous refetching.
+
+**Solution Applied**:
+1. **Updated `useOrders` hook** (`src/lib/hooks/useOrders.ts`):
+   - Changed `STABLE_DEFAULT_FILTERS` from `[{ field: 'status.abbreviation', values: ['NEW'], label: 'Status' }]` to `[]` (empty array)
+   - This allows the hook to work properly when no filters are present
+
+2. **Updated Order Management page** (`src/app/order-management/page.tsx`):
+   - Added explicit `defaultFilters: [{ field: 'status.abbreviation', values: ['NEW'], label: 'Status' }]` to the `useOrders` call
+   - This maintains the desired default behavior of showing NEW orders by default, but allows users to remove all filters
+
+**Technical Details**: The issue was that React Query uses the query parameters (including filters) as part of the cache key. When the hook had built-in default filters but the URL had no filters, React Query thought it needed to refetch with different parameters, creating an infinite loop.
+
+**Result**: Users can now safely remove all filters without causing infinite loops or 404 errors. The page will load all orders when no filters are applied, which is the expected behavior.
+
+---
+
+## 2025-01-27 - Infinite Re-render Fix (Second Occurrence)
+
+**Issue**: After the filter removal fix, the infinite re-render issue returned with the same "Maximum update depth exceeded" error in `@radix-ui/react-popper` PopperAnchor component.
+
+**Root Cause**: Circular dependencies in the `useOrders` hook callbacks:
+- `setFilters` callback had `sort` as a dependency
+- `setSort` callback had `filters` as a dependency  
+- This created a circular dependency that could trigger infinite re-renders
+- Additionally, `defaultFilters` and `defaultSort` dependencies in URL parsing memos could cause re-renders when passed as props
+
+**Solution Applied**:
+1. **Added refs for current state tracking** (`src/lib/hooks/useOrders.ts`):
+   - `filtersRef` and `sortRef` to track current filter/sort values
+   - `defaultFiltersRef` and `defaultSortRef` to track stable default values
+   - Updated refs in useEffect hooks when state changes
+
+2. **Eliminated circular dependencies**:
+   - `setFilters` callback now uses `sortRef.current` instead of `sort` dependency
+   - `setSort` callback now uses `filtersRef.current` instead of `filters` dependency
+   - Removed `sort` and `filters` from respective callback dependency arrays
+
+3. **Stabilized URL parsing**:
+   - URL parsing memos now use `defaultFiltersRef.current` and `defaultSortRef.current`
+   - Removed `defaultFilters` and `defaultSort` from memo dependency arrays
+   - This prevents re-renders when defaults are passed as props
+
+**Technical Details**: 
+- **Before**: Callbacks had circular dependencies causing potential infinite loops
+- **After**: Callbacks use stable ref values without circular dependencies
+- **Before**: URL parsing depended on potentially unstable default values
+- **After**: URL parsing uses stable ref-based default values
+
+**Expected Result**: Elimination of infinite re-render loops while maintaining all functionality for filters, sorting, and URL synchronization.
+## 2024-12-19 - Order Type Mapping Correction

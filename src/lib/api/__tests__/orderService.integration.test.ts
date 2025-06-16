@@ -104,7 +104,7 @@ describe('Order Service API Integration', () => {
       expect(order.portfolioId).toBe('PORT001')
       expect(order.securityId).toBe('SEC001')
       expect(order.quantity).toBe(200)
-      expect(order.orderTypeId).toBe(2) // BUY = 2
+      expect(order.orderTypeId).toBe(1) // BUY = 1
       expect(order.blotterId).toBe(1)
       expect(order.statusId).toBe(1)
       expect(order.limitPrice).toBeNull()
@@ -166,7 +166,7 @@ describe('Order Service API Integration', () => {
         blotterId: 1,
         statusId: 1,
         portfolioId: 'PORT001',
-        orderTypeId: 2,
+        orderTypeId: 1,
         securityId: 'SEC001',
         quantity: 100,
         orderTimestamp: new Date().toISOString(),

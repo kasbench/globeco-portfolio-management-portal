@@ -46,8 +46,8 @@ export const getOrderServiceConfig = (): OrderMappingConfig & {
   defaultVersion: 1,
   batchSize: parseInt(process.env.NEXT_PUBLIC_ORDER_BATCH_SIZE || '1000', 10),
   orderTypeMapping: {
-    BUY: parseInt(process.env.NEXT_PUBLIC_ORDER_BUY_TYPE_ID || '2', 10),
-    SELL: parseInt(process.env.NEXT_PUBLIC_ORDER_SELL_TYPE_ID || '3', 10),
+    BUY: parseInt(process.env.NEXT_PUBLIC_ORDER_BUY_TYPE_ID || '1', 10),
+    SELL: parseInt(process.env.NEXT_PUBLIC_ORDER_SELL_TYPE_ID || '2', 10),
   },
   timeout: parseInt(process.env.NEXT_PUBLIC_ORDER_SUBMISSION_TIMEOUT || '30000', 10),
   retryConfig: {

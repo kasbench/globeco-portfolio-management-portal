@@ -21,9 +21,9 @@ export interface SortableColumn {
   render?: (value: any, row: any) => React.ReactNode
 }
 
-interface SortableTableProps {
+interface SortableTableProps<T = any> {
   columns: SortableColumn[]
-  data: any[]
+  data: T[]
   sort: OrderSortConfig[]
   onSortChange: (sort: OrderSortConfig[]) => void
   loading?: boolean
@@ -31,7 +31,7 @@ interface SortableTableProps {
   className?: string
 }
 
-export function SortableTable<T>({
+export function SortableTable({
   columns,
   data,
   sort,
@@ -39,7 +39,7 @@ export function SortableTable<T>({
   loading = false,
   emptyMessage = 'No data available',
   className = ''
-}: SortableTableProps<T>) {
+}: SortableTableProps) {
   const handleSort = (key: string) => {
     const existingSort = sort.find(s => s.field === key)
     let newSort: OrderSortConfig[]

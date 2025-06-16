@@ -389,7 +389,7 @@ class OrderLogger {
    */
   private summarizeOrderTypes(orders: OrderPostDTO[]): Record<string, number> {
     return orders.reduce((acc, order) => {
-      const type = order.orderTypeId === 2 ? 'BUY' : order.orderTypeId === 3 ? 'SELL' : 'OTHER'
+      const type = order.orderTypeId === 1 ? 'BUY' : order.orderTypeId === 2 ? 'SELL' : 'OTHER'
       acc[type] = (acc[type] || 0) + 1
       return acc
     }, {} as Record<string, number>)

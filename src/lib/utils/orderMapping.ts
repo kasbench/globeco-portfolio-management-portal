@@ -15,8 +15,8 @@ export const DEFAULT_ORDER_MAPPING_CONFIG: OrderMappingConfig = {
   defaultVersion: 1,
   batchSize: 1000, // Maximum allowed by Order Service
   orderTypeMapping: {
-    BUY: 2, // BUY order type ID
-    SELL: 3, // SELL order type ID
+    BUY: 1, // BUY order type ID
+    SELL: 2, // SELL order type ID
   }
 }
 
