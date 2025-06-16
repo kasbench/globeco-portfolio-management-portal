@@ -262,21 +262,21 @@ export const TradeOrderActionMenu: React.FC<TradeOrderActionMenuProps> = ({
     if (!tradeOrder.submitted) {
       actions.push({
         action: 'edit',
-        label: 'Edit Order',
+        label: 'Edit Trade',
         icon: <Edit3 className="h-4 w-4" />,
         disabled: false
       })
 
       actions.push({
         action: 'delete',
-        label: 'Delete Order',
+        label: 'Delete Trade',
         icon: <Trash2 className="h-4 w-4" />,
         disabled: false
       })
 
       actions.push({
         action: 'submit',
-        label: 'Submit Order',
+        label: 'Submit Trade',
         icon: <Send className="h-4 w-4" />,
         disabled: false
       })

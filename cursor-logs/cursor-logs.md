@@ -327,3 +327,26 @@
 - src/types/trade.ts - Added nested object interfaces
 
 **Result:** Security and Portfolio columns now correctly display "MCK" and "Portfolio 6039" instead of showing IDs or being blank. The Trade Service v2 API external service integration is working correctly.
+
+## 2024-12-19 - Updated Trade Management Action Menu Labels
+
+**User Query:** On the trade management page, when clicking on the actions icon next to each row, the selections should be View Details, Edit Trade, Delete Trade, and Submit Trade. They are currently View Details, Edit Order, Delete Order, and Submit Order.
+
+**Issue:** Action menu items used "Order" terminology instead of "Trade" terminology
+
+**Root Cause:** The TradeOrderActionMenu component was using inconsistent terminology:
+- Correct: "View Details" (already correct)
+- Incorrect: "Edit Order", "Delete Order", "Submit Order"
+- Should be: "Edit Trade", "Delete Trade", "Submit Trade"
+
+**Actions Taken:**
+1. **Updated src/components/features/trade-order-action-menu.tsx**:
+   - Changed "Edit Order" → "Edit Trade"
+   - Changed "Delete Order" → "Delete Trade" 
+   - Changed "Submit Order" → "Submit Trade"
+   - Kept "View Details" unchanged (already correct)
+
+**Files Modified:**
+- src/components/features/trade-order-action-menu.tsx - Updated action menu labels
+
+**Result:** Action menu now consistently uses "Trade" terminology throughout the application. Menu items are now "View Details", "Edit Trade", "Delete Trade", and "Submit Trade" as requested.
