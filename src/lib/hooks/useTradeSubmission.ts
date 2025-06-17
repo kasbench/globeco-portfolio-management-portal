@@ -52,7 +52,52 @@ interface UseTradeSubmissionReturn {
 
 /**
  * Custom hook for managing trade order submission state
- * Handles individual order configuration, validation, and batch submission
+ * 
+ * Provides comprehensive state management for trade order submissions including
+ * individual order configuration, real-time validation, bulk operations, and
+ * batch submission processing. Handles complex submission workflows with
+ * automatic state synchronization and error recovery.
+ * 
+ * Features:
+ * - Individual order quantity and destination configuration
+ * - Real-time validation with detailed error reporting
+ * - Bulk operations for efficient multi-order management
+ * - Automatic state initialization and cleanup
+ * - Batch submission with progress tracking
+ * - Error handling and recovery mechanisms
+ * 
+ * State Management:
+ * - Tracks submission quantities for each trade order
+ * - Manages destination selections with validation
+ * - Maintains form validation state across all orders
+ * - Provides bulk action utilities for efficiency
+ * 
+ * @param tradeOrders - Array of trade orders to manage submissions for
+ * @param defaultDestinationId - Optional default destination for new submissions
+ * @returns Object containing submission state, actions, and utilities
+ * 
+ * @example
+ * ```tsx
+ * const {
+ *   submissions,
+ *   loading,
+ *   error,
+ *   setSubmissionQuantity,
+ *   setSubmissionDestination,
+ *   getValidationSummary,
+ *   submitBatch
+ * } = useTradeSubmission(selectedOrders, defaultDestination);
+ * 
+ * // Configure individual order
+ * setSubmissionQuantity(orderId, 100);
+ * setSubmissionDestination(orderId, destinationId);
+ * 
+ * // Validate before submission
+ * const validation = getValidationSummary();
+ * if (validation.isValid) {
+ *   await submitBatch();
+ * }
+ * ```
  */
 export function useTradeSubmission(
   tradeOrders: TradeOrderEnhancedResponseDTO[],
@@ -181,8 +226,6 @@ export function useTradeSubmission(
       setError(null);
       
       const submissionData = getSubmissionData();
-      console.log('Submitting trade orders:', submissionData.length, 'orders');
-      
       const validation = validateBatchSubmissionData(submissionData);
       
       if (!validation.isValid) {
@@ -195,12 +238,9 @@ export function useTradeSubmission(
         destinationId: data.destinationId
       }));
       
-      console.log('Calling API with submissions:', apiSubmissions);
       const response = await tradeService.submitTradeOrdersBatch({
         submissions: apiSubmissions
       });
-      
-      console.log('API response:', response);
       
       // Reset submissions on success (check both field names for compatibility)
       const successCount = response.successful || response.successCount || 0;

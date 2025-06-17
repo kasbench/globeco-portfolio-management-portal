@@ -193,14 +193,9 @@ export const TradeManagementPageContent: React.FC<TradeManagementPageContentProp
 
   // Handle submission completion
   const handleSubmissionComplete = () => {
-    console.log('Trade submission completed - refreshing data...')
     // Clear selection and refresh data
     setSelectedOrders(new Set())
-    refetch().then(() => {
-      console.log('Data refresh completed')
-    }).catch((error) => {
-      console.error('Data refresh failed:', error)
-    })
+    refetch()
   }
 
   // Convert filters to filter pills format

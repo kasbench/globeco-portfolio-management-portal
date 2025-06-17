@@ -9,6 +9,18 @@ import {
 
 /**
  * Calculate remaining quantity for a trade order
+ * 
+ * Computes the amount of quantity that has not yet been submitted for execution.
+ * This is used to determine the maximum quantity available for new submissions.
+ * 
+ * @param tradeOrder - The trade order to calculate remaining quantity for
+ * @returns The remaining quantity (total - already sent)
+ * 
+ * @example
+ * ```typescript
+ * const order = { quantity: 1000, quantitySent: 300 };
+ * const remaining = calculateRemainingQuantity(order); // Returns 700
+ * ```
  */
 export function calculateRemainingQuantity(tradeOrder: TradeOrderEnhancedResponseDTO): number {
   return tradeOrder.quantity - tradeOrder.quantitySent;
@@ -131,6 +143,33 @@ export function validateBatchSubmissionData(submissionData: TradeOrderSubmission
 
 /**
  * Create submission summary for review step
+ * 
+ * Generates a comprehensive summary of all submissions grouped by destination
+ * with validation status and statistics. Used in the review step to show
+ * users exactly what will be submitted before final confirmation.
+ * 
+ * Features:
+ * - Groups submissions by destination for clarity
+ * - Includes validation summary with error/warning counts
+ * - Provides total quantities and order counts
+ * - Maps destination IDs to human-readable names
+ * 
+ * @param submissionData - Array of configured submissions to summarize
+ * @param destinations - Available destinations for name mapping
+ * @returns Comprehensive submission summary object
+ * 
+ * @example
+ * ```typescript
+ * const summary = createSubmissionSummary(submissions, destinations);
+ * // Returns: {
+ * //   totalOrders: 5,
+ * //   totalQuantity: 2500,
+ * //   destinations: [
+ * //     { destinationId: 1, destinationName: 'NYSE', orderCount: 3, totalQuantity: 1500 }
+ * //   ],
+ * //   validationSummary: { validCount: 5, invalidCount: 0, warnings: [], errors: [] }
+ * // }
+ * ```
  */
 export function createSubmissionSummary(
   submissionData: TradeOrderSubmissionData[],

@@ -259,9 +259,7 @@ class TradeService {
     // Validate submissions before sending
     this.validateBatchSubmission(request);
     
-    console.log('TradeService: Making API call to submit batch:', request);
     const response = await this.api.post<BatchSubmitResponseDTO>('/api/v1/tradeOrders/batch/submit', request);
-    console.log('TradeService: API response received:', response.data);
     return response.data;
   }
 
