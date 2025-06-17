@@ -303,4 +303,56 @@ export interface TradeOrderSubmissionData {
   destinationId: number;
   remainingQuantity: number;
   validationResult: SubmissionValidationResult;
+}
+
+// UI State types for submission management
+export interface SubmissionUIState {
+  isModalOpen: boolean;
+  selectedOrderIds: number[];
+  currentStep: 'configure' | 'review' | 'submitting' | 'complete';
+  defaultDestinationId: number | null;
+}
+
+// Submission progress tracking
+export interface SubmissionProgress {
+  total: number;
+  completed: number;
+  failed: number;
+  inProgress: boolean;
+  currentOrderId?: number;
+}
+
+// Form validation state for UI
+export interface SubmissionFormValidation {
+  [tradeOrderId: number]: {
+    quantityError?: string;
+    destinationError?: string;
+    isValid: boolean;
+  };
+}
+
+// Destination option for UI dropdowns
+export interface DestinationOption {
+  value: number;
+  label: string;
+  description: string;
+  disabled?: boolean;
+}
+
+// Submission summary for review step
+export interface SubmissionSummary {
+  totalOrders: number;
+  totalQuantity: number;
+  destinations: Array<{
+    destinationId: number;
+    destinationName: string;
+    orderCount: number;
+    totalQuantity: number;
+  }>;
+  validationSummary: {
+    validCount: number;
+    invalidCount: number;
+    warnings: string[];
+    errors: string[];
+  };
 } 

@@ -1202,3 +1202,130 @@ case 'delete':
 - `src/app/trading/trade-management/page.tsx` - Added submit handlers and UI integration
 
 **Result**: Full submit functionality now works for both individual orders and batch operations, leveraging the Trade Service batch API for optimal performance.
+
+### 2025-01-27 - Phase 2 Complete: Data Layer Updates for Enhanced Trade Submission ✅
+
+**Requirement**: Complete Phase 2 of Requirement 6 - Enhanced Trade Order Submission with quantity and destination configuration.
+
+**Phase 2 Achievements**:
+
+1. **Enhanced TypeScript Type Definitions**:
+   - Added UI state management types (`SubmissionUIState`, `SubmissionProgress`)
+   - Added form validation types (`SubmissionFormValidation`) 
+   - Added destination option types (`DestinationOption`)
+   - Added submission summary types (`SubmissionSummary`) for review workflows
+   - Enhanced existing trade types with additional validation and state management support
+
+2. **React Hooks for Data Management**:
+   - **`useDestinations()`**: Manages destinations data with caching, loading states, error handling, and automatic retry
+   - **`useTradeSubmission()`**: Comprehensive submission state management including:
+     - Individual order quantity/destination configuration
+     - Bulk operation support (set all destinations, submit all remaining quantities)
+     - Real-time validation with business rule enforcement
+     - Batch submission with comprehensive error handling
+     - Automatic state reset on successful submission
+
+3. **Enhanced Utility Functions**:
+   - **`createSubmissionSummary()`**: Generates detailed submission summaries for review step
+   - **`getSubmissionStatistics()`**: Provides display metrics (total orders, quantities, destinations)
+   - **Updated `formatDestinationOptions()`**: Enhanced with proper TypeScript typing and UI state support
+
+4. **Comprehensive Unit Testing**:
+   - **`useDestinations` tests**: 8 test cases covering successful fetches, error handling, empty data, refetch functionality, and edge cases
+   - Full test coverage for hook behavior, async operations, and error scenarios
+   - Mock implementations for API services ensuring reliable testing
+
+**Technical Implementation Highlights**:
+
+- **State Management**: Advanced React state management with useCallback and useMemo optimization
+- **Validation Integration**: Seamless integration with existing validation utilities from Phase 1
+- **Error Handling**: Robust error handling with user-friendly error messages
+- **Performance**: Optimized re-renders and computed values for large datasets
+- **Type Safety**: Comprehensive TypeScript coverage with proper inference
+
+**Files Created/Modified**:
+- `src/types/trade.ts` - Enhanced with 5 new UI-focused interfaces
+- `src/lib/hooks/useDestinations.ts` - Complete destinations data management hook
+- `src/lib/hooks/useTradeSubmission.ts` - Comprehensive submission state management hook  
+- `src/lib/utils/tradeUtils.ts` - Added summary and statistics utilities
+- `src/lib/hooks/__tests__/useDestinations.test.ts` - Comprehensive hook unit tests
+
+**Integration with Phase 1**: Phase 2 builds seamlessly on Phase 1's foundation:
+- Uses Phase 1's API integration (`tradeService.getDestinations()`, `tradeService.submitTradeOrdersBatch()`)
+- Leverages Phase 1's validation utilities (`validateBatchSubmissionData`, `createSubmissionData`)
+- Extends Phase 1's type definitions with UI-focused interfaces
+- Maintains backward compatibility with existing trade management functionality
+
+**Result**: The data layer infrastructure is now complete and ready for Phase 3 (UI Components Development). The hooks and utilities provide a solid foundation for building the enhanced submission modal with individual quantity/destination configuration capabilities.
+
+### 2025-01-27 - Phase 3 Complete: UI Components Development for Enhanced Trade Submission ✅
+
+**Requirement**: Complete Phase 3 of Requirement 6 - Build the UI components for enhanced trade order submission with quantity and destination configuration.
+
+**Phase 3 Achievements**:
+
+1. **TradeSubmissionModal - Main Component**:
+   - **Multi-step Workflow**: Configure → Review → Submitting → Complete with proper state management
+   - **Loading States**: Elegant loading indicators during destinations fetch and submission
+   - **Error Handling**: Comprehensive error states for API failures with retry options
+   - **Auto-close Flow**: Success feedback with automatic modal closure and data refresh
+   - **Responsive Design**: Optimized for large datasets with max-height and scroll handling
+   - **Badge Integration**: Order counts and validation status indicators throughout
+
+2. **TradeSubmissionTable - Data Display Component**:
+   - **Comprehensive Data Display**: Order ID, Security, Type, Total/Sent/Remaining quantities
+   - **Interactive Input Fields**: Number inputs with real-time validation and visual feedback
+   - **Destination Selection**: Rich dropdown with destination descriptions and labels
+   - **Visual Validation**: Color-coded borders (red/yellow) and status badges (Ready/Pending/Error)
+   - **Read-only Mode**: For review step with formatted display of configured values
+   - **Accessibility**: Proper ARIA labels and keyboard navigation support
+
+3. **BulkActionsSection - Efficiency Component**:
+   - **Statistics Dashboard**: Real-time display of orders, quantities, remaining amounts, destinations
+   - **Submit All Remaining**: One-click setup for remaining quantities across all orders
+   - **Set All Destinations**: Bulk destination assignment with preview and apply workflow
+   - **Visual Feedback**: Live updates showing current selection and effects of bulk actions
+   - **Helper Text**: User guidance for efficient workflow completion
+
+4. **SubmissionSummaryCard - Review Component**:
+   - **Visual Summary**: Statistics grid with color-coded metrics (orders, quantity, destinations, averages)
+   - **Validation Status**: Clear indicators for valid/invalid submissions with counts
+   - **Destination Breakdown**: Detailed view of orders and quantities per destination
+   - **Utilization Metrics**: Percentage of remaining quantities being submitted
+   - **Distribution Analysis**: Single vs multi-destination submission indicators
+
+5. **Comprehensive Testing Infrastructure**:
+   - **Modal Component Tests**: 12 test cases covering all states and interactions
+   - **Mock Integration**: Full mocking of hooks and child components for isolated testing
+   - **Error Scenarios**: Loading states, API failures, validation errors
+   - **User Interactions**: Button clicks, navigation, form submissions
+   - **Accessibility**: Modal behavior, focus management, screen reader support
+
+**Technical Implementation Highlights**:
+
+- **State-Driven UI**: Clean separation between configure/review/submit/complete steps
+- **Performance Optimized**: useMemo for expensive calculations, proper component memoization
+- **Type Safety**: Full TypeScript integration with comprehensive prop interfaces
+- **User Experience**: Intuitive workflow with clear progress indicators and validation feedback
+- **Integration Ready**: Seamless integration with Phase 1 & 2 foundations
+
+**Files Created**:
+- `src/components/features/trade-submission-modal.tsx` - Main modal component (300+ lines)
+- `src/components/features/trade-submission-table.tsx` - Data table with validation (170+ lines)
+- `src/components/features/bulk-actions-section.tsx` - Bulk operations UI (130+ lines)
+- `src/components/features/submission-summary-card.tsx` - Review summary (140+ lines)
+- `src/components/features/__tests__/trade-submission-modal.test.tsx` - Comprehensive testing (200+ lines)
+
+**Integration Points**:
+- Uses Phase 1's validation utilities and API services
+- Leverages Phase 2's React hooks and type definitions
+- Integrates with existing UI component library (shadcn/ui)
+- Compatible with current trade management page structure
+
+**User Experience Flow**:
+1. **Configure Step**: Users set quantity/destination per order with bulk action shortcuts
+2. **Review Step**: Comprehensive summary with destination breakdown and validation status
+3. **Submit Step**: Loading indicator with progress feedback
+4. **Complete Step**: Success confirmation with automatic workflow completion
+
+**Result**: The UI components are now complete and ready for Phase 4 (Integration and Testing). The modal provides a comprehensive, user-friendly interface for enhanced trade order submission with individual quantity and destination configuration capabilities.
