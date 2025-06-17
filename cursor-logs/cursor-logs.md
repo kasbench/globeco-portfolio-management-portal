@@ -1033,3 +1033,73 @@ case 'delete':
 - `src/app/trading/trade-management/page.tsx` - Restored delete API call to `handleOrderAction`
 
 **Result**: Delete functionality now works end-to-end with single confirmation dialog and proper API execution.
+
+### 2025-01-27 - Implemented Trade Order Submit Functionality ✅
+
+**Requirement**: Implement submit logic for both individual trade orders and batch submission using the Trade Service batch submit API (`POST /api/v1/tradeOrders/batch/submit`).
+
+**Implementation Details**:
+
+1. **Fixed API Endpoint**: Corrected tradeService from incorrect `/api/v2/tradeOrders/batch/submit` to proper `/api/v1/tradeOrders/batch/submit` per API documentation
+
+2. **Single Order Submit**: Modified `handleOrderAction` for 'submit' case:
+   ```typescript
+   case 'submit':
+     // Submit single trade order using batch API (can handle single orders)
+     await tradeService.submitTradeOrdersBatch({ tradeOrderIds: [tradeOrder.id] })
+     await refetch()
+     // Note: TradeOrderActionMenu will show its own success/error toast
+     break
+   ```
+
+3. **Batch Submit Handler**: Created `handleBatchSubmit` function for selected orders:
+   ```typescript
+   const handleBatchSubmit = async () => {
+     if (selectedOrders.size === 0) {
+       toast.error('No orders selected for submission')
+       return
+     }
+
+     try {
+       const orderIds = Array.from(selectedOrders)
+       const result = await tradeService.submitTradeOrdersBatch({ tradeOrderIds: orderIds })
+       
+       if (result.successCount > 0) {
+         toast.success(`Successfully submitted ${result.successCount} trade order${result.successCount > 1 ? 's' : ''}`)
+       }
+       
+       if (result.failureCount > 0) {
+         toast.error(`Failed to submit ${result.failureCount} trade order${result.failureCount > 1 ? 's' : ''}`)
+       }
+       
+       // Clear selection and refresh data
+       setSelectedOrders(new Set())
+       await refetch()
+     } catch (error) {
+       console.error('Failed to submit selected trade orders:', error)
+       toast.error('Failed to submit selected trade orders. Please try again.')
+     }
+   }
+   ```
+
+4. **UI Integration**: Connected "Submit Selected" button to `handleBatchSubmit` handler
+
+**API Usage**: 
+- **Endpoint**: `POST /api/v1/tradeOrders/batch/submit`
+- **Request Format**: `{ tradeOrderIds: number[] }`
+- **Response Format**: `{ successCount, failureCount, results[] }`
+- **Max Batch Size**: 100 orders per request
+
+**Features**:
+- ✅ Single order submission via individual action menu
+- ✅ Batch submission for multiple selected orders
+- ✅ Detailed success/failure feedback with counts
+- ✅ Automatic selection clearing after submission
+- ✅ Table refresh to show updated submission status
+- ✅ Proper error handling and user notifications
+
+**Files Modified**:
+- `src/lib/api/tradeService.ts` - Fixed API endpoint from v2 to v1
+- `src/app/trading/trade-management/page.tsx` - Added submit handlers and UI integration
+
+**Result**: Full submit functionality now works for both individual orders and batch operations, leveraging the Trade Service batch API for optimal performance.

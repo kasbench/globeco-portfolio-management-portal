@@ -126,6 +126,34 @@ const TradeManagementPageContent: React.FC<TradeManagementPageContentProps> = ()
     }
   }
 
+  // Handle batch submit of selected orders
+  const handleBatchSubmit = async () => {
+    if (selectedOrders.size === 0) {
+      toast.error('No orders selected for submission')
+      return
+    }
+
+    try {
+      const orderIds = Array.from(selectedOrders)
+      const result = await tradeService.submitTradeOrdersBatch({ tradeOrderIds: orderIds })
+      
+      if (result.successCount > 0) {
+        toast.success(`Successfully submitted ${result.successCount} trade order${result.successCount > 1 ? 's' : ''}`)
+      }
+      
+      if (result.failureCount > 0) {
+        toast.error(`Failed to submit ${result.failureCount} trade order${result.failureCount > 1 ? 's' : ''}`)
+      }
+      
+      // Clear selection and refresh data
+      setSelectedOrders(new Set())
+      await refetch()
+    } catch (error) {
+      console.error('Failed to submit selected trade orders:', error)
+      toast.error('Failed to submit selected trade orders. Please try again.')
+    }
+  }
+
   // Handle individual order actions
   const handleOrderAction = async (action: TradeOrderAction, tradeOrder: TradeOrderEnhancedResponseDTO) => {
     try {
@@ -151,9 +179,10 @@ const TradeManagementPageContent: React.FC<TradeManagementPageContentProps> = ()
           // Note: TradeOrderActionMenu will show its own success/error toast
           break
         case 'submit':
-          // TODO: Implement submit functionality
-          // toast.success("Trade order would be submitted")
+          // Submit single trade order using batch API (can handle single orders)
+          await tradeService.submitTradeOrdersBatch({ tradeOrderIds: [tradeOrder.id] })
           await refetch()
+          // Note: TradeOrderActionMenu will show its own success/error toast
           break
       }
     } catch (error) {
@@ -258,7 +287,11 @@ const TradeManagementPageContent: React.FC<TradeManagementPageContentProps> = ()
             </div>
             {selectedCount > 0 && (
               <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleBatchSubmit}
+                >
                   Submit Selected ({selectedCount})
                 </Button>
                 <Button variant="outline" size="sm">

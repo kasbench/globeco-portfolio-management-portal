@@ -248,10 +248,11 @@ class TradeService {
   // ==================== BATCH OPERATIONS v2 API ====================
 
   /**
-   * Submit multiple trade orders in batch (v2)
+   * Submit multiple trade orders in batch (v1)
+   * Can be used for single orders or batches (max 100 orders)
    */
   async submitTradeOrdersBatch(request: BatchSubmitRequestDTO): Promise<BatchSubmitResponseDTO> {
-    const response = await this.api.post<BatchSubmitResponseDTO>('/api/v2/tradeOrders/batch/submit', request);
+    const response = await this.api.post<BatchSubmitResponseDTO>('/api/v1/tradeOrders/batch/submit', request);
     return response.data;
   }
 
