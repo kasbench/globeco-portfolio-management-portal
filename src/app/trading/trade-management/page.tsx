@@ -16,6 +16,7 @@ import TradeOrderListTable from '@/components/tables/TradeOrderListTable'
 import { TradeOrderEnhancedResponseDTO, TradeOrderAction, TradeOrderFilters } from '@/types/trade'
 import { TradeOrderActionMenu } from '@/components/features/trade-order-action-menu'
 import TradeOrderDetailsModal from '@/components/features/trade-order-details-modal'
+import { TradeSubmissionModal } from '@/components/features/trade-submission-modal'
 
 import tradeService from '@/lib/api/tradeService'
 
@@ -50,7 +51,7 @@ const FILTER_FIELDS = [
 
 interface TradeManagementPageContentProps {}
 
-const TradeManagementPageContent: React.FC<TradeManagementPageContentProps> = () => {
+export const TradeManagementPageContent: React.FC<TradeManagementPageContentProps> = () => {
   const [selectedOrders, setSelectedOrders] = useState<Set<number>>(new Set())
   const [filters, setFilters] = useState<TradeOrderFilters>({})
   const [detailsModal, setDetailsModal] = useState<{
@@ -61,6 +62,14 @@ const TradeManagementPageContent: React.FC<TradeManagementPageContentProps> = ()
     isOpen: false,
     tradeOrder: null,
     mode: 'view'
+  })
+
+  const [submissionModal, setSubmissionModal] = useState<{
+    isOpen: boolean
+    tradeOrders: TradeOrderEnhancedResponseDTO[]
+  }>({
+    isOpen: false,
+    tradeOrders: []
   })
 
 
@@ -127,31 +136,21 @@ const TradeManagementPageContent: React.FC<TradeManagementPageContentProps> = ()
   }
 
   // Handle batch submit of selected orders
-  const handleBatchSubmit = async () => {
+  const handleBatchSubmit = () => {
     if (selectedOrders.size === 0) {
       toast.error('No orders selected for submission')
       return
     }
 
-    try {
-      const orderIds = Array.from(selectedOrders)
-      const result = await tradeService.submitTradeOrdersBatch({ tradeOrderIds: orderIds })
-      
-      if (result.successCount > 0) {
-        toast.success(`Successfully submitted ${result.successCount} trade order${result.successCount > 1 ? 's' : ''}`)
-      }
-      
-      if (result.failureCount > 0) {
-        toast.error(`Failed to submit ${result.failureCount} trade order${result.failureCount > 1 ? 's' : ''}`)
-      }
-      
-      // Clear selection and refresh data
-      setSelectedOrders(new Set())
-      await refetch()
-    } catch (error) {
-      console.error('Failed to submit selected trade orders:', error)
-      toast.error('Failed to submit selected trade orders. Please try again.')
-    }
+    // Get selected trade orders for the modal
+    const selectedTradeOrders = tradeOrdersData?.content?.filter(order => 
+      selectedOrders.has(order.id)
+    ) || []
+
+    setSubmissionModal({
+      isOpen: true,
+      tradeOrders: selectedTradeOrders
+    })
   }
 
   // Handle individual order actions
@@ -179,16 +178,24 @@ const TradeManagementPageContent: React.FC<TradeManagementPageContentProps> = ()
           // Note: TradeOrderActionMenu will show its own success/error toast
           break
         case 'submit':
-          // Submit single trade order using batch API (can handle single orders)
-          await tradeService.submitTradeOrdersBatch({ tradeOrderIds: [tradeOrder.id] })
-          await refetch()
-          // Note: TradeOrderActionMenu will show its own success/error toast
+          // Open submission modal for single trade order
+          setSubmissionModal({
+            isOpen: true,
+            tradeOrders: [tradeOrder]
+          })
           break
       }
     } catch (error) {
       console.error(`Failed to ${action} trade order:`, error)
       toast.error(`Failed to ${action} trade order. Please try again.`)
     }
+  }
+
+  // Handle submission completion
+  const handleSubmissionComplete = () => {
+    // Clear selection and refresh data
+    setSelectedOrders(new Set())
+    refetch()
   }
 
   // Convert filters to filter pills format
@@ -292,7 +299,7 @@ const TradeManagementPageContent: React.FC<TradeManagementPageContentProps> = ()
                   size="sm"
                   onClick={handleBatchSubmit}
                 >
-                  Submit Selected ({selectedCount})
+                  Configure Submission ({selectedCount})
                 </Button>
                 <Button variant="outline" size="sm">
                   Move to Blotter
@@ -396,6 +403,13 @@ const TradeManagementPageContent: React.FC<TradeManagementPageContentProps> = ()
         }}
       />
 
+      {/* Trade Submission Modal */}
+      <TradeSubmissionModal
+        open={submissionModal.isOpen}
+        onOpenChange={(open) => setSubmissionModal(prev => ({ ...prev, isOpen: open }))}
+        tradeOrders={submissionModal.tradeOrders}
+        onSubmissionComplete={handleSubmissionComplete}
+      />
 
     </div>
   )
