@@ -181,6 +181,8 @@ export function useTradeSubmission(
       setError(null);
       
       const submissionData = getSubmissionData();
+      console.log('Submitting trade orders:', submissionData.length, 'orders');
+      
       const validation = validateBatchSubmissionData(submissionData);
       
       if (!validation.isValid) {
@@ -193,12 +195,16 @@ export function useTradeSubmission(
         destinationId: data.destinationId
       }));
       
+      console.log('Calling API with submissions:', apiSubmissions);
       const response = await tradeService.submitTradeOrdersBatch({
         submissions: apiSubmissions
       });
       
-      // Reset submissions on success
-      if (response.successCount > 0) {
+      console.log('API response:', response);
+      
+      // Reset submissions on success (check both field names for compatibility)
+      const successCount = response.successful || response.successCount || 0;
+      if (successCount > 0) {
         resetSubmissions();
       }
       

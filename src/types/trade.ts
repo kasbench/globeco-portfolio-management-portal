@@ -112,9 +112,14 @@ export interface BatchOperationResultDTO {
 }
 
 export interface BatchSubmitResponseDTO {
-  successCount: number;
-  failureCount: number;
-  results: BatchOperationResultDTO[];
+  status: string;
+  message: string;
+  totalRequested: number;
+  successful: number;        // Actual field from API
+  failed: number;           // Actual field from API
+  successCount?: number;    // Keep for backward compatibility
+  failureCount?: number;    // Keep for backward compatibility
+  results?: BatchOperationResultDTO[];
 }
 
 export interface BatchMoveResponseDTO extends BatchSubmitResponseDTO {}

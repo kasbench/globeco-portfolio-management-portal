@@ -56,37 +56,28 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
   loading = false
 }) => {
   const getActionDetails = () => {
-    switch (action) {
-      case 'delete':
-        return {
-          title: 'Delete Trade Order',
-          description: 'Are you sure you want to delete this trade order?',
-          details: `This action cannot be undone. Trade Order #${tradeOrder.id} will be permanently removed.`,
-          confirmText: 'Delete',
-          confirmVariant: 'destructive' as const,
-          icon: <Trash2 className="h-4 w-4" />,
-          warning: true
-        }
-      case 'submit':
-        return {
-          title: 'Submit Trade Order',
-          description: 'Are you sure you want to submit this trade order for execution?',
-          details: `Trade Order #${tradeOrder.id} will be sent for execution and cannot be modified afterward.`,
-          confirmText: 'Submit',
-          confirmVariant: 'default' as const,
-          icon: <Send className="h-4 w-4" />,
-          warning: false
-        }
-      default:
-        return {
-          title: 'Confirm Action',
-          description: 'Are you sure you want to perform this action?',
-          details: '',
-          confirmText: 'Confirm',
-          confirmVariant: 'default' as const,
-          icon: <AlertTriangle className="h-4 w-4" />,
-          warning: false
-        }
+    // This dialog is now only used for delete actions
+    if (action === 'delete') {
+      return {
+        title: 'Delete Trade Order',
+        description: 'Are you sure you want to delete this trade order?',
+        details: `This action cannot be undone. Trade Order #${tradeOrder.id} will be permanently removed.`,
+        confirmText: 'Delete',
+        confirmVariant: 'destructive' as const,
+        icon: <Trash2 className="h-4 w-4" />,
+        warning: true
+      }
+    }
+    
+    // Fallback for other actions (should not be used)
+    return {
+      title: 'Confirm Action',
+      description: 'Are you sure you want to perform this action?',
+      details: '',
+      confirmText: 'Confirm',
+      confirmVariant: 'default' as const,
+      icon: <AlertTriangle className="h-4 w-4" />,
+      warning: false
     }
   }
 
@@ -118,11 +109,11 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm font-medium">Security:</span>
-              <span className="text-sm">{tradeOrder.securityTicker}</span>
+              <span className="text-sm">{tradeOrder.security?.ticker || 'N/A'}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm font-medium">Portfolio:</span>
-              <span className="text-sm">{tradeOrder.portfolioName}</span>
+              <span className="text-sm">{tradeOrder.portfolio?.name || 'N/A'}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm font-medium">Type:</span>
@@ -199,15 +190,16 @@ export const TradeOrderActionMenu: React.FC<TradeOrderActionMenuProps> = ({
   })
 
   const handleActionClick = (action: TradeOrderAction) => {
-    // Actions that require confirmation
-    if (action === 'delete' || action === 'submit') {
+    // Only delete action requires the simple confirmation dialog
+    if (action === 'delete') {
       setConfirmationDialog({
         isOpen: true,
         action,
         loading: false
       })
     } else {
-      // Direct actions (view, edit)
+      // All other actions (view, edit, submit) go directly to parent handler
+      // Submit will open the enhanced TradeSubmissionModal in the parent
       onAction(action, tradeOrder)
     }
   }
@@ -220,16 +212,14 @@ export const TradeOrderActionMenu: React.FC<TradeOrderActionMenuProps> = ({
     try {
       await onAction(confirmationDialog.action, tradeOrder)
       
-      // Show success toast
-      const actionName = confirmationDialog.action === 'delete' ? 'deleted' : 'submitted'
-      toast.success(`Trade order ${actionName} successfully.`)
+      // Show success toast (only for delete action now)
+      toast.success(`Trade order deleted successfully.`)
 
       setConfirmationDialog({ isOpen: false, action: null, loading: false })
     } catch (error) {
       console.error(`Failed to ${confirmationDialog.action} trade order:`, error)
       
-      const actionName = confirmationDialog.action === 'delete' ? 'delete' : 'submit'
-      toast.error(`Failed to ${actionName} trade order. Please try again.`)
+      toast.error(`Failed to delete trade order. Please try again.`)
 
       setConfirmationDialog(prev => ({ ...prev, loading: false }))
     }

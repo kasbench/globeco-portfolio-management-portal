@@ -98,11 +98,17 @@ export function TradeSubmissionModal({
       setCurrentStep('submitting');
       const result = await submitBatch();
       
-      if (result.successCount > 0) {
+      // Check both possible field names (API uses 'successful', types define 'successCount')
+      const successCount = (result as any).successful || result.successCount || 0;
+      console.log('Submission result:', result, 'successCount:', successCount);
+      
+      if (successCount > 0) {
         setCurrentStep('complete');
-        // Auto-close and refresh after a brief delay
+        // Refresh data immediately
+        console.log('Calling onSubmissionComplete callback...');
+        onSubmissionComplete();
+        // Auto-close modal after a brief delay for user feedback
         setTimeout(() => {
-          onSubmissionComplete();
           onOpenChange(false);
           setCurrentStep('configure');
         }, 2000);
