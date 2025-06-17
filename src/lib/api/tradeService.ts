@@ -18,7 +18,11 @@ import {
   ExecutionQueryParams,
   TradeServiceErrorResponse,
   SubmitOrderResponseDTO,
-  BlotterResponseDTO
+  BlotterResponseDTO,
+  DestinationResponseDTO,
+  LegacyBatchSubmitRequestDTO,
+  TradeOrderSubmission,
+  SubmissionValidationResult
 } from '@/types/trade';
 
 /**
@@ -248,10 +252,23 @@ class TradeService {
   // ==================== BATCH OPERATIONS v2 API ====================
 
   /**
-   * Submit multiple trade orders in batch (v1)
+   * Submit multiple trade orders in batch (v1) - Updated for new submission format
    * Can be used for single orders or batches (max 100 orders)
    */
   async submitTradeOrdersBatch(request: BatchSubmitRequestDTO): Promise<BatchSubmitResponseDTO> {
+    // Validate submissions before sending
+    this.validateBatchSubmission(request);
+    
+    const response = await this.api.post<BatchSubmitResponseDTO>('/api/v1/tradeOrders/batch/submit', request);
+    return response.data;
+  }
+
+  /**
+   * Legacy batch submit method for backward compatibility
+   * @deprecated Use submitTradeOrdersBatch with new submission format
+   */
+  async submitTradeOrdersBatchLegacy(request: LegacyBatchSubmitRequestDTO): Promise<BatchSubmitResponseDTO> {
+    console.warn('Warning: Using deprecated legacy batch submit. Please migrate to new submission format.');
     const response = await this.api.post<BatchSubmitResponseDTO>('/api/v1/tradeOrders/batch/submit', request);
     return response.data;
   }
@@ -341,6 +358,34 @@ class TradeService {
     return response.data;
   }
 
+  // ==================== DESTINATIONS MANAGEMENT ====================
+
+  /**
+   * Get all destinations (v1)
+   */
+  async getDestinations(): Promise<DestinationResponseDTO[]> {
+    try {
+      const response = await this.api.get<DestinationResponseDTO[]>('/api/v1/destinations');
+      return response.data;
+    } catch (error) {
+      console.error('Failed to fetch destinations:', error);
+      throw new Error('Unable to load destinations. Please try again.');
+    }
+  }
+
+  /**
+   * Get destination by ID (v1)
+   */
+  async getDestinationById(id: number): Promise<DestinationResponseDTO> {
+    try {
+      const response = await this.api.get<DestinationResponseDTO>(`/api/v1/destinations/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error(`Failed to fetch destination ${id}:`, error);
+      throw new Error(`Unable to load destination. Please try again.`);
+    }
+  }
+
   // ==================== BLOTTER MANAGEMENT ====================
 
   /**
@@ -360,6 +405,46 @@ class TradeService {
   }
 
   // ==================== UTILITY METHODS ====================
+
+  /**
+   * Validate batch submission data
+   */
+  private validateBatchSubmission(request: BatchSubmitRequestDTO): void {
+    if (!request.submissions || !Array.isArray(request.submissions)) {
+      throw new Error('Submissions array is required');
+    }
+
+    if (request.submissions.length === 0) {
+      throw new Error('At least one submission is required');
+    }
+
+    if (request.submissions.length > 100) {
+      throw new Error('Maximum 100 submissions allowed per batch');
+    }
+
+    for (const submission of request.submissions) {
+      this.validateSubmission(submission);
+    }
+  }
+
+  /**
+   * Validate individual submission
+   */
+  private validateSubmission(submission: TradeOrderSubmission): void {
+    if (!submission.tradeOrderId || submission.tradeOrderId <= 0) {
+      throw new Error('Valid trade order ID is required');
+    }
+
+    if (!submission.quantity || submission.quantity <= 0) {
+      throw new Error('Quantity must be greater than 0');
+    }
+
+    if (!submission.destinationId || submission.destinationId <= 0) {
+      throw new Error('Valid destination ID is required');
+    }
+  }
+
+
 
   /**
    * Get available blotter abbreviations for batch move operations

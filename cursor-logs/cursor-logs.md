@@ -226,6 +226,78 @@
 
 **Result:** Trade Management page now displays the "Quantity Sent" column showing the `quantitySent` value from the API response, positioned after the "Quantity" column and formatted consistently with other numeric fields.
 
+## 2024-12-19 - Completed Phase 1 of Requirement 6: Backend API Integration
+
+**User Query:** This looks good. Please proceed with phase 1 of @requirement-6.md. Update the execution plan when complete
+
+**Issue:** Implement Phase 1 of the enhanced trade order submission requirement - backend API integration for destinations service and updated batch submission logic
+
+**Actions Taken:**
+
+### 1.1 Destinations Service Integration
+1. **Updated src/types/trade.ts**:
+   - Added `DestinationResponseDTO` interface with id, abbreviation, description, version fields
+   - Added `TradeOrderSubmission` interface for individual submissions with tradeOrderId, quantity, destinationId
+   - Updated `BatchSubmitRequestDTO` to use new `submissions: TradeOrderSubmission[]` format
+   - Added `LegacyBatchSubmitRequestDTO` for backward compatibility
+   - Added `SubmissionValidationResult` and `TradeOrderSubmissionData` utility types
+
+2. **Updated src/lib/api/tradeService.ts**:
+   - Added `getDestinations()` method to fetch all destinations from `/api/v1/destinations`
+   - Added `getDestinationById(id)` method for individual destination retrieval
+   - Added comprehensive error handling for destinations API calls
+   - Updated batch submission method with validation
+   - Added legacy batch submit method for backward compatibility
+   - Added validation methods for submission data integrity
+
+### 1.2 Utility Functions
+3. **Created src/lib/utils/tradeUtils.ts**:
+   - `calculateRemainingQuantity()` - calculates quantity - quantitySent
+   - `validateSubmissionQuantity()` - validates quantity against remaining with detailed error/warning messages
+   - `formatDestinationOptions()` - formats destinations for UI dropdowns
+   - `isTradeOrderSubmittable()` - checks if order is eligible for submission
+   - `createSubmissionData()` - creates validated submission data objects
+   - `getDefaultSubmissionQuantity()` - returns remaining quantity as default
+   - `validateBatchSubmissionData()` - validates entire batch with separation of valid/invalid submissions
+
+### 1.3 Comprehensive Unit Tests
+4. **Created src/lib/api/__tests__/tradeService.destinations.test.ts**:
+   - Tests for `getDestinations()` success scenarios
+   - Tests for `getDestinationById()` functionality
+   - Error handling tests for 404, 500, network timeouts
+   - Validation of API call parameters and response structures
+   - Console logging verification for error scenarios
+
+5. **Created src/lib/utils/__tests__/tradeUtils.test.ts**:
+   - Tests for all utility functions with various edge cases
+   - Validation logic testing with positive and negative scenarios
+   - Batch validation testing with mixed valid/invalid data
+   - Boundary condition testing (zero quantities, max batch sizes)
+   - Comprehensive coverage of business logic requirements
+
+**Key Features Implemented:**
+- **Destinations API Integration**: Full CRUD support for destinations with error handling
+- **Enhanced Batch Submission**: New submission format with quantity and destination per order
+- **Robust Validation**: Multi-level validation for individual and batch submissions
+- **Backward Compatibility**: Legacy API support during transition period
+- **Comprehensive Testing**: Unit tests covering success paths, error conditions, and edge cases
+- **Utility Functions**: Reusable business logic for remaining quantity calculations and validation
+
+**API Integration:**
+- `GET /api/v1/destinations` - Fetch all available destinations
+- `GET /api/v1/destinations/{id}` - Fetch specific destination
+- `POST /api/v1/tradeOrders/batch/submit` - Enhanced batch submission with new format
+
+**Files Modified:**
+- src/types/trade.ts - Added new type definitions
+- src/lib/api/tradeService.ts - Added destinations service and updated batch submission
+- src/lib/utils/tradeUtils.ts - Created utility functions
+- src/lib/api/__tests__/tradeService.destinations.test.ts - Created destinations tests
+- src/lib/utils/__tests__/tradeUtils.test.ts - Created utility tests
+- documentation/requirement-6.md - Updated execution plan with completed Phase 1
+
+**Result:** Phase 1 backend API integration is complete with full destinations service support, enhanced batch submission logic, comprehensive validation, and extensive unit test coverage. Ready to proceed with Phase 2 (Data Layer Updates).
+
 **Solution:** Transform API response in service layer to match expected interface
 
 **Actions Taken:**

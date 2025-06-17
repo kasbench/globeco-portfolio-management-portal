@@ -73,8 +73,28 @@ export interface UpdateTradeOrderRequestDTO extends CreateTradeOrderRequestDTO {
   version: number;
 }
 
+// Destination DTOs
+export interface DestinationResponseDTO {
+  id: number;
+  abbreviation: string;
+  description: string;
+  version: number;
+}
+
+// Trade Order Submission DTOs
+export interface TradeOrderSubmission {
+  tradeOrderId: number;
+  quantity: number;
+  destinationId: number;
+}
+
 // Batch operation DTOs
 export interface BatchSubmitRequestDTO {
+  submissions: TradeOrderSubmission[];
+}
+
+// Legacy batch submit (deprecated - for backward compatibility)
+export interface LegacyBatchSubmitRequestDTO {
   tradeOrderIds: number[];
 }
 
@@ -268,4 +288,19 @@ export interface BatchActionResult {
   totalCount: number;
   results: BatchOperationResultDTO[];
   message: string;
+}
+
+// Utility types for submission validation
+export interface SubmissionValidationResult {
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
+}
+
+export interface TradeOrderSubmissionData {
+  tradeOrder: TradeOrderEnhancedResponseDTO;
+  quantity: number;
+  destinationId: number;
+  remainingQuantity: number;
+  validationResult: SubmissionValidationResult;
 } 

@@ -144,19 +144,19 @@ When user clicks "Submit Selected" or individual "Submit" action:
 
 ## Execution Plan
 
-### Phase 1: Backend API Integration
-- [ ] **1.1** Create destinations service integration
-  - [ ] Add `DestinationResponseDTO` type definitions
-  - [ ] Implement `getDestinations()` method in tradeService
-  - [ ] Add error handling for destinations API
-  - [ ] Add unit tests for destinations service
+### Phase 1: Backend API Integration ✅ COMPLETED
+- [x] **1.1** Create destinations service integration
+  - [x] Add `DestinationResponseDTO` type definitions
+  - [x] Implement `getDestinations()` method in tradeService
+  - [x] Add error handling for destinations API
+  - [x] Add unit tests for destinations service
 
-- [ ] **1.2** Update batch submit service
-  - [ ] Modify `BatchSubmitRequestDTO` to use new submission format
-  - [ ] Update `submitTradeOrders()` method signature
-  - [ ] Transform request data to match API requirements
-  - [ ] Add validation for submission data
-  - [ ] Update unit tests for batch submit
+- [x] **1.2** Update batch submit service
+  - [x] Modify `BatchSubmitRequestDTO` to use new submission format
+  - [x] Update `submitTradeOrders()` method signature
+  - [x] Transform request data to match API requirements
+  - [x] Add validation for submission data
+  - [x] Update unit tests for batch submit
 
 ### Phase 2: Data Layer Updates
 - [ ] **2.1** Update TypeScript types
