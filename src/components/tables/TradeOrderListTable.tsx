@@ -37,12 +37,12 @@ interface TableColumn {
 
 const TABLE_COLUMNS: TableColumn[] = [
   { key: 'id', label: 'Order ID', sortable: true, className: 'w-24' },
-  { key: 'securityTicker', label: 'Security', sortable: true, className: 'w-20' },
+  { key: 'security.ticker', label: 'Security', sortable: true, className: 'w-20' },
   { key: 'orderType', label: 'Type', sortable: true, className: 'w-16', mobileHidden: true },
   { key: 'quantity', label: 'Quantity', sortable: true, className: 'w-24 text-right' },
-  { key: 'limitPrice', label: 'Limit Price', sortable: true, className: 'w-24 text-right', mobileHidden: true },
-  { key: 'portfolioName', label: 'Portfolio', sortable: true, className: 'w-32', mobileHidden: true },
-  { key: 'blotterAbbreviation', label: 'Blotter', sortable: true, className: 'w-20', mobileHidden: true },
+  { key: 'quantitySent', label: 'Quantity Sent', sortable: true, className: 'w-24 text-right' },
+  { key: 'portfolio.name', label: 'Portfolio', sortable: true, className: 'w-32', mobileHidden: true },
+  { key: 'blotter.abbreviation', label: 'Blotter', sortable: true, className: 'w-20', mobileHidden: true },
   { key: 'submitted', label: 'Status', sortable: true, className: 'w-24' },
   { key: 'tradeTimestamp', label: 'Trade Time', sortable: true, className: 'w-32' }
 ]
@@ -206,7 +206,7 @@ const TradeOrderListTable: React.FC<TradeOrderListTableProps> = ({
                       {formatNumber(order.quantity)}
                     </td>
                     <td className="p-4 text-right font-mono text-sm">
-                      {order.limitPrice ? formatCurrency(order.limitPrice) : '—'}
+                      {formatNumber(order.quantitySent)}
                     </td>
                     <td className="p-4 text-sm text-gray-600">{order.portfolio?.name || order.portfolioName || order.portfolioId || '—'}</td>
                     <td className="p-4 text-sm text-gray-600">{order.blotter?.abbreviation || order.blotterAbbreviation || '—'}</td>
@@ -290,6 +290,10 @@ const TradeOrderListTable: React.FC<TradeOrderListTableProps> = ({
                         {formatOrderType(order.orderType)}
                         <span className="font-mono">{formatNumber(order.quantity)}</span>
                       </div>
+                    </div>
+                    <div>
+                      <div className="text-gray-500">Quantity Sent</div>
+                      <div className="font-mono">{formatNumber(order.quantitySent)}</div>
                     </div>
                     <div>
                       <div className="text-gray-500">Status</div>

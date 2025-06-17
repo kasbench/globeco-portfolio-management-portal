@@ -199,6 +199,33 @@
 }
 ```
 
+## 2024-12-19 - Added Quantity Sent Column to Trade Management Page
+
+**User Query:** Please add Quantity Sent (quantitySent) as a new column on the Trade Management Page. Here is a sample response object to GET api/v2/tradeOrders that shows how quantitySent is rendered: {...}
+
+**Issue:** User requested adding the `quantitySent` field as a new column in the Trade Management table
+
+**Actions Taken:**
+1. **Updated src/components/tables/TradeOrderListTable.tsx**:
+   - Added `quantitySent` column to the `TABLE_COLUMNS` array positioned after `quantity` column
+   - Fixed TypeScript types by using proper `TradeOrderSortField` keys (e.g., `'security.ticker'` instead of `'securityTicker'`)
+   - Added table cell display logic for `quantitySent` in the desktop view using `formatNumber(order.quantitySent)`
+   - Updated mobile view to include `quantitySent` information as a separate field
+
+**Column Configuration Added:**
+```typescript
+{ key: 'quantitySent', label: 'Quantity Sent', sortable: true, className: 'w-24 text-right' }
+```
+
+**Display Logic Added:**
+- Desktop: `<td className="p-4 text-right font-mono text-sm">{formatNumber(order.quantitySent)}</td>`
+- Mobile: Added as grid item with "Quantity Sent" label
+
+**Files Modified:**
+- src/components/tables/TradeOrderListTable.tsx - Added quantitySent column display logic
+
+**Result:** Trade Management page now displays the "Quantity Sent" column showing the `quantitySent` value from the API response, positioned after the "Quantity" column and formatted consistently with other numeric fields.
+
 **Solution:** Transform API response in service layer to match expected interface
 
 **Actions Taken:**
