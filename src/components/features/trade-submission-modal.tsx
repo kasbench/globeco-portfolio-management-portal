@@ -21,15 +21,57 @@ import { TradeSubmissionTable } from './trade-submission-table';
 import { SubmissionSummaryCard } from './submission-summary-card';
 import { BulkActionsSection } from './bulk-actions-section';
 
+/**
+ * Props for the TradeSubmissionModal component
+ */
 interface TradeSubmissionModalProps {
+  /** Whether the modal is open */
   open: boolean;
+  /** Callback fired when the modal open state changes */
   onOpenChange: (open: boolean) => void;
+  /** Array of trade orders to submit */
   tradeOrders: TradeOrderEnhancedResponseDTO[];
+  /** Callback fired when submission is completed successfully */
   onSubmissionComplete: () => void;
 }
 
+/**
+ * Represents the different steps in the submission workflow
+ */
 type SubmissionStep = 'configure' | 'review' | 'submitting' | 'complete';
 
+/**
+ * Enhanced Trade Submission Modal Component
+ * 
+ * Provides a comprehensive workflow for submitting trade orders with custom quantities
+ * and destinations. Features a multi-step process: configure → review → submit → complete.
+ * 
+ * Key Features:
+ * - Individual order configuration with quantity and destination selection
+ * - Bulk actions for efficient multi-order operations
+ * - Real-time validation with visual feedback
+ * - Review step with detailed submission summary
+ * - Automatic data refresh on completion
+ * 
+ * Workflow Steps:
+ * 1. **Configure**: Set quantities and destinations for each order
+ * 2. **Review**: Verify submission details before proceeding  
+ * 3. **Submit**: Process submissions with progress tracking
+ * 4. **Complete**: Show results and auto-close
+ * 
+ * @param props - Component props
+ * @returns JSX element for the submission modal
+ * 
+ * @example
+ * ```tsx
+ * <TradeSubmissionModal
+ *   open={isOpen}
+ *   onOpenChange={setIsOpen}
+ *   tradeOrders={selectedOrders}
+ *   onSubmissionComplete={handleRefresh}
+ * />
+ * ```
+ */
 export function TradeSubmissionModal({
   open,
   onOpenChange,
@@ -100,12 +142,10 @@ export function TradeSubmissionModal({
       
       // Check both possible field names (API uses 'successful', types define 'successCount')
       const successCount = (result as any).successful || result.successCount || 0;
-      console.log('Submission result:', result, 'successCount:', successCount);
       
       if (successCount > 0) {
         setCurrentStep('complete');
         // Refresh data immediately
-        console.log('Calling onSubmissionComplete callback...');
         onSubmissionComplete();
         // Auto-close modal after a brief delay for user feedback
         setTimeout(() => {
