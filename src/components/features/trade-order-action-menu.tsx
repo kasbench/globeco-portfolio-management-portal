@@ -222,21 +222,14 @@ export const TradeOrderActionMenu: React.FC<TradeOrderActionMenuProps> = ({
       
       // Show success toast
       const actionName = confirmationDialog.action === 'delete' ? 'deleted' : 'submitted'
-      toast({
-        title: 'Success',
-        description: `Trade order ${actionName} successfully.`,
-      })
+      toast.success(`Trade order ${actionName} successfully.`)
 
       setConfirmationDialog({ isOpen: false, action: null, loading: false })
     } catch (error) {
       console.error(`Failed to ${confirmationDialog.action} trade order:`, error)
       
       const actionName = confirmationDialog.action === 'delete' ? 'delete' : 'submit'
-      toast({
-        title: 'Error',
-        description: `Failed to ${actionName} trade order. Please try again.`,
-        variant: 'destructive',
-      })
+      toast.error(`Failed to ${actionName} trade order. Please try again.`)
 
       setConfirmationDialog(prev => ({ ...prev, loading: false }))
     }

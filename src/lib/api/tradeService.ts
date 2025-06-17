@@ -229,10 +229,10 @@ class TradeService {
   }
 
   /**
-   * Delete trade order (v2)
+   * Delete trade order (v1)
    */
   async deleteTradeOrder(id: number, version: number): Promise<void> {
-    await this.api.delete(`/api/v2/tradeOrders/${id}`, {
+    await this.api.delete(`/api/v1/tradeOrders/${id}`, {
       params: { version },
     });
   }

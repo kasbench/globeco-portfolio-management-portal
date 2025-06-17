@@ -9,12 +9,15 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { toast } from 'sonner'
 import { useTradeOrders } from '@/lib/hooks/useTradeOrders'
 import TradeOrderListTable from '@/components/tables/TradeOrderListTable'
 import { TradeOrderEnhancedResponseDTO, TradeOrderAction, TradeOrderFilters } from '@/types/trade'
 import { TradeOrderActionMenu } from '@/components/features/trade-order-action-menu'
 import TradeOrderDetailsModal from '@/components/features/trade-order-details-modal'
+
+import tradeService from '@/lib/api/tradeService'
 
 // Filter configuration for Trade Orders
 const FILTER_FIELDS = [
@@ -60,6 +63,7 @@ const TradeManagementPageContent: React.FC<TradeManagementPageContentProps> = ()
     mode: 'view'
   })
 
+
   const {
     data: tradeOrdersData,
     isLoading,
@@ -73,6 +77,10 @@ const TradeManagementPageContent: React.FC<TradeManagementPageContentProps> = ()
     initialFilters: filters,
     initialPageSize: 50 
   })
+
+
+
+
 
   // Handle filter changes
   const handleFiltersChange = (newFilters: any[]) => {
@@ -137,13 +145,14 @@ const TradeManagementPageContent: React.FC<TradeManagementPageContentProps> = ()
           })
           break
         case 'delete':
-          // TODO: Implement delete functionality
-          toast.success(`Trade Order #${tradeOrder.id} would be deleted`)
+          // TradeOrderActionMenu shows confirmation, but we handle the actual deletion here
+          await tradeService.deleteTradeOrder(tradeOrder.id, tradeOrder.version)
           await refetch()
+          // Note: TradeOrderActionMenu will show its own success/error toast
           break
         case 'submit':
           // TODO: Implement submit functionality
-          toast.success(`Trade Order #${tradeOrder.id} would be submitted`)
+          // toast.success("Trade order would be submitted")
           await refetch()
           break
       }
@@ -353,6 +362,8 @@ const TradeManagementPageContent: React.FC<TradeManagementPageContentProps> = ()
           setDetailsModal({ isOpen: false, tradeOrder: null, mode: 'view' })
         }}
       />
+
+
     </div>
   )
 }
