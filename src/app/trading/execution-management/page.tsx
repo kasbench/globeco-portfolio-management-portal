@@ -261,10 +261,21 @@ export const ExecutionManagementPageContent: React.FC<ExecutionManagementPageCon
     try {
       switch (action) {
         case 'view':
-          setDetailsModal({
-            isOpen: true,
-            execution: execution
-          })
+          // Fetch fresh execution details for the modal
+          try {
+            const freshExecution = await executionService.getExecution(execution.id)
+            setDetailsModal({
+              isOpen: true,
+              execution: freshExecution
+            })
+          } catch (error) {
+            console.warn('Failed to fetch fresh execution details, using cached data:', error)
+            // Fallback to cached execution data
+            setDetailsModal({
+              isOpen: true,
+              execution: execution
+            })
+          }
           break
         case 'cancel':
           setCancelConfirmation({
@@ -287,12 +298,14 @@ export const ExecutionManagementPageContent: React.FC<ExecutionManagementPageCon
       
       if (isBulk && executionsToCancel.length > 1) {
         // Bulk cancellation
-        await executionService.cancelExecutions(executionsToCancel.map(e => e.id))
-        toast.success(`Successfully cancelled ${executionsToCancel.length} executions`)
+        const executionData = executionsToCancel.map(e => ({ id: e.id, version: e.version }))
+        const result = await executionService.cancelExecutionsBatch(executionData)
+        toast.success(`Successfully cancelled ${result.successful} of ${result.totalCount} executions`)
         setSelectedExecutions(new Set())
       } else if (executionsToCancel.length === 1) {
         // Single cancellation
-        await executionService.cancelExecution(executionsToCancel[0].id)
+        const execution = executionsToCancel[0]
+        await executionService.cancelExecution(execution.id, execution.version)
         toast.success('Execution cancelled successfully')
       }
 

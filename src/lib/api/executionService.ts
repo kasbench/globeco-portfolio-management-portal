@@ -152,7 +152,7 @@ class ExecutionService {
    * Determine if an execution can be cancelled based on its status
    */
   private canCancelExecution(executionStatus: string): boolean {
-    const nonCancellableStatuses = ['FILLED', 'CANCELLED', 'CANCEL'];
+    const nonCancellableStatuses = ['FILLED', 'FULL', 'CANCELLED', 'CANCEL'];
     return !nonCancellableStatuses.includes(executionStatus);
   }
 

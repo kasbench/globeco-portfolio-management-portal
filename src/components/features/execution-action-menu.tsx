@@ -51,7 +51,7 @@ const CancelConfirmationDialog: React.FC<CancelConfirmationDialogProps> = ({
   execution,
   loading = false
 }) => {
-  const canCancel = !['FILLED', 'CANCELLED', 'CANCEL'].includes(execution.executionStatus)
+  const canCancel = !['FILLED', 'FULL', 'CANCELLED', 'CANCEL'].includes(execution.executionStatus)
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -159,7 +159,7 @@ export const ExecutionActionMenu: React.FC<ExecutionActionMenuProps> = ({
     loading: false
   })
 
-  const canCancel = !['FILLED', 'CANCELLED', 'CANCEL'].includes(execution.executionStatus)
+  const canCancel = !['FILLED', 'FULL', 'CANCELLED', 'CANCEL'].includes(execution.executionStatus)
 
   const handleActionClick = (action: ExecutionAction) => {
     if (action === 'cancel') {
@@ -198,6 +198,7 @@ export const ExecutionActionMenu: React.FC<ExecutionActionMenuProps> = ({
       case 'SENT':
         return <Hash className="h-3 w-3 text-purple-500" />
       case 'FILLED':
+      case 'FULL':
         return <div className="h-3 w-3 rounded-full bg-green-500" />
       case 'PARTIALLY_FILLED':
         return <div className="h-3 w-3 rounded-full bg-yellow-500" />

@@ -28,6 +28,7 @@ const ExecutionStatusBadge: React.FC<{ status: string }> = ({ status }) => {
       case 'SENT':
         return 'default'
       case 'FILLED':
+      case 'FULL':
         return 'success'
       case 'PARTIALLY_FILLED':
         return 'warning'
