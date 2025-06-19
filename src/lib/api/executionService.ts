@@ -1,6 +1,7 @@
 import axios, { AxiosInstance, AxiosResponse, AxiosError } from 'axios';
 import {
   ExecutionDTO,
+  EnhancedExecutionDTO,
   ExecutionPageDTO,
   ExecutionPostDTO,
   ExecutionPutDTO,
@@ -12,6 +13,7 @@ import {
   ExecutionFilters,
   PaginationDTO
 } from '@/types/execution';
+import { securityService } from './securityService';
 
 /**
  * Execution Service API Client
@@ -384,6 +386,63 @@ class ExecutionService {
       tradeTypes: Array.from(tradeTypes).sort(),
       destinations: Array.from(destinations).sort()
     };
+  }
+
+  /**
+   * Enhance executions with ticker information from Security Service
+   */
+  private async enhanceExecutionsWithTickers(executions: ExecutionDTO[]): Promise<EnhancedExecutionDTO[]> {
+    if (executions.length === 0) return [];
+
+    try {
+      // Extract unique security IDs
+      const securityIds = [...new Set(executions.map(exec => exec.securityId))];
+      
+      // Fetch tickers from Security Service
+      const tickers = await securityService.getTickers(securityIds);
+      
+      // Enhance executions with ticker information
+      return executions.map(execution => ({
+        ...execution,
+        security: {
+          securityId: execution.securityId,
+          ticker: tickers.get(execution.securityId) || execution.securityId // Fallback to securityId if ticker not found
+        }
+      }));
+    } catch (error) {
+      console.warn('Failed to enhance executions with ticker information:', error);
+      
+      // Return executions with fallback ticker data
+      return executions.map(execution => ({
+        ...execution,
+        security: {
+          securityId: execution.securityId,
+          ticker: execution.securityId // Fallback to securityId
+        }
+      }));
+    }
+  }
+
+  /**
+   * Get executions with filtering, sorting, and pagination - enhanced with ticker information
+   */
+  async getExecutionsEnhanced(params: ExecutionQueryParams = {}): Promise<{ content: EnhancedExecutionDTO[]; pagination: PaginationDTO }> {
+    const response = await this.getExecutions(params);
+    const enhancedExecutions = await this.enhanceExecutionsWithTickers(response.content);
+    
+    return {
+      content: enhancedExecutions,
+      pagination: response.pagination
+    };
+  }
+
+  /**
+   * Get a specific execution by ID - enhanced with ticker information
+   */
+  async getExecutionEnhanced(id: number): Promise<EnhancedExecutionDTO> {
+    const execution = await this.getExecution(id);
+    const enhanced = await this.enhanceExecutionsWithTickers([execution]);
+    return enhanced[0];
   }
 }
 

@@ -5,16 +5,16 @@ import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { SortableTable, SortableColumn } from '@/components/tables/sortable-table'
 import { ExecutionActionMenu } from '@/components/features/execution-action-menu'
-import { ExecutionDTO, ExecutionAction, ExecutionSortField, SortDirection } from '@/types/execution'
+import { EnhancedExecutionDTO, ExecutionAction, ExecutionSortField, SortDirection } from '@/types/execution'
 import { formatCurrency, formatNumber, formatDate, formatTime } from '@/lib/utils'
 
 interface ExecutionListTableProps {
-  executions: ExecutionDTO[]
+  executions: EnhancedExecutionDTO[]
   loading?: boolean
   selectedExecutions: Set<number>
   onExecutionSelect: (executionId: number, selected: boolean) => void
   onSelectAll: (selected: boolean) => void
-  onExecutionAction: (action: ExecutionAction, execution: ExecutionDTO) => void
+  onExecutionAction: (action: ExecutionAction, execution: EnhancedExecutionDTO) => void
   sorting: Array<{ field: ExecutionSortField; direction: SortDirection }>
   onSortChange: (sort: Array<{ field: ExecutionSortField; direction: SortDirection }>) => void
   className?: string
@@ -74,7 +74,7 @@ export const ExecutionListTable: React.FC<ExecutionListTableProps> = ({
   className = ''
 }) => {
   // Determine if an execution can be cancelled
-  const canCancel = (execution: ExecutionDTO): boolean => {
+  const canCancel = (execution: EnhancedExecutionDTO): boolean => {
     return !['FILLED', 'FULL', 'CANCELLED', 'CANCEL'].includes(execution.executionStatus)
   }
 
@@ -95,7 +95,7 @@ export const ExecutionListTable: React.FC<ExecutionListTableProps> = ({
   }, [cancellableExecutions, selectedExecutions, isAllSelected])
 
   // Format fill progress
-  const formatFillProgress = (execution: ExecutionDTO) => {
+  const formatFillProgress = (execution: EnhancedExecutionDTO) => {
     if (execution.quantity === 0) return '0%'
     const percentage = (execution.quantityFilled / execution.quantity) * 100
     return `${percentage.toFixed(1)}%`

@@ -1,13 +1,15 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { executionService } from '@/lib/api/executionService'
 import { 
-  ExecutionPageDTO, 
+  EnhancedExecutionDTO,
   ExecutionFilters, 
   ExecutionSortField,
   SortDirection,
-  ExecutionDTO 
+  PaginationDTO,
+  ExecutionQueryParams
 } from '@/types/execution'
 
 export interface UseExecutionsOptions {
@@ -23,11 +25,11 @@ export interface UseExecutionsOptions {
 }
 
 export interface UseExecutionsResult {
-  data: ExecutionPageDTO | null
-  executions: ExecutionDTO[]
+  data: { content: EnhancedExecutionDTO[]; pagination: PaginationDTO } | undefined
+  executions: EnhancedExecutionDTO[]
   isLoading: boolean
   error: Error | null
-  refetch: () => Promise<void>
+  refetch: () => Promise<any>
   pagination: {
     page: number
     size: number
@@ -40,10 +42,10 @@ export interface UseExecutionsResult {
   sorting: {
     field: ExecutionSortField
     direction: SortDirection
-  }
+  }[]
   updateFilters: (newFilters: ExecutionFilters) => void
   updatePagination: (update: { page?: number; size?: number }) => void
-  updateSorting: (field: ExecutionSortField, direction?: SortDirection) => void
+  updateSorting: (sort: Array<{ field: ExecutionSortField; direction: SortDirection }>) => void
   clearFilters: () => void
   isRefetching: boolean
 }
@@ -51,74 +53,82 @@ export interface UseExecutionsResult {
 const DEFAULT_PAGE_SIZE = 50
 const DEFAULT_POLLING_INTERVAL = 30000 // 30 seconds
 
+/**
+ * Convert filter object to query parameters
+ */
+const convertFiltersToQueryParams = (filters: ExecutionFilters): Record<string, string> => {
+  const params: Record<string, string> = {}
+  
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) {
+      if (Array.isArray(value)) {
+        params[key] = value.join(',')
+      } else {
+        params[key] = value.toString()
+      }
+    }
+  })
+  
+  return params
+}
+
+/**
+ * Format sort parameters for API
+ */
+const formatSortParams = (sorting: Array<{ field: ExecutionSortField; direction: SortDirection }>): string => {
+  return sorting
+    .map(sort => sort.direction === 'DESC' ? `-${sort.field}` : sort.field)
+    .join(',')
+}
+
 export const useExecutions = (options: UseExecutionsOptions = {}): UseExecutionsResult => {
   const {
-    initialFilters = {}, // No default filters - show all executions
+    initialFilters = {},
     initialPageSize = DEFAULT_PAGE_SIZE,
     initialPage = 0,
-    initialSort = { field: 'receivedTimestamp', direction: 'DESC' }, // Most recent first
-    enablePolling = true, // Enable by default for real-time updates
+    initialSort = { field: 'receivedTimestamp', direction: 'DESC' },
+    enablePolling = true,
     pollingInterval = DEFAULT_POLLING_INTERVAL
   } = options
 
   // State management
-  const [data, setData] = useState<ExecutionPageDTO | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [isRefetching, setIsRefetching] = useState(false)
-  const [error, setError] = useState<Error | null>(null)
   const [filters, setFilters] = useState<ExecutionFilters>(initialFilters)
   const [pagination, setPagination] = useState({
     offset: initialPage * initialPageSize,
     limit: initialPageSize
   })
-  const [sorting, setSorting] = useState(initialSort)
+  const [sorting, setSorting] = useState([initialSort])
 
-  // Fetch function
-  const fetchExecutions = useCallback(async (showLoader = true) => {
-    try {
-      if (showLoader) {
-        setIsLoading(true)
-      } else {
-        setIsRefetching(true)
-      }
-      setError(null)
-
-      // Build sort parameter with correct format (descending fields prefixed with '-')
-      const sortField = sorting.direction === 'DESC' ? `-${sorting.field}` : sorting.field
-      
-      const response = await executionService.getExecutions({
+  // React Query for data fetching
+  const {
+    data,
+    isLoading,
+    error,
+    refetch,
+    isRefetching
+  } = useQuery({
+    queryKey: ['executions', filters, pagination, sorting],
+    queryFn: async () => {
+      const params: ExecutionQueryParams = {
         limit: pagination.limit,
         offset: pagination.offset,
-        sortBy: sortField,
-        ...filters
-      })
+        sortBy: formatSortParams(sorting),
+        ...convertFiltersToQueryParams(filters)
+      }
 
-      setData(response)
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error('Failed to fetch executions')
-      setError(error)
-      console.error('Error fetching executions:', error)
-    } finally {
-      setIsLoading(false)
-      setIsRefetching(false)
+      console.log('Fetching executions with params:', params)
+      return await executionService.getExecutionsEnhanced(params)
+    },
+    staleTime: enablePolling ? 30000 : 5 * 60 * 1000, // 30s if polling, 5min otherwise
+    refetchInterval: enablePolling ? pollingInterval : false,
+    refetchIntervalInBackground: false,
+    retry: (failureCount, error) => {
+      // Retry up to 3 times for network errors, but not for 4xx errors
+      if (failureCount >= 3) return false
+      const status = (error as any)?.status
+      return !status || status >= 500
     }
-  }, [pagination, sorting, filters])
-
-  // Initial data fetch
-  useEffect(() => {
-    fetchExecutions(true)
-  }, [fetchExecutions])
-
-  // Auto-refresh polling effect
-  useEffect(() => {
-    if (!enablePolling) return
-
-    const interval = setInterval(() => {
-      fetchExecutions(false) // Background refresh without loader
-    }, pollingInterval)
-
-    return () => clearInterval(interval)
-  }, [enablePolling, pollingInterval, fetchExecutions])
+  })
 
   // Update functions
   const updateFilters = useCallback((newFilters: ExecutionFilters) => {
@@ -128,7 +138,6 @@ export const useExecutions = (options: UseExecutionsOptions = {}): UseExecutions
 
   const updatePagination = useCallback((update: { page?: number; size?: number }) => {
     setPagination(prev => {
-      // Convert page-based updates to offset-based
       let newPagination = { ...prev }
       
       if (update.size !== undefined) {
@@ -143,24 +152,17 @@ export const useExecutions = (options: UseExecutionsOptions = {}): UseExecutions
     })
   }, [])
 
-  const updateSorting = useCallback((field: ExecutionSortField, direction?: SortDirection) => {
-    setSorting(prev => ({
-      field,
-      direction: direction || (prev.field === field && prev.direction === 'ASC' ? 'DESC' : 'ASC')
-    }))
+  const updateSorting = useCallback((newSorting: Array<{ field: ExecutionSortField; direction: SortDirection }>) => {
+    setSorting(newSorting)
     setPagination(prev => ({ ...prev, offset: 0 })) // Reset to first page
   }, [])
 
   const clearFilters = useCallback(() => {
-    setFilters({}) // Clear all filters
+    setFilters({})
     setPagination(prev => ({ ...prev, offset: 0 }))
   }, [])
 
-  const refetch = useCallback(async () => {
-    await fetchExecutions(false)
-  }, [fetchExecutions])
-
-  // Computed pagination info - convert offset/limit back to page-based for UI compatibility
+  // Computed pagination info
   const paginationInfo = useMemo(() => {
     if (!data) {
       return {
@@ -192,7 +194,7 @@ export const useExecutions = (options: UseExecutionsOptions = {}): UseExecutions
     data,
     executions,
     isLoading,
-    error,
+    error: error as Error | null,
     refetch,
     pagination: paginationInfo,
     filters,

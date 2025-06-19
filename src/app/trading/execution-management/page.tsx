@@ -22,7 +22,7 @@ import {
 import { toast } from 'sonner'
 import { useExecutions } from '@/lib/hooks/useExecutions'
 import { ExecutionListTable } from '@/components/tables/ExecutionListTable'
-import { ExecutionDTO, ExecutionAction, ExecutionFilters, ExecutionSortField, SortDirection } from '@/types/execution'
+import { EnhancedExecutionDTO, ExecutionAction, ExecutionFilters, ExecutionSortField, SortDirection } from '@/types/execution'
 import { ExecutionDetailsModal } from '@/components/features/execution-details-modal'
 import { executionService } from '@/lib/api/executionService'
 import { saveFilters, loadFilters, cleanupExpiredFilters } from '@/lib/utils/filterPersistence'
@@ -78,7 +78,7 @@ export const ExecutionManagementPageContent: React.FC<ExecutionManagementPageCon
   const [initialFiltersLoaded, setInitialFiltersLoaded] = useState(false)
   const [detailsModal, setDetailsModal] = useState<{
     isOpen: boolean
-    execution: ExecutionDTO | null
+    execution: EnhancedExecutionDTO | null
   }>({
     isOpen: false,
     execution: null
@@ -86,7 +86,7 @@ export const ExecutionManagementPageContent: React.FC<ExecutionManagementPageCon
 
   const [cancelConfirmation, setCancelConfirmation] = useState<{
     isOpen: boolean
-    executions: ExecutionDTO[]
+    executions: EnhancedExecutionDTO[]
     isBulk: boolean
   }>({
     isOpen: false,
@@ -257,7 +257,7 @@ export const ExecutionManagementPageContent: React.FC<ExecutionManagementPageCon
   }
 
   // Handle individual execution actions
-  const handleExecutionAction = async (action: ExecutionAction, execution: ExecutionDTO) => {
+  const handleExecutionAction = async (action: ExecutionAction, execution: EnhancedExecutionDTO) => {
     try {
       switch (action) {
         case 'view':

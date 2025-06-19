@@ -1,18 +1,18 @@
 import { PageInfo, SortInfo } from './order';
 
-// Security DTO (nested in ExecutionDTO)
+// Security DTO (nested in ExecutionDTO when enhanced with external service data)
 export interface SecurityDTO {
   securityId: string;
   ticker: string;
 }
 
-// Core Execution DTO (v1.3.0 API response)
+// Core Execution DTO (v1.3.0 API response - actual format)
 export interface ExecutionDTO {
   id: number;
   executionStatus: 'NEW' | 'SENT' | 'FILLED' | 'PARTIALLY_FILLED' | 'CANCELLED' | 'CANCEL';
   tradeType: 'BUY' | 'SELL';
   destination: string;
-  security: SecurityDTO;
+  securityId: string; // API only returns securityId, not security object
   quantity: number;
   limitPrice: number;
   receivedTimestamp: string;
@@ -21,6 +21,12 @@ export interface ExecutionDTO {
   quantityFilled: number;
   averagePrice: number | null;
   version: number;
+}
+
+// Enhanced Execution DTO (with security data from Security Service)
+export interface EnhancedExecutionDTO extends Omit<ExecutionDTO, 'securityId'> {
+  security: SecurityDTO; // Enhanced with ticker information
+  securityId?: string; // Keep for backward compatibility
 }
 
 // Pagination DTO (from API documentation)
