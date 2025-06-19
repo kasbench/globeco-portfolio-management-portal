@@ -1898,3 +1898,136 @@ Phase 3 is complete with advanced filtering, export functionality, and enhanced 
 - Cross-browser compatibility verification
 
 ---
+
+## 2024-12-19 - Fixed Import Error in ExecutionDetailsModal
+
+### Issue
+Console error: `./src/components/features/execution-details-modal.tsx Attempted import error: 'formatTimestamp' is not exported from '@/lib/utils'`
+
+### Root Cause
+The `execution-details-modal.tsx` component was trying to import `formatTimestamp` function which doesn't exist in the utils file. The modal was created earlier but used a non-existent formatting function.
+
+### Resolution
+- **Updated Import**: Changed from `formatTimestamp` to `formatDateTime` which provides the same functionality
+- **Function Calls**: Updated all references in the component to use `formatDateTime`
+- **Verification**: The `formatDateTime` function in `@/lib/utils` provides proper date/time formatting with:
+  - Relative time display for recent dates (e.g., "2h ago", "Yesterday")
+  - Formatted timestamps for older dates (e.g., "Dec 19, 2024 14:30")
+
+### Files Modified
+- `src/components/features/execution-details-modal.tsx`: Updated import and function calls
+
+### Technical Details
+- **Before**: `import { formatCurrency, formatNumber, formatTimestamp } from '@/lib/utils'`
+- **After**: `import { formatCurrency, formatNumber, formatDateTime } from '@/lib/utils'`
+- **Function Usage**: Both `execution.receivedTimestamp` and `execution.sentTimestamp` now properly formatted
+
+### Result
+Import error resolved, ExecutionDetailsModal component now properly formats timestamps without console errors.
+
+## 2024-12-19 - Fixed Multiple formatTimestamp Import Errors
+
+### Issue
+Multiple console errors: `Attempted import error: 'formatTimestamp' is not exported from '@/lib/utils'` affecting:
+- `src/components/tables/ExecutionListTable.tsx`
+- `src/lib/utils/exportUtils.ts`
+
+### Root Cause
+Several components were trying to import and use `formatTimestamp` function which doesn't exist in the utils file. The original implementation used a custom `formatTimestamp` function with mode parameters ('date', 'time') that was never properly implemented.
+
+### Resolution
+**Updated Components to use existing formatting functions:**
+
+#### ExecutionListTable.tsx
+- **Import Change**: `formatTimestamp` → `formatDate, formatTime`
+- **Function Calls**: 
+  - `formatTimestamp(value, 'date')` → `formatDate(value)`
+  - `formatTimestamp(value, 'time')` → `formatTime(value)`
+- **Context**: Used in receivedTimestamp and sentTimestamp column rendering
+
+#### exportUtils.ts  
+- **Import Change**: `formatTimestamp` → `formatDate, formatTime`
+- **Function Calls**: Same pattern as above for CSV export date/time formatting
+- **Context**: Used in CSV generation for separate date and time columns
+
+### Files Modified
+- `src/components/tables/ExecutionListTable.tsx`: Updated imports and timestamp rendering
+- `src/lib/utils/exportUtils.ts`: Updated imports and CSV date/time formatting
+
+### Technical Details
+- **Available Functions**: `formatDate()`, `formatTime()`, `formatDateTime()` from `@/lib/utils`
+- **formatDate()**: Returns format like "Dec 19, 2024"  
+- **formatTime()**: Returns format like "14:30:25"
+- **formatDateTime()**: Returns relative time or full timestamp
+
+### Result
+All formatTimestamp import errors resolved. Execution Management page now properly displays timestamps in table columns and CSV exports work correctly.
+
+## 2024-12-19 - Fixed Checkbox Indeterminate Attribute Warning
+
+### Issue
+React warning: `Received false for a non-boolean attribute indeterminate. If you want to write it to the DOM, pass a string instead: indeterminate="false" or indeterminate={condition ? value : undefined} instead.`
+
+### Root Cause
+The `indeterminate` prop on the Checkbox component in ExecutionListTable was receiving a boolean `false` value. React's HTML `indeterminate` attribute expects either `true` or to be omitted entirely (undefined), not `false`.
+
+### Resolution
+Updated the checkbox indeterminate prop to use conditional logic:
+- **Before**: `indeterminate={isPartiallySelected}` (could be `false`)
+- **After**: `indeterminate={isPartiallySelected || undefined}` (either `true` or `undefined`)
+
+### Files Modified
+- `src/components/tables/ExecutionListTable.tsx`: Fixed select-all checkbox indeterminate prop
+
+### Technical Details
+- **Issue**: When `isPartiallySelected` was `false`, React received `indeterminate={false}`
+- **Fix**: Using `||` operator ensures `indeterminate` is either `true` or `undefined`
+- **Result**: Checkbox properly shows indeterminate state when some items are selected, normal state otherwise
+
+### Result
+React warning eliminated, checkbox indeterminate state now works correctly without console warnings.
+
+## 2024-12-19 - Fixed Execution Statistics Calculation - FULL vs FILLED Status
+
+### Issue
+Execution statistics at the top of the page showing incorrect counts:
+- **Actual data**: 1 execution with status `'FULL'`, 1 execution with status `'NEW'`
+- **Displayed stats**: 0 Filled, 2 Active (should be 1 Filled, 1 Active)
+
+### Root Cause
+The statistics calculation was only looking for `executionStatus === 'FILLED'`, but the API is returning `'FULL'` status instead of `'FILLED'`. This caused:
+1. Filled executions to be counted as 0 (since `'FULL'` !== `'FILLED'`)
+2. Active count to be incorrectly calculated as `total - filled - cancelled` where filled was 0
+
+### Resolution
+Updated all status checking logic to handle both `'FULL'` and `'FILLED'` status values:
+
+#### Statistics Calculation (`src/app/trading/execution-management/page.tsx`)
+- **Before**: `executions.filter(e => e.executionStatus === 'FILLED')`
+- **After**: `executions.filter(e => ['FILLED', 'FULL'].includes(e.executionStatus))`
+
+#### ExecutionListTable Status Badge (`src/components/tables/ExecutionListTable.tsx`)
+- **Updated**: `getStatusVariant()` function to handle both `'FILLED'` and `'FULL'` as success status
+- **Result**: Both status values now display with green success styling
+
+#### Cancellation Logic
+- **Updated**: `canCancel()` function to exclude both `'FILLED'` and `'FULL'` from cancellable executions
+- **Updated**: `handleSelectAll()` to exclude both status values from bulk selection
+
+### Files Modified
+- `src/app/trading/execution-management/page.tsx`: Updated statistics calculation and selection logic
+- `src/components/tables/ExecutionListTable.tsx`: Updated status badge and cancellation logic
+
+### Technical Details
+- **API Inconsistency**: API returns `'FULL'` but TypeScript types expect `'FILLED'`
+- **Backwards Compatibility**: Code now handles both values to be robust against API variations
+- **Consistent Behavior**: All status checking logic now uses the same pattern
+
+### Result
+Statistics now correctly show:
+- 1 Filled execution (recognizes `'FULL'` status)
+- 1 Active execution (correct calculation)
+- Proper status badge coloring for both `'FULL'` and `'FILLED'` statuses
+- Consistent cancellation behavior across the application
+
+---

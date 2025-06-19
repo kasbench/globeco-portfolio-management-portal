@@ -12,7 +12,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { ExecutionDTO } from '@/types/execution'
-import { formatCurrency, formatNumber, formatTimestamp } from '@/lib/utils'
+import { formatCurrency, formatNumber, formatDateTime } from '@/lib/utils'
 
 interface ExecutionDetailsModalProps {
   execution: ExecutionDTO | null
@@ -184,7 +184,7 @@ export const ExecutionDetailsModal: React.FC<ExecutionDetailsModalProps> = ({
               <div className="space-y-2">
                 <div className="text-sm font-medium text-slate-600">Received</div>
                 <div className="text-sm font-mono bg-slate-50 p-2 rounded">
-                  {formatTimestamp(execution.receivedTimestamp)}
+                  {formatDateTime(execution.receivedTimestamp)}
                 </div>
               </div>
               
@@ -192,7 +192,7 @@ export const ExecutionDetailsModal: React.FC<ExecutionDetailsModalProps> = ({
                 <div className="space-y-2">
                   <div className="text-sm font-medium text-slate-600">Sent</div>
                   <div className="text-sm font-mono bg-slate-50 p-2 rounded">
-                    {formatTimestamp(execution.sentTimestamp)}
+                    {formatDateTime(execution.sentTimestamp)}
                   </div>
                 </div>
               )}

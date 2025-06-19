@@ -3,7 +3,7 @@
  */
 
 import { ExecutionDTO } from '@/types/execution'
-import { formatTimestamp, formatCurrency, formatNumber } from '@/lib/utils'
+import { formatDate, formatTime, formatCurrency, formatNumber } from '@/lib/utils'
 
 export interface ExportOptions {
   includeAllFields?: boolean
@@ -57,16 +57,16 @@ export function executionsToCSV(executions: ExecutionDTO[], options: ExportOptio
       : '0.0'
 
     const receivedDate = execution.receivedTimestamp 
-      ? formatTimestamp(execution.receivedTimestamp, 'date')
+      ? formatDate(execution.receivedTimestamp)
       : ''
     const receivedTime = execution.receivedTimestamp 
-      ? formatTimestamp(execution.receivedTimestamp, 'time')
+      ? formatTime(execution.receivedTimestamp)
       : ''
     const sentDate = execution.sentTimestamp 
-      ? formatTimestamp(execution.sentTimestamp, 'date')
+      ? formatDate(execution.sentTimestamp)
       : ''
     const sentTime = execution.sentTimestamp 
-      ? formatTimestamp(execution.sentTimestamp, 'time')
+      ? formatTime(execution.sentTimestamp)
       : ''
 
     const baseRow = [

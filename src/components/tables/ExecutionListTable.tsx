@@ -6,7 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { SortableTable, SortableColumn } from '@/components/tables/sortable-table'
 import { ExecutionActionMenu } from '@/components/features/execution-action-menu'
 import { ExecutionDTO, ExecutionAction, ExecutionSortField, SortDirection } from '@/types/execution'
-import { formatCurrency, formatNumber, formatTimestamp } from '@/lib/utils'
+import { formatCurrency, formatNumber, formatDate, formatTime } from '@/lib/utils'
 
 interface ExecutionListTableProps {
   executions: ExecutionDTO[]
@@ -28,6 +28,7 @@ const ExecutionStatusBadge: React.FC<{ status: string }> = ({ status }) => {
       case 'SENT':
         return 'default'
       case 'FILLED':
+      case 'FULL':
         return 'success'
       case 'PARTIALLY_FILLED':
         return 'warning'
@@ -74,7 +75,7 @@ export const ExecutionListTable: React.FC<ExecutionListTableProps> = ({
 }) => {
   // Determine if an execution can be cancelled
   const canCancel = (execution: ExecutionDTO): boolean => {
-    return !['FILLED', 'CANCELLED', 'CANCEL'].includes(execution.executionStatus)
+    return !['FILLED', 'FULL', 'CANCELLED', 'CANCEL'].includes(execution.executionStatus)
   }
 
   // Get cancellable executions for selection
@@ -108,7 +109,7 @@ export const ExecutionListTable: React.FC<ExecutionListTableProps> = ({
       label: (
         <Checkbox
           checked={isAllSelected}
-          indeterminate={isPartiallySelected}
+          indeterminate={isPartiallySelected || undefined}
           onCheckedChange={(checked) => onSelectAll(!!checked)}
           aria-label="Select all cancellable executions"
         />
@@ -215,8 +216,8 @@ export const ExecutionListTable: React.FC<ExecutionListTableProps> = ({
       className: 'w-40 text-sm',
       render: (value) => (
         <div>
-          <div>{formatTimestamp(value, 'date')}</div>
-          <div className="text-xs text-slate-500">{formatTimestamp(value, 'time')}</div>
+          <div>{formatDate(value)}</div>
+          <div className="text-xs text-slate-500">{formatTime(value)}</div>
         </div>
       )
     },
@@ -228,8 +229,8 @@ export const ExecutionListTable: React.FC<ExecutionListTableProps> = ({
       className: 'w-40 text-sm',
       render: (value) => value ? (
         <div>
-          <div>{formatTimestamp(value, 'date')}</div>
-          <div className="text-xs text-slate-500">{formatTimestamp(value, 'time')}</div>
+          <div>{formatDate(value)}</div>
+          <div className="text-xs text-slate-500">{formatTime(value)}</div>
         </div>
       ) : (
         <span className="text-slate-400">-</span>

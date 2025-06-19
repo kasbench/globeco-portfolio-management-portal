@@ -188,7 +188,7 @@ export const ExecutionManagementPageContent: React.FC<ExecutionManagementPageCon
     if (selected && executions) {
       // Only select cancellable executions
       const selectableExecutions = executions
-        .filter(execution => !['FILLED', 'CANCELLED', 'CANCEL'].includes(execution.executionStatus))
+        .filter(execution => !['FILLED', 'FULL', 'CANCELLED', 'CANCEL'].includes(execution.executionStatus))
         .map(execution => execution.id)
       setSelectedExecutions(new Set(selectableExecutions))
     } else {
@@ -316,7 +316,7 @@ export const ExecutionManagementPageContent: React.FC<ExecutionManagementPageCon
     if (!executions || executions.length === 0) return null
 
     const total = executions.length
-    const filled = executions.filter(e => e.executionStatus === 'FILLED').length
+    const filled = executions.filter(e => ['FILLED', 'FULL'].includes(e.executionStatus)).length
     const partiallyFilled = executions.filter(e => e.executionStatus === 'PARTIALLY_FILLED').length
     const cancelled = executions.filter(e => ['CANCELLED', 'CANCEL'].includes(e.executionStatus)).length
     const active = total - filled - cancelled
