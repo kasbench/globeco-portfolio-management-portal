@@ -1,9 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Image from 'next/image'
 import Link from 'next/link'
-import { ChevronDown } from 'lucide-react'
+import Image from 'next/image'
+import { ChevronDown, Menu, X } from 'lucide-react'
 import { useRoleStore } from '@/store/roleStore'
 import RoleSelector from './RoleSelector'
 
@@ -13,17 +13,16 @@ interface MenuItemConfig {
   allowedRoles: string[]
 }
 
-interface SubMenuItemConfig {
-  href: string
-  label: string
-}
-
 interface MenuItemWithSubmenuConfig {
   label: string
   allowedRoles: string[]
-  submenu: SubMenuItemConfig[]
+  submenu: {
+    href: string
+    label: string
+  }[]
 }
 
+// Main navigation items in the new order: Home - Order Generation - Order Management - Dashboard
 const MENU_ITEMS: MenuItemConfig[] = [
   {
     href: '/',
@@ -111,28 +110,29 @@ export default function Header() {
     : true
 
   return (
-    <header className="globeco-gradient relative z-50">
-      <div className="absolute inset-0 bg-black/20" />
-      <div className="relative z-10">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo and Brand */}
-            <Link href="/" className="flex items-center space-x-3 group">
-              <Image
-                src="/images/globeco-logo.png"
-                alt="GlobeCo"
-                width={40}
-                height={40}
-                className="transition-transform group-hover:scale-105"
-              />
-              <div className="hidden sm:block">
-                <h1 className="text-white font-bold text-lg">GlobeCo</h1>
-                <p className="text-white/80 text-xs -mt-0.5">Portfolio Management</p>
-              </div>
-            </Link>
-
-            {/* Navigation - Desktop */}
+    <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-gradient-to-r from-emerald-800 to-teal-800 backdrop-blur supports-[backdrop-filter]:bg-emerald-800/60">
+      <div className="container flex h-16 items-center">
+        <div className="mr-4 hidden md:flex">
+          <Link href="/" className="mr-6 flex items-center space-x-2">
+            <Image
+              src="/images/globeco-logo.png"
+              alt="GlobeCo"
+              width={32}
+              height={32}
+              className="brightness-0 invert"
+            />
+            <div className="text-white">
+              <div className="text-lg font-bold leading-none">GlobeCo</div>
+              <div className="text-sm text-white/80 leading-none">Portfolio Management</div>
+            </div>
+          </Link>
+        </div>
+        
+        <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
+          <div className="w-full flex-1 md:w-auto md:flex-none">
+            {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center space-x-1">
+              {/* Home */}
               {visibleMenuItems.slice(0, 1).map((item) => (
                 <Link
                   key={item.href}
@@ -187,6 +187,17 @@ export default function Header() {
                 </div>
               )}
 
+              {/* Order Generation, Order Management */}
+              {visibleMenuItems.slice(1, 3).map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="text-white/90 hover:text-white hover:bg-white/10 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200"
+                >
+                  {item.label}
+                </Link>
+              ))}
+
               {/* Trading Submenu */}
               {isTradingVisible && (
                 <div className="relative">
@@ -231,7 +242,19 @@ export default function Header() {
                 </div>
               )}
 
-              {visibleMenuItems.slice(1).map((item) => (
+              {/* Dashboard */}
+              {visibleMenuItems.slice(3, 4).map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="text-white/90 hover:text-white hover:bg-white/10 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200"
+                >
+                  {item.label}
+                </Link>
+              ))}
+
+              {/* Administration (only for admin) */}
+              {visibleMenuItems.slice(4).map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
@@ -241,97 +264,105 @@ export default function Header() {
                 </Link>
               ))}
             </nav>
+          </div>
 
-            {/* Mobile Navigation Button & Role Selector */}
-            <div className="flex items-center space-x-4">
-              {/* Mobile Menu Button */}
-              <div className="lg:hidden">
-                <details className="group">
-                  <summary className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 transition-all duration-200 cursor-pointer list-none">
-                    <span className="text-white text-sm font-medium">Menu</span>
-                    <svg className="w-4 h-4 text-white/70 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </summary>
+          {/* Mobile Navigation */}
+          <div className="flex items-center space-x-4 lg:hidden">
+            {/* Mobile Menu */}
+            <details className="relative">
+              <summary className="list-none cursor-pointer p-2 rounded-md hover:bg-white/10 transition-colors">
+                <Menu className="h-6 w-6 text-white" />
+              </summary>
+
+              <div className="absolute top-full right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
+                <div className="p-2">
+                  <div className="text-xs font-medium text-gray-500 uppercase tracking-wide px-2 py-1 mb-1">
+                    Navigation
+                  </div>
                   
-                  {/* Mobile Dropdown */}
-                  <div className="absolute top-full right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
-                    <div className="p-2">
-                      <div className="text-xs font-medium text-gray-500 uppercase tracking-wide px-2 py-1 mb-1">
-                        Navigation
+                  {/* Home */}
+                  {visibleMenuItems.slice(0, 1).map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className="block px-3 py-2 text-gray-900 hover:bg-gray-50 rounded-md text-sm font-medium transition-colors"
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+                  
+                  {/* Model Management Mobile Submenu */}
+                  {isModelManagementVisible && (
+                    <div className="border-l-2 border-gray-100 ml-2 pl-3 my-2">
+                      <div className="text-xs font-medium text-gray-500 px-2 py-1 mb-1">
+                        {MODEL_MANAGEMENT_MENU.label}
                       </div>
-                      {visibleMenuItems.slice(0, 1).map((item) => (
+                      {MODEL_MANAGEMENT_MENU.submenu.map((item) => (
                         <Link
                           key={item.href}
                           href={item.href}
-                          className="block px-3 py-2 text-gray-900 hover:bg-gray-50 rounded-md text-sm font-medium transition-colors"
-                        >
-                          {item.label}
-                        </Link>
-                      ))}
-                      
-                      {/* Model Management Mobile Submenu */}
-                      {isModelManagementVisible && (
-                        <div className="border-l-2 border-gray-100 ml-2 pl-3 my-2">
-                          <div className="text-xs font-medium text-gray-500 px-2 py-1 mb-1">
-                            {MODEL_MANAGEMENT_MENU.label}
-                          </div>
-                          {MODEL_MANAGEMENT_MENU.submenu.map((item) => (
-                            <Link
-                              key={item.href}
-                              href={item.href}
-                              className="block px-3 py-2 text-gray-900 hover:bg-gray-50 rounded-md text-sm transition-colors"
-                            >
-                              {item.label}
-                            </Link>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Trading Mobile Submenu */}
-                      {isTradingVisible && (
-                        <div className="border-l-2 border-gray-100 ml-2 pl-3 my-2">
-                          <div className="text-xs font-medium text-gray-500 px-2 py-1 mb-1">
-                            {TRADING_MENU.label}
-                          </div>
-                          {TRADING_MENU.submenu.map((item) => (
-                            <Link
-                              key={item.href}
-                              href={item.href}
-                              className="block px-3 py-2 text-gray-900 hover:bg-gray-50 rounded-md text-sm transition-colors"
-                            >
-                              {item.label}
-                            </Link>
-                          ))}
-                        </div>
-                      )}
-
-                      {visibleMenuItems.slice(1).map((item) => (
-                        <Link
-                          key={item.href}
-                          href={item.href}
-                          className="block px-3 py-2 text-gray-900 hover:bg-gray-50 rounded-md text-sm font-medium transition-colors"
+                          className="block px-3 py-2 text-gray-900 hover:bg-gray-50 rounded-md text-sm transition-colors"
                         >
                           {item.label}
                         </Link>
                       ))}
                     </div>
-                    
-                    {isClient && (
-                      <div className="border-t border-gray-100 px-2 py-2">
-                        <p className="text-xs text-gray-400 px-2">
-                          Current Role: <span className="font-medium text-gray-600">{currentRole}</span>
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </details>
-              </div>
+                  )}
 
-              {/* Role Selector */}
-              <RoleSelector />
-            </div>
+                  {/* Order Generation, Order Management */}
+                  {visibleMenuItems.slice(1, 3).map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className="block px-3 py-2 text-gray-900 hover:bg-gray-50 rounded-md text-sm font-medium transition-colors"
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+
+                  {/* Trading Mobile Submenu */}
+                  {isTradingVisible && (
+                    <div className="border-l-2 border-gray-100 ml-2 pl-3 my-2">
+                      <div className="text-xs font-medium text-gray-500 px-2 py-1 mb-1">
+                        {TRADING_MENU.label}
+                      </div>
+                      {TRADING_MENU.submenu.map((item) => (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          className="block px-3 py-2 text-gray-900 hover:bg-gray-50 rounded-md text-sm transition-colors"
+                        >
+                          {item.label}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Dashboard and Administration */}
+                  {visibleMenuItems.slice(3).map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className="block px-3 py-2 text-gray-900 hover:bg-gray-50 rounded-md text-sm font-medium transition-colors"
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+                </div>
+                
+                {isClient && (
+                  <div className="border-t border-gray-100 px-2 py-2">
+                    <p className="text-xs text-gray-400 px-2">
+                      Current Role: <span className="font-medium text-gray-600">{currentRole}</span>
+                    </p>
+                  </div>
+                )}
+              </div>
+            </details>
           </div>
+
+          {/* Role Selector */}
+          <RoleSelector />
         </div>
       </div>
     </header>

@@ -2171,3 +2171,25 @@ Phase 4 is complete with full execution actions functionality, comprehensive tes
 - Security Service: `http://globeco-security-service:8000` (new integration)
 
 This fix ensures that executions now display the proper ticker symbols (e.g., "AAPL", "MSFT") instead of just "A", while maintaining system reliability and performance.
+
+## 2024-12-19 21:15 - Reordered Navigation Menu Items
+
+**Change Requested**: User requested to reorder the main navigation menu items to: Home - Model Management - Order Generation - Order Management - Trading - Dashboard
+
+**Implementation**:
+1. **Updated Header Component** (`src/components/layout/Header.tsx`):
+   - Reordered navigation items in both desktop and mobile views
+   - Updated MENU_ITEMS array order
+   - Adjusted slice indices for proper positioning of submenus
+   - Fixed import statement for RoleSelector (default export)
+
+2. **New Menu Order**:
+   - Home (first)
+   - Model Management (submenu with Investment Model and Rebalance Results)
+   - Order Generation
+   - Order Management
+   - Trading (submenu with Trade Management and Execution Management)
+   - Dashboard (moved before Administration)
+   - Administration (last, admin-only)
+
+**Result**: Navigation menu now displays in the requested order across both desktop and mobile interfaces.
