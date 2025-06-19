@@ -1,51 +1,81 @@
 'use client'
 
-import React, { useState, useMemo, Suspense } from 'react'
-import { Activity, Filter, RefreshCw, X } from 'lucide-react'
+import React, { useState, useMemo, Suspense, useEffect } from 'react'
+import { Activity, Filter, RefreshCw, X, Download, FileDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { FilterPills } from '@/components/ui/filter-pills'
+import { ExecutionFilterPills } from '@/components/ui/execution-filter-pills'
 import { Pagination } from '@/components/ui/pagination'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu'
 import { toast } from 'sonner'
 import { useExecutions } from '@/lib/hooks/useExecutions'
 import { ExecutionListTable } from '@/components/tables/ExecutionListTable'
 import { ExecutionDTO, ExecutionAction, ExecutionFilters, ExecutionSortField, SortDirection } from '@/types/execution'
 import { ExecutionDetailsModal } from '@/components/features/execution-details-modal'
 import { executionService } from '@/lib/api/executionService'
+import { saveFilters, loadFilters, cleanupExpiredFilters } from '@/lib/utils/filterPersistence'
+import { exportExecutions, getExportSummary } from '@/lib/utils/exportUtils'
 
-// Filter configuration for Executions
-const FILTER_FIELDS = [
+// Enhanced filter configuration for Executions
+const ENHANCED_FILTER_FIELDS = [
   {
-    field: 'ticker',
+    field: 'ticker' as keyof ExecutionFilters,
     label: 'Security Ticker',
-    placeholder: 'Enter ticker symbol (e.g. AAPL)'
+    placeholder: 'Enter ticker symbol (e.g. AAPL)',
+    type: 'text' as const
   },
   {
-    field: 'executionStatus',
+    field: 'executionStatus' as keyof ExecutionFilters,
     label: 'Status',
-    placeholder: 'NEW, SENT, FILLED, etc.'
+    placeholder: 'Select execution status',
+    type: 'multiselect' as const
   },
   {
-    field: 'tradeType',
+    field: 'tradeType' as keyof ExecutionFilters,
     label: 'Trade Type',
-    placeholder: 'BUY, SELL, or SHORT'
+    placeholder: 'Select trade type',
+    type: 'multiselect' as const
   },
   {
-    field: 'destination',
+    field: 'destination' as keyof ExecutionFilters,
     label: 'Destination',
-    placeholder: 'Enter destination'
+    placeholder: 'Enter destination',
+    type: 'text' as const
+  },
+  {
+    field: 'receivedTimestamp' as keyof ExecutionFilters,
+    label: 'Received Date',
+    placeholder: 'Select date range',
+    type: 'daterange' as const
+  },
+  {
+    field: 'sentTimestamp' as keyof ExecutionFilters,
+    label: 'Sent Date',
+    placeholder: 'Select date range',
+    type: 'daterange' as const
   }
 ]
+
+const FILTER_PERSISTENCE_KEY = 'execution_management'
 
 interface ExecutionManagementPageContentProps {}
 
 export const ExecutionManagementPageContent: React.FC<ExecutionManagementPageContentProps> = () => {
   const [selectedExecutions, setSelectedExecutions] = useState<Set<number>>(new Set())
   const [filters, setFilters] = useState<ExecutionFilters>({})
+  const [initialFiltersLoaded, setInitialFiltersLoaded] = useState(false)
   const [detailsModal, setDetailsModal] = useState<{
     isOpen: boolean
     execution: ExecutionDTO | null
@@ -63,6 +93,42 @@ export const ExecutionManagementPageContent: React.FC<ExecutionManagementPageCon
     executions: [],
     isBulk: false
   })
+
+  const [exportDialog, setExportDialog] = useState<{
+    isOpen: boolean
+    selectedOnly: boolean
+    includeAllFields: boolean
+  }>({
+    isOpen: false,
+    selectedOnly: false,
+    includeAllFields: false
+  })
+
+  // Load persisted filters on component mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      cleanupExpiredFilters() // Clean up expired filters first
+      const persistedFilters = loadFilters(FILTER_PERSISTENCE_KEY)
+      
+      if (persistedFilters.length > 0) {
+        // Convert persisted filters back to ExecutionFilters format
+        const initialFilters: ExecutionFilters = {}
+        persistedFilters.forEach(filter => {
+          if (filter.field === 'executionStatus') {
+            initialFilters.executionStatus = filter.values
+          } else if (filter.field === 'tradeType') {
+            initialFilters.tradeType = filter.values
+          } else if (filter.field === 'ticker') {
+            initialFilters.ticker = filter.values
+          } else if (filter.field === 'destination') {
+            initialFilters.destination = filter.values
+          }
+        })
+        setFilters(initialFilters)
+      }
+      setInitialFiltersLoaded(true)
+    }
+  }, [])
 
   const {
     data: executionsData,
@@ -82,7 +148,7 @@ export const ExecutionManagementPageContent: React.FC<ExecutionManagementPageCon
     enablePolling: true // Auto-refresh every 30 seconds
   })
 
-  // Handle filter changes
+  // Handle filter changes with persistence
   const handleFiltersChange = (newFilters: any[]) => {
     const filtersObject: ExecutionFilters = {}
     
@@ -100,6 +166,11 @@ export const ExecutionManagementPageContent: React.FC<ExecutionManagementPageCon
 
     setFilters(filtersObject)
     updateFilters(filtersObject)
+    
+    // Persist filters to localStorage
+    if (typeof window !== 'undefined') {
+      saveFilters(FILTER_PERSISTENCE_KEY, newFilters)
+    }
   }
 
   // Handle execution selection
@@ -142,6 +213,47 @@ export const ExecutionManagementPageContent: React.FC<ExecutionManagementPageCon
       executions: selectedExecutionList,
       isBulk: true
     })
+  }
+
+  // Handle export functionality
+  const handleExportClick = (selectedOnly: boolean = false) => {
+    if (selectedOnly && selectedExecutions.size === 0) {
+      toast.error('No executions selected for export')
+      return
+    }
+
+    if (!executions || executions.length === 0) {
+      toast.error('No executions available for export')
+      return
+    }
+
+    setExportDialog({
+      isOpen: true,
+      selectedOnly,
+      includeAllFields: false
+    })
+  }
+
+  const handleExportConfirm = () => {
+    try {
+      if (!executions) {
+        toast.error('No executions available for export')
+        return
+      }
+
+      exportExecutions(executions, selectedExecutions, {
+        selectedOnly: exportDialog.selectedOnly,
+        includeAllFields: exportDialog.includeAllFields
+      })
+
+      const exportCount = exportDialog.selectedOnly ? selectedExecutions.size : executions.length
+      toast.success(`Successfully exported ${exportCount} execution${exportCount !== 1 ? 's' : ''} to CSV`)
+      
+      setExportDialog({ isOpen: false, selectedOnly: false, includeAllFields: false })
+    } catch (error) {
+      console.error('Export failed:', error)
+      toast.error('Failed to export executions. Please try again.')
+    }
   }
 
   // Handle individual execution actions
@@ -212,6 +324,23 @@ export const ExecutionManagementPageContent: React.FC<ExecutionManagementPageCon
     return { total, filled, partiallyFilled, cancelled, active }
   }, [executions])
 
+  // Don't render until initial filters are loaded to prevent flash
+  if (!initialFiltersLoaded) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="space-y-6">
+          <Skeleton className="h-8 w-64" />
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            {[...Array(5)].map((_, i) => (
+              <Skeleton key={i} className="h-20 w-full" />
+            ))}
+          </div>
+          <Skeleton className="h-96 w-full" />
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* Page Header */}
@@ -230,6 +359,30 @@ export const ExecutionManagementPageContent: React.FC<ExecutionManagementPageCon
             <RefreshCw className={`h-4 w-4 mr-2 ${isRefetching ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
+          
+          {/* Export Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Download className="h-4 w-4 mr-2" />
+                Export
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => handleExportClick(false)}>
+                <FileDown className="h-4 w-4 mr-2" />
+                Export All Executions
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => handleExportClick(true)}
+                disabled={selectedExecutions.size === 0}
+              >
+                <FileDown className="h-4 w-4 mr-2" />
+                Export Selected ({selectedExecutions.size})
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           {selectedExecutions.size > 0 && (
             <Button 
               variant="destructive" 
@@ -279,9 +432,9 @@ export const ExecutionManagementPageContent: React.FC<ExecutionManagementPageCon
         </div>
       )}
 
-      {/* Filter Pills */}
-      <FilterPills
-        filterFields={FILTER_FIELDS}
+      {/* Enhanced Filter Pills */}
+      <ExecutionFilterPills
+        filterFields={ENHANCED_FILTER_FIELDS}
         onFiltersChange={handleFiltersChange}
         className="mb-4"
       />
@@ -356,6 +509,50 @@ export const ExecutionManagementPageContent: React.FC<ExecutionManagementPageCon
         isOpen={detailsModal.isOpen}
         onClose={() => setDetailsModal({ isOpen: false, execution: null })}
       />
+
+      {/* Export Confirmation Dialog */}
+      <Dialog open={exportDialog.isOpen} onOpenChange={(open) => 
+        !open && setExportDialog({ isOpen: false, selectedOnly: false, includeAllFields: false })
+      }>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Export Executions</DialogTitle>
+            <DialogDescription>
+              {getExportSummary(
+                executions?.length || 0,
+                selectedExecutions,
+                exportDialog.selectedOnly
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="includeAllFields"
+                checked={exportDialog.includeAllFields}
+                onCheckedChange={(checked) => 
+                  setExportDialog(prev => ({ ...prev, includeAllFields: !!checked }))
+                }
+              />
+              <Label htmlFor="includeAllFields">
+                Include all fields (including hidden fields like Security ID)
+              </Label>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setExportDialog({ isOpen: false, selectedOnly: false, includeAllFields: false })}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleExportConfirm}>
+              <Download className="h-4 w-4 mr-2" />
+              Export to CSV
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Cancel Confirmation Dialog */}
       <Dialog open={cancelConfirmation.isOpen} onOpenChange={(open) => 
