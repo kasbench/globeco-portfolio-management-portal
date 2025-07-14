@@ -1,5 +1,3 @@
-import { PageInfo, SortInfo } from './order';
-
 // Core Trade Order DTO (v1 API response)
 export interface TradeOrderResponseDTO {
   id: number;
@@ -41,7 +39,7 @@ export interface TradeOrderEnhancedResponseDTO extends TradeOrderResponseDTO {
 export interface TradeOrderPageResponseDTO {
   content: TradeOrderEnhancedResponseDTO[];
   pageable: {
-    sort: SortInfo;
+    sort: any; // was SortInfo
     pageNumber: number;
     pageSize: number;
   };
@@ -153,7 +151,7 @@ export interface ExecutionEnhancedResponseDTO extends ExecutionResponseDTO {
 export interface ExecutionPageResponseDTO {
   content: ExecutionEnhancedResponseDTO[];
   pageable: {
-    sort: SortInfo;
+    sort: any; // was SortInfo
     pageNumber: number;
     pageSize: number;
   };
@@ -267,7 +265,7 @@ export interface TradeOrderListState {
   error: string | null;
   filters: TradeOrderFilters;
   sorting: TradeOrderSortFields[];
-  pagination: PageInfo;
+  pagination: any; // was PageInfo
   selection: TradeOrderSelection;
 }
 

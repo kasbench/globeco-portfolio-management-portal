@@ -130,7 +130,7 @@ export const useTradeOrders = (options: UseTradeOrdersOptions = {}): UseTradeOrd
   const updatePagination = useCallback((update: { page?: number; size?: number }) => {
     setPagination(prev => {
       // Convert page-based updates to offset-based
-      let newPagination = { ...prev }
+      const newPagination = { ...prev }
       
       if (update.size !== undefined) {
         newPagination.limit = update.size

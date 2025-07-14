@@ -138,7 +138,7 @@ export const useExecutions = (options: UseExecutionsOptions = {}): UseExecutions
 
   const updatePagination = useCallback((update: { page?: number; size?: number }) => {
     setPagination(prev => {
-      let newPagination = { ...prev }
+      const newPagination = { ...prev }
       
       if (update.size !== undefined) {
         newPagination.limit = update.size

@@ -29,9 +29,9 @@ const ExecutionStatusBadge: React.FC<{ status: string }> = ({ status }) => {
         return 'default'
       case 'FILLED':
       case 'FULL':
-        return 'success'
+        return 'default' // was 'success'
       case 'PARTIALLY_FILLED':
-        return 'warning'
+        return 'outline' // was 'warning'
       case 'CANCELLED':
       case 'CANCEL':
         return 'destructive'
@@ -56,6 +56,11 @@ const TradeTypeBadge: React.FC<{ tradeType: string }> = ({ tradeType }) => {
       {tradeType}
     </Badge>
   )
+}
+
+// Helper type guard for EnhancedExecutionDTO
+function hasSecurityWithTicker(execution: any): execution is { security: { ticker: string, securityId: string } } {
+  return execution && typeof execution.security === 'object' && execution.security !== null && 'ticker' in execution.security && typeof execution.security.ticker === 'string';
 }
 
 export const ExecutionDetailsModal: React.FC<ExecutionDetailsModalProps> = ({
@@ -123,8 +128,8 @@ export const ExecutionDetailsModal: React.FC<ExecutionDetailsModalProps> = ({
                 <div className="flex justify-between">
                   <span className="text-sm font-medium text-slate-600">Security:</span>
                   <div className="text-right">
-                    <div className="text-sm font-medium">{execution.security.ticker}</div>
-                    <div className="text-xs text-slate-500">{execution.security.securityId}</div>
+                    <div className="text-sm font-medium">{hasSecurityWithTicker(execution) ? execution.security.ticker : execution.securityId}</div>
+                    <div className="text-xs text-slate-500">{hasSecurityWithTicker(execution) ? execution.security.securityId : execution.securityId}</div>
                   </div>
                 </div>
 

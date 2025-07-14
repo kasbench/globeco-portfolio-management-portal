@@ -218,11 +218,6 @@ const TradeOrderListTable: React.FC<TradeOrderListTableProps> = ({
                       <TradeOrderActionMenu
                         tradeOrder={order}
                         onAction={onOrderAction}
-                        trigger={
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        }
                       />
                     </td>
                   </tr>
@@ -275,11 +270,6 @@ const TradeOrderListTable: React.FC<TradeOrderListTableProps> = ({
                     <TradeOrderActionMenu
                       tradeOrder={order}
                       onAction={onOrderAction}
-                      trigger={
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      }
                     />
                   </div>
 

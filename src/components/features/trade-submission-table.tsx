@@ -75,8 +75,8 @@ export function TradeSubmissionTable({
             const remainingQuantity = calculateRemainingQuantity(order);
             const submissionQuantity = submission?.quantity || 0;
             const validation = validateSubmissionQuantity(submissionQuantity, remainingQuantity);
-            const hasError = validation.error !== null;
-            const hasWarning = validation.warning !== null;
+            const hasError = Array.isArray(validation.errors) && validation.errors.length > 0;
+            const hasWarning = Array.isArray(validation.warnings) && validation.warnings.length > 0;
 
             return (
               <TableRow key={order.id}>
@@ -84,9 +84,9 @@ export function TradeSubmissionTable({
                 
                 <TableCell>
                   <div>
-                    <div className="font-medium">{order.security.ticker}</div>
+                    <div className="font-medium">{order.security?.ticker ?? order.securityId}</div>
                     <div className="text-sm text-muted-foreground">
-                      {order.security.name}
+                      {order.securityId}
                     </div>
                   </div>
                 </TableCell>
@@ -170,14 +170,18 @@ export function TradeSubmissionTable({
                     {hasError && (
                       <div className="flex items-center gap-1 text-red-600">
                         <AlertTriangle className="h-4 w-4" />
-                        <span className="text-xs">{validation.error}</span>
+                        {Array.isArray(validation.errors) && validation.errors.map((err, idx) => (
+                          <span key={idx} className="text-xs">{err}</span>
+                        ))}
                       </div>
                     )}
                     
                     {!hasError && hasWarning && (
                       <div className="flex items-center gap-1 text-yellow-600">
                         <AlertTriangle className="h-4 w-4" />
-                        <span className="text-xs">{validation.warning}</span>
+                        {Array.isArray(validation.warnings) && validation.warnings.map((warn, idx) => (
+                          <span key={idx} className="text-xs">{warn}</span>
+                        ))}
                       </div>
                     )}
                     

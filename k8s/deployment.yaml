@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: globeco-portfolio-management-portal
+  namespace: globeco
+  labels:
+    app: globeco-portfolio-management-portal
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: globeco-portfolio-management-portal
+  template:
+    metadata:
+      labels:
+        app: globeco-portfolio-management-portal
+    spec:
+      containers:
+        - name: globeco-portfolio-management-portal
+          image: kasbench/globeco-portfolio-management-portal:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3000
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi" 

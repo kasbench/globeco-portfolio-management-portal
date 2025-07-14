@@ -144,14 +144,6 @@ class SecurityService {
   }
 
   /**
-   * Get all securities
-   */
-  async getSecurities(): Promise<SecurityOut[]> {
-    const response = await this.api.get('/api/v1/securities');
-    return response.data;
-  }
-
-  /**
    * Get a specific security by ID with caching
    */
   async getSecurity(securityId: string): Promise<SecurityOut> {

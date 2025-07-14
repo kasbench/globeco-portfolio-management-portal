@@ -75,7 +75,7 @@ const CancelConfirmationDialog: React.FC<CancelConfirmationDialogProps> = ({
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm font-medium">Security:</span>
-              <span className="text-sm">{execution.security.ticker}</span>
+              <span className="text-sm">{hasSecurityWithTicker(execution) ? execution.security.ticker : execution.securityId}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm font-medium">Destination:</span>
@@ -143,6 +143,11 @@ const CancelConfirmationDialog: React.FC<CancelConfirmationDialogProps> = ({
       </DialogContent>
     </Dialog>
   )
+}
+
+// Helper type guard for EnhancedExecutionDTO
+function hasSecurityWithTicker(execution: any): execution is { security: { ticker: string } } {
+  return execution && typeof execution.security === 'object' && execution.security !== null && 'ticker' in execution.security && typeof execution.security.ticker === 'string';
 }
 
 export const ExecutionActionMenu: React.FC<ExecutionActionMenuProps> = ({
@@ -233,7 +238,7 @@ export const ExecutionActionMenu: React.FC<ExecutionActionMenuProps> = ({
               <span>Execution #{execution.id}</span>
             </div>
             <div className="flex items-center gap-1 mt-1">
-              <span className="font-medium">{execution.security.ticker}</span>
+              <span className="font-medium">{hasSecurityWithTicker(execution) ? execution.security.ticker : execution.securityId}</span>
               <span>•</span>
               <span>{execution.tradeType}</span>
               <span>•</span>

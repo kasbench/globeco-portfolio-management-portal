@@ -7,6 +7,8 @@ import { SortableTable, SortableColumn } from '@/components/tables/sortable-tabl
 import { ExecutionActionMenu } from '@/components/features/execution-action-menu'
 import { EnhancedExecutionDTO, ExecutionAction, ExecutionSortField, SortDirection } from '@/types/execution'
 import { formatCurrency, formatNumber, formatDate, formatTime } from '@/lib/utils'
+import { ExecutionDTO } from '@/types/execution'
+import { OrderSortConfig } from '@/types/order'
 
 interface ExecutionListTableProps {
   executions: EnhancedExecutionDTO[]
@@ -29,9 +31,9 @@ const ExecutionStatusBadge: React.FC<{ status: string }> = ({ status }) => {
         return 'default'
       case 'FILLED':
       case 'FULL':
-        return 'success'
+        return 'default' // was 'success'
       case 'PARTIALLY_FILLED':
-        return 'warning'
+        return 'outline' // was 'warning'
       case 'CANCELLED':
       case 'CANCEL':
         return 'destructive'
@@ -106,14 +108,7 @@ export const ExecutionListTable: React.FC<ExecutionListTableProps> = ({
     // Selection checkbox column
     {
       key: 'select',
-      label: (
-        <Checkbox
-          checked={isAllSelected}
-          indeterminate={isPartiallySelected || undefined}
-          onCheckedChange={(checked) => onSelectAll(!!checked)}
-          aria-label="Select all cancellable executions"
-        />
-      ),
+      label: 'Select',
       sortable: false,
       className: 'w-12',
       render: (_, execution) => {
@@ -159,8 +154,8 @@ export const ExecutionListTable: React.FC<ExecutionListTableProps> = ({
       className: 'w-24 font-medium',
       render: (_, execution) => (
         <div>
-          <div className="font-medium">{execution.security.ticker}</div>
-          <div className="text-xs text-slate-500">{execution.security.securityId}</div>
+          <div className="font-medium">{execution.security?.ticker ?? execution.securityId}</div>
+          <div className="text-xs text-slate-500">{execution.security?.securityId ?? execution.securityId}</div>
         </div>
       )
     },
@@ -244,23 +239,40 @@ export const ExecutionListTable: React.FC<ExecutionListTableProps> = ({
       className: 'w-16',
       render: (_, execution) => (
         <ExecutionActionMenu
-          execution={execution}
-          onAction={onExecutionAction}
+          execution={execution as ExecutionDTO}
+          onAction={onExecutionAction as (action: ExecutionAction, execution: ExecutionDTO) => void}
+          disabled={!canCancel(execution)}
         />
       )
     }
   ]
+
+  // Convert sorting to OrderSortConfig[] for SortableTable
+  const orderSortConfig: OrderSortConfig[] = sorting.map((s): OrderSortConfig => ({
+    field: String(s.field),
+    direction: s.direction === 'ASC' ? 'asc' : 'desc'
+  }))
+
+  const handleOrderSortChange = (sort: OrderSortConfig[]) => {
+    // Convert back to ExecutionSortField/SortDirection if needed
+    onSortChange(
+      sort.map((s: OrderSortConfig) => ({
+        field: s.field as ExecutionSortField,
+        direction: s.direction === 'asc' ? 'ASC' : 'DESC'
+      }))
+    )
+  }
 
   return (
     <div className={className}>
       <SortableTable
         columns={columns}
         data={executions}
-        sort={sorting}
-        onSortChange={onSortChange}
+        sort={orderSortConfig}
+        onSortChange={handleOrderSortChange}
         loading={loading}
-        emptyMessage="No executions found"
-        className="rounded-lg border"
+        emptyMessage="No executions found."
+        className={className}
       />
     </div>
   )

@@ -1,5 +1,3 @@
-import { PageInfo, SortInfo } from './order';
-
 // Security DTO (nested in ExecutionDTO when enhanced with external service data)
 export interface SecurityDTO {
   securityId: string;

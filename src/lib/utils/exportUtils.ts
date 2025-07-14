@@ -73,8 +73,8 @@ export function executionsToCSV(executions: ExecutionDTO[], options: ExportOptio
       execution.id.toString(),
       execution.executionStatus,
       execution.tradeType,
-      execution.security.ticker || '',
-      execution.security.securityId || '',
+      hasSecurityWithTicker(execution) && execution.security.ticker ? execution.security.ticker : execution.securityId || '',
+      hasSecurityWithTicker(execution) && execution.security.securityId ? execution.security.securityId : execution.securityId || '',
       execution.destination || '',
       formatNumber(execution.quantity),
       formatNumber(execution.quantityFilled),
@@ -91,9 +91,9 @@ export function executionsToCSV(executions: ExecutionDTO[], options: ExportOptio
       const extendedRow = [
         ...baseRow,
         execution.tradeServiceExecutionId || '',
-        execution.security.name || '',
-        execution.security.securityType || '',
-        execution.security.exchange || ''
+        hasSecurityWithTicker(execution) && execution.security.name ? execution.security.name : execution.securityId || '',
+        hasSecurityWithTicker(execution) && execution.security.securityType ? execution.security.securityType : '',
+        hasSecurityWithTicker(execution) && execution.security.exchange ? execution.security.exchange : ''
       ]
       return extendedRow
     }
@@ -188,4 +188,9 @@ export function getExportSummary(
   }
   
   return `Export all ${totalExecutions} execution${totalExecutions !== 1 ? 's' : ''}`
+} 
+
+// Helper type guard for EnhancedExecutionDTO
+function hasSecurityWithTicker(execution: any): execution is { security: { ticker?: string, securityId?: string, name?: string, securityType?: string, exchange?: string } } {
+  return execution && typeof execution.security === 'object' && execution.security !== null;
 } 
