@@ -1,3 +1,8 @@
+// This module is for server-side/API route use only. Do NOT import in client-side code.
+if (typeof window !== 'undefined') {
+  throw new Error('executionService.ts must not be imported on the client side.');
+}
+
 import axios, { AxiosInstance, AxiosResponse, AxiosError } from 'axios';
 import {
   ExecutionDTO,
@@ -18,15 +23,17 @@ import { securityService } from './securityService';
 /**
  * Execution Service API Client
  * Provides comprehensive access to the GlobeCo Execution Service v1.3.0 API
+ *
+ * NOTE: This module is for server-side/API route use only.
  */
 class ExecutionService {
   private api: AxiosInstance;
   private readonly baseURL: string;
 
   constructor() {
-    this.baseURL = process.env.NODE_ENV === 'production' 
-      ? 'http://globeco-execution-service:8084'
-      : 'http://localhost:8084';
+    const EXECUTION_SERVICE_HOST = process.env.EXECUTION_SERVICE_HOST || 'globeco-execution-service.globeco';
+    const EXECUTION_SERVICE_PORT = process.env.EXECUTION_SERVICE_PORT || '8084';
+    this.baseURL = `http://${EXECUTION_SERVICE_HOST}:${EXECUTION_SERVICE_PORT}`;
 
     this.api = axios.create({
       baseURL: this.baseURL,

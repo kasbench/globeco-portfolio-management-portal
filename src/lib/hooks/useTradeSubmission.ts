@@ -1,11 +1,11 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { 
   TradeOrderEnhancedResponseDTO, 
   TradeOrderSubmissionData, 
   TradeOrderSubmission,
   BatchSubmitResponseDTO 
 } from '@/types/trade';
-import { tradeService } from '@/lib/api/tradeService';
+// import { tradeService } from '@/lib/api/tradeService';
 import { 
   createSubmissionData, 
   validateBatchSubmissionData, 
@@ -130,9 +130,9 @@ export function useTradeSubmission(
   }, [submittableOrders, defaultDestinationId, submissions]);
 
   // Initialize on mount or when orders change
-  useMemo(() => {
+  useEffect(() => {
     initializeSubmissions();
-  }, [submittableOrders]);
+  }, [submittableOrders, initializeSubmissions]);
 
   const setSubmissionQuantity = useCallback((tradeOrderId: number, quantity: number) => {
     setSubmissions(prev => ({
@@ -238,9 +238,14 @@ export function useTradeSubmission(
         destinationId: data.destinationId
       }));
       
-      const response = await tradeService.submitTradeOrdersBatch({
-        submissions: apiSubmissions
+      // POST to /api/trades/batch if available, else fallback to /api/trades
+      const res = await fetch('/api/trades', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(apiSubmissions.length === 1 ? apiSubmissions[0] : apiSubmissions)
       });
+      if (!res.ok) throw new Error('Failed to submit trade orders');
+      const response = await res.json();
       
       // Reset submissions on success (check both field names for compatibility)
       const successCount = response.successful || response.successCount || 0;

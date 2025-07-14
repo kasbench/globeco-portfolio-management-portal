@@ -146,7 +146,7 @@ export const formatDuration = (seconds: number): string => {
   return parts.join(' ') || '0 seconds'
 }
 
-export default {
+const formatters = {
   formatCurrency,
   formatCurrencyPrecise,
   formatNumber,
@@ -159,4 +159,6 @@ export default {
   formatQuantity,
   formatBasisPoints,
   formatDuration,
-} 
+}
+
+export default formatters 

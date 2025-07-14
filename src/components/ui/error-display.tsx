@@ -761,7 +761,7 @@ export function ErrorDisplayContainer({
       errorService.off('cleanupCompleted', handleCleanup)
       errorService.off('allErrorsCleared', handleCleanup)
     }
-  }, [entityId, level, showMetrics, maxDisplayedErrors])
+  }, [entityId, level, showMetrics, maxDisplayedErrors, errorService])
 
   const handleRetryError = async (errorId: string) => {
     try {

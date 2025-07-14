@@ -83,7 +83,7 @@ export default function ModelForm({ model, isOpen, onClose, onSubmit, isLoading 
         })
       }
     }
-  }, [model?.model_id, isOpen]) // Only depend on model ID and dialog state
+  }, [form, getPortfolioNames, model, isOpen]) // Only depend on model ID and dialog state
 
   const { fields: positionFields, append: addPosition, remove: removePosition } = useFieldArray({
     control: form.control,

@@ -16,7 +16,9 @@ const config = {
   // Test file patterns
   testMatch: [
     '<rootDir>/src/**/__tests__/**/*.{js,jsx,ts,tsx}',
-    '<rootDir>/src/**/*.{test,spec}.{js,jsx,ts,tsx}'
+    '<rootDir>/src/**/*.{test,spec}.{js,jsx,ts,tsx}',
+    '<rootDir>/tests/**/*.{js,jsx,ts,tsx}',
+    '<rootDir>/tests/**/*.{test,spec}.{js,jsx,ts,tsx}'
   ],
   
   // Module name mapping for absolute imports
@@ -86,5 +88,7 @@ const config = {
   errorOnDeprecated: true,
 }
 
+// Add note for plain Jest config for tests/ directory
+// See jest.plain.config.js for non-Next.js tests in tests/
 // createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async
 module.exports = createJestConfig(config) 

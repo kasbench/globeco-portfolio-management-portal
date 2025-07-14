@@ -630,7 +630,7 @@ export function useBatchOperations(
       setCancelRequested(false)
       setProgress(null)
     }
-  }, [rebalances, selectionState, mergedOptions, queryClient, updateProgress])
+  }, [rebalances, selectionState, mergedOptions, queryClient, updateProgress, cancelRequested])
 
   const batchDelete = useCallback(async (
     operationOptions?: Partial<BatchOperationOptions>

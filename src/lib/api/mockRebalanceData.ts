@@ -140,10 +140,11 @@ export const getMockRebalancePortfolioPositions = async (
 }
 
 // Default export for easy importing
-export default {
+const mockRebalanceData = {
   generateMockRebalances,
   getMockRebalancesPage,
   getMockRebalance,
   getMockRebalancePortfolios,
   getMockRebalancePortfolioPositions,
-} 
+}
+export default mockRebalanceData; 

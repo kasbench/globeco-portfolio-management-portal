@@ -49,8 +49,10 @@ export function useBlotters(): UseBlottersResult {
         }
       }
 
-      console.log('Fetching blotters from Trade Service API')
-      const data = await tradeService.getBlotters()
+      console.log('Fetching blotters from /api/blotters API route')
+      const res = await fetch('/api/blotters')
+      if (!res.ok) throw new Error('Failed to fetch blotters')
+      const data = await res.json()
       
       // Update cache
       blotterCache = {

@@ -3,7 +3,7 @@
 
 'use client'
 
-import { useCallback, useRef, useState, useEffect } from 'react'
+import { useCallback, useRef, useState, useEffect, useMemo } from 'react'
 import { toast } from 'sonner'
 
 export interface DragItem {
@@ -74,7 +74,7 @@ export function useDragAndDrop({
   items = [],
   containerId = 'default'
 }: UseDragDropProps = {}): UseDragDropReturn {
-  const mergedConfig = { ...DEFAULT_CONFIG, ...config }
+  const mergedConfig = useMemo(() => ({ ...DEFAULT_CONFIG, ...config }), [config])
   
   // State
   const [isDragging, setIsDragging] = useState(false)

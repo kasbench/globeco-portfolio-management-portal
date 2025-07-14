@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
-import orderServiceApi from '@/lib/api/orderService'
 import {
   OrderWithDetailsDTO,
   OrderPageResponseDTO,
@@ -186,7 +185,16 @@ export function useOrders(options: UseOrdersOptions = {}): UseOrdersReturn {
         }
       })
 
-      const response: OrderPageResponseDTO = await orderServiceApi.listOrders(params)
+      // Build query string
+      const query = new URLSearchParams()
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          query.set(key, String(value))
+        }
+      })
+      const res = await fetch(`/api/orders?${query.toString()}`)
+      if (!res.ok) throw new Error('Failed to fetch orders')
+      const response: OrderPageResponseDTO = await res.json()
       return response.content
     },
     getNextPageParam: (lastPage, pages) => {

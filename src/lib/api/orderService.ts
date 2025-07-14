@@ -1,3 +1,8 @@
+// This module is for server-side/API route use only. Do NOT import in client-side code.
+if (typeof window !== 'undefined') {
+  throw new Error('orderService.ts must not be imported on the client side.');
+}
+
 import axios, { AxiosResponse, AxiosError } from 'axios'
 import { 
   OrderPostDTO, 
@@ -31,29 +36,29 @@ import {
   cleanupAfterSubmission 
 } from '@/lib/utils/rebalanceTransform'
 
-// Order Service configuration
-const ORDER_SERVICE_HOST = process.env.NEXT_PUBLIC_ORDER_SERVICE_HOST || 'localhost'
-const ORDER_SERVICE_PORT = process.env.NEXT_PUBLIC_ORDER_SERVICE_PORT || '8081'
+// Order Service configuration (server-side only)
+const ORDER_SERVICE_HOST = process.env.ORDER_SERVICE_HOST || 'globeco-order-service'
+const ORDER_SERVICE_PORT = process.env.ORDER_SERVICE_PORT || '8081'
 const BASE_URL = `http://${ORDER_SERVICE_HOST}:${ORDER_SERVICE_PORT}`
 
-// Configuration with environment variable overrides
+// Configuration with environment variable overrides (server-side only)
 export const getOrderServiceConfig = (): OrderMappingConfig & { 
   timeout: number
   retryConfig: RetryConfig 
 } => ({
-  defaultBlotterId: parseInt(process.env.NEXT_PUBLIC_ORDER_DEFAULT_BLOTTER_ID || '1', 10),
-  defaultStatusId: parseInt(process.env.NEXT_PUBLIC_ORDER_DEFAULT_STATUS_ID || '1', 10),
+  defaultBlotterId: parseInt(process.env.ORDER_DEFAULT_BLOTTER_ID || '1', 10),
+  defaultStatusId: parseInt(process.env.ORDER_DEFAULT_STATUS_ID || '1', 10),
   defaultVersion: 1,
-  batchSize: parseInt(process.env.NEXT_PUBLIC_ORDER_BATCH_SIZE || '1000', 10),
+  batchSize: parseInt(process.env.ORDER_BATCH_SIZE || '1000', 10),
   orderTypeMapping: {
-    BUY: parseInt(process.env.NEXT_PUBLIC_ORDER_BUY_TYPE_ID || '1', 10),
-    SELL: parseInt(process.env.NEXT_PUBLIC_ORDER_SELL_TYPE_ID || '2', 10),
+    BUY: parseInt(process.env.ORDER_BUY_TYPE_ID || '1', 10),
+    SELL: parseInt(process.env.ORDER_SELL_TYPE_ID || '2', 10),
   },
-  timeout: parseInt(process.env.NEXT_PUBLIC_ORDER_SUBMISSION_TIMEOUT || '30000', 10),
+  timeout: parseInt(process.env.ORDER_SUBMISSION_TIMEOUT || '30000', 10),
   retryConfig: {
-    maxRetries: parseInt(process.env.NEXT_PUBLIC_ORDER_RETRY_MAX_ATTEMPTS || '3', 10),
-    retryDelay: parseInt(process.env.NEXT_PUBLIC_ORDER_RETRY_DELAY || '1000', 10),
-    backoffMultiplier: parseInt(process.env.NEXT_PUBLIC_ORDER_RETRY_BACKOFF_MULTIPLIER || '2', 10),
+    maxRetries: parseInt(process.env.ORDER_RETRY_MAX_ATTEMPTS || '3', 10),
+    retryDelay: parseInt(process.env.ORDER_RETRY_DELAY || '1000', 10),
+    backoffMultiplier: parseInt(process.env.ORDER_RETRY_BACKOFF_MULTIPLIER || '2', 10),
     retryableErrorCodes: [408, 429, 500, 502, 503, 504] // Timeout, rate limit, server errors
   }
 })

@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
 import { useMemo } from 'react'
-import { portfolioApi } from '@/lib/api/portfolioService'
 import { Portfolio, PortfolioMap, PortfolioOption } from '@/types/portfolio'
 import { orderGenerationApi } from '@/lib/api/orderGenerationService'
 
@@ -15,7 +14,11 @@ export function usePortfolios() {
     refetch
   } = useQuery({
     queryKey: ['portfolios'],
-    queryFn: portfolioApi.getPortfolios,
+    queryFn: async () => {
+      const res = await fetch('/api/portfolios')
+      if (!res.ok) throw new Error('Failed to fetch portfolios')
+      return res.json()
+    },
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
   })
@@ -23,7 +26,7 @@ export function usePortfolios() {
   // Create portfolio mapping for efficient lookups
   const portfolioMap: PortfolioMap = useMemo(() => {
     const map: PortfolioMap = {}
-    portfolios.forEach(portfolio => {
+    portfolios.forEach((portfolio: Portfolio) => {
       map[portfolio.id] = portfolio.name
     })
     return map
@@ -31,7 +34,7 @@ export function usePortfolios() {
 
   // Create portfolio options for form selects
   const portfolioOptions: PortfolioOption[] = useMemo(() => {
-    return portfolios.map(portfolio => ({
+    return portfolios.map((portfolio: Portfolio) => ({
       value: portfolio.id,
       label: portfolio.name
     }))
@@ -44,7 +47,7 @@ export function usePortfolios() {
 
   // Utility function to get portfolio ID by name
   const getPortfolioId = (portfolioName: string): string | null => {
-    const portfolio = portfolios.find(p => p.name === portfolioName)
+    const portfolio = portfolios.find((p: Portfolio) => p.name === portfolioName)
     return portfolio?.id || null
   }
 
@@ -62,7 +65,7 @@ export function usePortfolios() {
 
   // Utility function to validate if a portfolio name exists
   const isValidPortfolioName = (portfolioName: string): boolean => {
-    return portfolios.some(p => p.name === portfolioName)
+    return portfolios.some((p: Portfolio) => p.name === portfolioName)
   }
 
   // Utility function to validate if a portfolio ID exists
@@ -96,7 +99,11 @@ export function usePortfolios() {
 export function usePortfolio(portfolioId: string) {
   const { data: portfolio, isLoading, isError, error } = useQuery({
     queryKey: ['portfolio', portfolioId],
-    queryFn: () => portfolioApi.getPortfolio(portfolioId),
+    queryFn: async () => {
+      const res = await fetch(`/api/portfolios/${portfolioId}`)
+      if (!res.ok) throw new Error('Failed to fetch portfolio')
+      return res.json()
+    },
     enabled: !!portfolioId,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
@@ -112,6 +119,7 @@ export function usePortfolio(portfolioId: string) {
 
 // Hook for loading portfolios for a specific rebalance
 export function useRebalancePortfolios(rebalanceId: string, enabled: boolean = true) {
+  // This still uses orderGenerationApi, which should be migrated in a later step
   return useQuery({
     queryKey: ['rebalance-portfolios', rebalanceId],
     queryFn: () => orderGenerationApi.getRebalancePortfolios(rebalanceId),

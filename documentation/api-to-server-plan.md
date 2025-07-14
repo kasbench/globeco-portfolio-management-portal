@@ -1,5 +1,20 @@
 # Plan: Migrate Client-Side API Calls to Server-Side Calls
 
+## Migration Progress Checklist
+
+### ✅ Resources Migrated to Server-Side API Routes
+- [x] Orders
+- [x] Portfolios
+- [x] Models
+- [x] Trades
+- [x] Executions
+- [x] Reference Data (Statuses, Order Types, Blotters, Destinations, etc.)
+
+### ⬜️ Resources Remaining to Migrate
+- [ ] (None – all major resources have been migrated)
+
+---
+
 ## Overview
 This plan outlines the steps required to move all API calls from the client (browser) to the server (Next.js server-side or API routes) for the GlobeCo Portfolio Management Portal. This will:
 - Eliminate CORS/network issues
@@ -58,29 +73,35 @@ Test files and mocks are excluded from this migration plan. All relevant usages 
 ---
 
 ## 2. **Refactor API Utilities for Server-Side Use**
-- [ ] Update API utility modules to support server-side execution (remove reliance on browser-only features, ensure they use internal service DNS names)
-- [ ] Move all environment variable usage to server-side (e.g., use `process.env` in API routes, not in browser code)
-- [ ] Ensure all axios/HTTP clients are only instantiated on the server
+- [x] Update API utility modules to support server-side execution (remove reliance on browser-only features, ensure they use internal service DNS names)
+- [x] Move all environment variable usage to server-side (e.g., use `process.env` in API routes, not in browser code)
+- [x] Ensure all axios/HTTP clients are only instantiated on the server
 
 ---
 
 ## 3. **Create Next.js API Routes or Server Functions**
-- [ ] For each backend service, create a corresponding API route in `src/pages/api/` (e.g., `/api/orders`, `/api/models`, etc.)
-- [ ] Move all business logic for data fetching/mutation into these API routes
-- [ ] Update API routes to call internal services using service DNS names (e.g., `http://globeco-order-service.globeco:8081`)
+- [x] For orders, create corresponding API routes in `src/app/api/orders` and `src/app/api/orders/[id]` (**COMPLETE & VERIFIED**)
+- [x] For portfolios, create corresponding API routes in `src/app/api/portfolios` and `src/app/api/portfolios/[id]` (**COMPLETE & VERIFIED**)
+- [x] For each remaining backend service, create a corresponding API route (e.g., `/api/models`, `/api/executions`, `/api/trades`, reference data like `/api/statuses`)
+  - [x] **Trades: Complete**
+- [x] Move all business logic for order data fetching/mutation into these API routes
+- [x] Update order API routes to call internal services using service DNS names (e.g., `http://globeco-order-service.globeco:8081`)
 
 ---
 
 ## 4. **Refactor React Hooks and Components**
-- [ ] Update all data-fetching hooks to call the new Next.js API routes instead of calling backend services directly
-- [ ] Refactor mutation hooks (create, update, delete, submit, etc.) to use API routes
-- [ ] Ensure all React components/pages use the updated hooks
+- [x] Update all order-related data-fetching hooks to call the new Next.js API routes instead of calling backend services directly
+- [x] Refactor order-related mutation hooks (create, update, delete, submit, etc.) to use API routes
+- [x] Ensure all order-related React components/pages use the updated hooks
+- [x] Update all portfolio-related hooks and components to use the new API routes (**COMPLETE & VERIFIED**)
+- [x] Repeat for other resources (models, executions, trades, etc.)
+  - [x] **Models: Complete**
 
 ---
 
 ## 5. **Update Environment Variables and Configuration**
-- [ ] Remove all `NEXT_PUBLIC_*` variables for backend service addresses
-- [ ] Set internal service addresses in server-side `.env` variables only
+- [x] Remove all `NEXT_PUBLIC_*` variables for backend service addresses
+- [x] Set internal service addresses in server-side `.env` variables only
 - [ ] Update documentation to reflect new configuration
 
 ---
@@ -107,4 +128,12 @@ Test files and mocks are excluded from this migration plan. All relevant usages 
 
 ---
 
-**Progress can be tracked by checking off each item above as it is completed.**
+### **Next Steps**
+1. Implement API routes for remaining resources (models, executions, trades, reference data).
+   - **Trades: Complete**
+   - **Models: Complete**
+   - **Next:** Proceed to executions or reference data as the next migration target.
+2. Refactor corresponding hooks and components to use these new API routes.
+   - **Models: Complete**
+3. Test all user flows and validate that all API calls are routed through the Next.js server.
+4. Update documentation and clean up any unused code.

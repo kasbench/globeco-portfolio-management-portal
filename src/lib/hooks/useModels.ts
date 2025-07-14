@@ -1,6 +1,5 @@
 import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState, useMemo } from 'react'
-import { orderGenerationApi } from '@/lib/api/orderGenerationService'
 import { 
   Model, 
   ModelCreateRequest, 
@@ -44,7 +43,15 @@ export function useModels() {
         limit: MODELS_PER_PAGE,
         sort_by: sortString
       }
-      return orderGenerationApi.getModels(params)
+      const query = new URLSearchParams()
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          query.set(key, String(value))
+        }
+      })
+      const res = await fetch(`/api/models?${query.toString()}`)
+      if (!res.ok) throw new Error('Failed to fetch models')
+      return res.json()
     },
     getNextPageParam: (lastPage, pages) => {
       // If the last page has fewer items than the limit, we've reached the end
@@ -63,7 +70,15 @@ export function useModels() {
 
   // Create model mutation
   const createModelMutation = useMutation({
-    mutationFn: (model: ModelCreateRequest) => orderGenerationApi.createModel(model),
+    mutationFn: async (model: ModelCreateRequest) => {
+      const res = await fetch('/api/models', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(model),
+      })
+      if (!res.ok) throw new Error('Failed to create model')
+      return res.json()
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['models'] })
     },
@@ -71,16 +86,30 @@ export function useModels() {
 
   // Update model mutation
   const updateModelMutation = useMutation({
-    mutationFn: ({ modelId, model }: { modelId: string, model: ModelUpdateRequest }) => 
-      orderGenerationApi.updateModel(modelId, model),
+    mutationFn: async ({ modelId, model }: { modelId: string, model: ModelUpdateRequest }) => {
+      const res = await fetch(`/api/models/${modelId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(model),
+      })
+      if (!res.ok) throw new Error('Failed to update model')
+      return res.json()
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['models'] })
     },
   })
 
-  // Rebalance model mutation
+  // Rebalance model mutation (now uses /api/models/[id]/rebalance API route)
   const rebalanceModelMutation = useMutation({
-    mutationFn: (modelId: string) => orderGenerationApi.rebalanceModel(modelId),
+    mutationFn: async (modelId: string) => {
+      const res = await fetch(`/api/models/${modelId}/rebalance`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!res.ok) throw new Error('Failed to rebalance model');
+      return res.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['models'] })
     },
@@ -144,23 +173,41 @@ export function useModel(modelId: string) {
   // Get single model
   const { data: model, isLoading, isError, error } = useQuery({
     queryKey: ['model', modelId],
-    queryFn: () => orderGenerationApi.getModel(modelId),
+    queryFn: async () => {
+      const res = await fetch(`/api/models/${modelId}`)
+      if (!res.ok) throw new Error('Failed to fetch model')
+      return res.json()
+    },
     enabled: !!modelId,
   })
 
   // Update model mutation
   const updateModelMutation = useMutation({
-    mutationFn: (modelData: ModelUpdateRequest) => 
-      orderGenerationApi.updateModel(modelId, modelData),
+    mutationFn: async (modelData: ModelUpdateRequest) => {
+      const res = await fetch(`/api/models/${modelId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(modelData),
+      })
+      if (!res.ok) throw new Error('Failed to update model')
+      return res.json()
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['model', modelId] })
       queryClient.invalidateQueries({ queryKey: ['models'] })
     },
   })
 
-  // Rebalance model mutation
+  // Rebalance model mutation (now uses /api/models/[id]/rebalance API route)
   const rebalanceModelMutation = useMutation({
-    mutationFn: () => orderGenerationApi.rebalanceModel(modelId),
+    mutationFn: async () => {
+      const res = await fetch(`/api/models/${modelId}/rebalance`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!res.ok) throw new Error('Failed to rebalance model');
+      return res.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['model', modelId] })
       queryClient.invalidateQueries({ queryKey: ['models'] })

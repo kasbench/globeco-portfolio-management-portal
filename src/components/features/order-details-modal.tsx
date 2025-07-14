@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { format } from 'date-fns'
 import { 
   X, 
@@ -34,7 +34,6 @@ import {
   OrderTypeDTO,
   BlotterDTO 
 } from '@/types/order'
-import orderServiceApi from '@/lib/api/orderService'
 
 interface OrderDetailsModalProps {
   orderId: number | null
@@ -64,34 +63,15 @@ export function OrderDetailsModal({
   const [blotters, setBlotters] = useState<BlotterDTO[]>([])
 
   // Load order details when modal opens
-  useEffect(() => {
-    if (open && orderId) {
-      loadOrderDetails()
-      loadReferenceData()
-    }
-  }, [open, orderId])
-
-  // Reset state when modal closes
-  useEffect(() => {
-    if (!open) {
-      setOrder(null)
-      setEditedOrder({})
-      setMode(initialMode)
-      setError(null)
-    }
-  }, [open, initialMode])
-
-  const loadOrderDetails = async () => {
+  const loadOrderDetails = useCallback(async () => {
     if (!orderId) return
-
     setLoading(true)
     setError(null)
-
     try {
-      const orderData = await orderServiceApi.getOrderById(orderId)
+      const res = await fetch(`/api/orders/${orderId}`)
+      if (!res.ok) throw new Error('Failed to load order details')
+      const orderData = await res.json()
       setOrder(orderData)
-      
-      // Initialize edit form with current values
       setEditedOrder({
         id: orderData.id,
         blotterId: orderData.blotter.id,
@@ -111,23 +91,39 @@ export function OrderDetailsModal({
     } finally {
       setLoading(false)
     }
-  }
+  }, [orderId]);
 
-  const loadReferenceData = async () => {
+  const loadReferenceData = useCallback(async () => {
     try {
       const [statusesData, orderTypesData, blottersData] = await Promise.all([
-        orderServiceApi.listStatuses(),
-        orderServiceApi.listOrderTypes(),
-        orderServiceApi.listBlotters()
+        fetch('/api/statuses').then(res => res.json()),
+        fetch('/api/order-types').then(res => res.json()),
+        fetch('/api/blotters').then(res => res.json())
       ])
-      
       setStatuses(statusesData)
       setOrderTypes(orderTypesData)
       setBlotters(blottersData)
     } catch (err) {
       console.error('Failed to load reference data:', err)
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    if (open && orderId) {
+      loadOrderDetails()
+      loadReferenceData()
+    }
+  }, [open, orderId, loadOrderDetails, loadReferenceData]);
+
+  // Reset state when modal closes
+  useEffect(() => {
+    if (!open) {
+      setOrder(null)
+      setEditedOrder({})
+      setMode(initialMode)
+      setError(null)
+    }
+  }, [open, initialMode])
 
   const handleSave = async () => {
     if (!order || !editedOrder.id) return
@@ -136,7 +132,13 @@ export function OrderDetailsModal({
     setError(null)
 
     try {
-      const updatedOrder = await orderServiceApi.updateOrder(order.id, editedOrder as OrderDTO)
+      const res = await fetch(`/api/orders/${order.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editedOrder)
+      })
+      if (!res.ok) throw new Error('Failed to update order')
+      const updatedOrder = await res.json()
       setOrder(updatedOrder)
       setMode('view')
       

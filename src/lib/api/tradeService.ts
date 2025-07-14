@@ -1,3 +1,8 @@
+// This module is for server-side/API route use only. Do NOT import in client-side code.
+if (typeof window !== 'undefined') {
+  throw new Error('tradeService.ts must not be imported on the client side.');
+}
+
 import axios, { AxiosInstance, AxiosResponse, AxiosError } from 'axios';
 import {
   TradeOrderResponseDTO,
@@ -28,15 +33,17 @@ import {
 /**
  * Trade Service API Client
  * Provides comprehensive access to the GlobeCo Trade Service v2 API
+ *
+ * NOTE: This module is for server-side/API route use only.
  */
 class TradeService {
   private api: AxiosInstance;
   private readonly baseURL: string;
 
   constructor() {
-    this.baseURL = process.env.NODE_ENV === 'production' 
-      ? 'http://globeco-trade-service:8082'
-      : 'http://localhost:8082';
+    const TRADE_SERVICE_HOST = process.env.TRADE_SERVICE_HOST || 'globeco-trade-service.globeco';
+    const TRADE_SERVICE_PORT = process.env.TRADE_SERVICE_PORT || '8082';
+    this.baseURL = `http://${TRADE_SERVICE_HOST}:${TRADE_SERVICE_PORT}`;
 
     this.api = axios.create({
       baseURL: this.baseURL,

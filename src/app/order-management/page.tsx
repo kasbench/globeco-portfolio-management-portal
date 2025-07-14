@@ -31,7 +31,7 @@ import { OrderActionMenu } from '@/components/ui/order-action-menu'
 import { OrderDetailsModal } from '@/components/features/order-details-modal'
 import { useOrders } from '@/lib/hooks/useOrders'
 import { OrderWithDetailsDTO, OrderFilter } from '@/types/order'
-import orderServiceApi from '@/lib/api/orderService'
+// Remove: import orderServiceApi from '@/lib/api/orderService'
 
 function OrderManagementContent() {
   const {
@@ -316,13 +316,18 @@ function OrderManagementContent() {
     }))
 
     try {
-      // Get the order details first to get the version
-      const orderDetails = await orderServiceApi.getOrderById(orderId)
-      await orderServiceApi.deleteOrder(orderId, orderDetails.version)
+      // Fetch order details to get the version
+      const res = await fetch(`/api/orders/${orderId}`)
+      if (!res.ok) throw new Error('Failed to fetch order details')
+      const orderDetails = await res.json()
+      const version = orderDetails.version
+      // Delete order
+      const delRes = await fetch(`/api/orders/${orderId}?version=${version}`, { method: 'DELETE' })
+      if (!delRes.ok) throw new Error('Failed to delete order')
       toast.success(`Order #${orderId} deleted successfully`)
       await refresh()
       setDeleteConfirmation({ orderId: null, open: false })
-    } catch (error) {
+    } catch (error: any) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to delete order'
       toast.error(`Failed to delete order: ${errorMessage}`)
     } finally {
@@ -340,10 +345,11 @@ function OrderManagementContent() {
     }))
 
     try {
-      await orderServiceApi.submitOrder(order.id)
+      const res = await fetch(`/api/orders/${order.id}/submit`, { method: 'POST' })
+      if (!res.ok) throw new Error('Failed to submit order')
       toast.success(`Order #${order.id} submitted successfully`)
       await refresh()
-    } catch (error) {
+    } catch (error: any) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to submit order'
       toast.error(`Failed to submit order: ${errorMessage}`)
     } finally {
@@ -354,9 +360,9 @@ function OrderManagementContent() {
     }
   }
 
-  const handleOrderUpdated = (updatedOrder: OrderWithDetailsDTO) => {
+  const handleOrderUpdated = async (updatedOrder: OrderWithDetailsDTO) => {
     toast.success(`Order #${updatedOrder.id} updated successfully`)
-    refresh()
+    await refresh()
   }
 
   const handleBatchSubmit = async () => {
@@ -371,23 +377,16 @@ function OrderManagementContent() {
     setActionLoading(prev => ({ ...prev, batch: true }))
 
     try {
-      const result = await orderServiceApi.submitOrdersBatch(selectedOrderIds)
-      
-      if (result.successful === selectedOrderIds.length) {
-        toast.success(`Successfully submitted ${result.successful} orders`)
-      } else if (result.successful > 0) {
-        toast.warning(
-          `Submitted ${result.successful} orders successfully, ${result.failed} failed`
-        )
-      } else {
-        toast.error(`Failed to submit all ${result.failed} orders`)
-      }
-      
-      clearSelection()
+      const res = await fetch('/api/orders/batch/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderIds: selectedOrderIds })
+      })
+      if (!res.ok) throw new Error('Failed to submit batch')
+      toast.success('Batch submitted successfully')
       await refresh()
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to submit batch'
-      toast.error(`Batch submission failed: ${errorMessage}`)
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to submit batch')
     } finally {
       setActionLoading(prev => ({ ...prev, batch: false }))
     }

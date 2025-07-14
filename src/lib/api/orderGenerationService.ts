@@ -1,3 +1,8 @@
+// This module is for server-side/API route use only. Do NOT import in client-side code.
+if (typeof window !== 'undefined') {
+  throw new Error('orderGenerationService.ts must not be imported on the client side.');
+}
+
 import axios, { AxiosResponse } from 'axios'
 import { 
   Model, 
@@ -15,10 +20,9 @@ import {
   RebalancesQueryParams
 } from '@/types/rebalance'
 
-// Order Generation Service configuration
-// Use localhost for development since Docker service names are not accessible from browser
-const ORDER_GENERATION_SERVICE_HOST = process.env.NEXT_PUBLIC_ORDER_GENERATION_SERVICE_HOST || 'localhost'
-const ORDER_GENERATION_SERVICE_PORT = process.env.NEXT_PUBLIC_ORDER_GENERATION_SERVICE_PORT || '8088'
+// Order Generation Service configuration (server-side only)
+const ORDER_GENERATION_SERVICE_HOST = process.env.ORDER_GENERATION_SERVICE_HOST || 'globeco-order-generation-service.globeco'
+const ORDER_GENERATION_SERVICE_PORT = process.env.ORDER_GENERATION_SERVICE_PORT || '8088'
 const BASE_URL = `http://${ORDER_GENERATION_SERVICE_HOST}:${ORDER_GENERATION_SERVICE_PORT}`
 
 // Create axios instance with base configuration

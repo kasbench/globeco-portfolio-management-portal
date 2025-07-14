@@ -232,19 +232,8 @@ export function VirtualScrollTable<T>({
     })
   }, [data, sortColumn, sortDirection, columns])
 
-  // Memoized row data
-  const rowData = useMemo(() => ({
-    items: sortedData,
-    columns,
-    onRowClick,
-    onRowSelect: handleRowSelect,
-    selectedItems: selectedIndices,
-    selectable,
-    multiSelect,
-  }), [sortedData, columns, onRowClick, selectedIndices, selectable, multiSelect])
-
   // Row selection handler
-  function handleRowSelect(index: number, selected: boolean) {
+  const handleRowSelect = useCallback((index: number, selected: boolean) => {
     setSelectedIndices(prev => {
       const newSelected = new Set(prev)
       
@@ -264,7 +253,18 @@ export function VirtualScrollTable<T>({
       
       return newSelected
     })
-  }
+  }, [multiSelect, onRowSelect, sortedData]);
+
+  // Memoized row data
+  const rowData = useMemo(() => ({
+    items: sortedData,
+    columns,
+    onRowClick,
+    onRowSelect: handleRowSelect,
+    selectedItems: selectedIndices,
+    selectable,
+    multiSelect,
+  }), [sortedData, columns, onRowClick, handleRowSelect, selectedIndices, selectable, multiSelect]);
 
   // Select all handler
   const handleSelectAll = useCallback((selected: boolean) => {

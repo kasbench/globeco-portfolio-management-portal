@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { TradeService } from '@/lib/api/tradeService'
+// import { TradeService } from '@/lib/api/tradeService'
 import { 
   TradeOrderPageResponseDTO, 
   TradeOrderFilters, 
@@ -72,7 +72,7 @@ export const useTradeOrders = (options: UseTradeOrdersOptions = {}): UseTradeOrd
   const [sorting, setSorting] = useState(initialSort)
 
   // Trade service instance
-  const tradeService = useMemo(() => new TradeService(), [])
+  // const tradeService = useMemo(() => new TradeService(), [])
 
   // Fetch function
   const fetchTradeOrders = useCallback(async (showLoader = true) => {
@@ -87,14 +87,16 @@ export const useTradeOrders = (options: UseTradeOrdersOptions = {}): UseTradeOrd
       // Build sort parameter with correct format (descending fields prefixed with '-')
       const sortField = sorting.direction === 'DESC' ? `-${sorting.field}` : sorting.field
       
-      const response = await tradeService.getTradeOrders({
-        limit: pagination.limit,
-        offset: pagination.offset,
+      const params = new URLSearchParams({
+        limit: pagination.limit.toString(),
+        offset: pagination.offset.toString(),
         sort: sortField,
-        ...filters
-      })
-
-      setData(response)
+        ...Object.fromEntries(Object.entries(filters).filter(([_, v]) => v !== undefined && v !== null && v !== ''))
+      });
+      const res = await fetch(`/api/trades?${params.toString()}`);
+      if (!res.ok) throw new Error('Failed to fetch trade orders');
+      const response = await res.json();
+      setData(response);
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Failed to fetch trade orders')
       setError(error)
@@ -103,7 +105,7 @@ export const useTradeOrders = (options: UseTradeOrdersOptions = {}): UseTradeOrd
       setIsLoading(false)
       setIsRefetching(false)
     }
-  }, [tradeService, pagination, sorting, filters])
+  }, [pagination, sorting, filters])
 
   // Initial data fetch
   useEffect(() => {

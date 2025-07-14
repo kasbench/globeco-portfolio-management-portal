@@ -185,14 +185,6 @@ export function useKeyboardShortcuts({
   const shortcutsRef = useRef<Map<string, KeyboardShortcut>>(new Map())
   const isHelpVisibleRef = useRef(false)
 
-  // Initialize shortcuts
-  useEffect(() => {
-    shortcuts.forEach(shortcut => {
-      const key = createShortcutKey(shortcut)
-      shortcutsRef.current.set(key, shortcut)
-    })
-  }, [shortcuts])
-
   // Create unique key for shortcut
   const createShortcutKey = useCallback((shortcut: KeyboardShortcut): string => {
     const modifiers = []
@@ -200,9 +192,60 @@ export function useKeyboardShortcuts({
     if (shortcut.shiftKey) modifiers.push('shift')
     if (shortcut.altKey) modifiers.push('alt')
     if (shortcut.metaKey) modifiers.push('meta')
-    
     return `${modifiers.join('+')}_${shortcut.key.toLowerCase()}`
   }, [])
+
+  // Help system
+  const showHelp = useCallback(() => {
+    isHelpVisibleRef.current = true
+    
+    // Create help modal content
+    const categories = shortcuts.reduce((acc, shortcut) => {
+      if (!acc[shortcut.category]) {
+        acc[shortcut.category] = []
+      }
+      acc[shortcut.category].push(shortcut)
+      return acc
+    }, {} as Record<string, KeyboardShortcut[]>)
+
+    const helpContent = Object.entries(categories)
+      .map(([category, shortcuts]) => {
+        const shortcutList = shortcuts
+          .filter(s => s.enabled !== false)
+          .map(s => {
+            const modifiers = []
+            if (s.ctrlKey) modifiers.push('Ctrl')
+            if (s.shiftKey) modifiers.push('Shift')
+            if (s.altKey) modifiers.push('Alt')
+            if (s.metaKey) modifiers.push('Cmd')
+            
+            const keyCombo = modifiers.length > 0 
+              ? `${modifiers.join('+')}+${s.key}`
+              : s.key
+
+            return `${keyCombo}: ${s.description}`
+          })
+          .join('\n')
+        
+        return `${category}:\n${shortcutList}`
+      })
+      .join('\n\n')
+
+    // Show help in a toast or modal (implementation depends on UI library)
+    toast.info('Keyboard Shortcuts', {
+      description: helpContent,
+      duration: 10000,
+      position: 'top-center'
+    })
+  }, [shortcuts])
+
+  // Initialize shortcuts
+  useEffect(() => {
+    shortcuts.forEach(shortcut => {
+      const key = createShortcutKey(shortcut)
+      shortcutsRef.current.set(key, shortcut)
+    })
+  }, [shortcuts, createShortcutKey])
 
   // Check if shortcut matches event
   const matchesShortcut = useCallback((event: KeyboardEvent, shortcut: KeyboardShortcut): boolean => {
@@ -252,7 +295,7 @@ export function useKeyboardShortcuts({
         break
       }
     }
-  }, [matchesShortcut, onShortcutExecuted])
+  }, [matchesShortcut, onShortcutExecuted, showHelp])
 
   // Enable/disable shortcuts
   const enableShortcut = useCallback((key: string) => {
@@ -279,49 +322,6 @@ export function useKeyboardShortcuts({
   }, [onShortcutExecuted])
 
   // Help system
-  const showHelp = useCallback(() => {
-    isHelpVisibleRef.current = true
-    
-    // Create help modal content
-    const categories = shortcuts.reduce((acc, shortcut) => {
-      if (!acc[shortcut.category]) {
-        acc[shortcut.category] = []
-      }
-      acc[shortcut.category].push(shortcut)
-      return acc
-    }, {} as Record<string, KeyboardShortcut[]>)
-
-    const helpContent = Object.entries(categories)
-      .map(([category, shortcuts]) => {
-        const shortcutList = shortcuts
-          .filter(s => s.enabled !== false)
-          .map(s => {
-            const modifiers = []
-            if (s.ctrlKey) modifiers.push('Ctrl')
-            if (s.shiftKey) modifiers.push('Shift')
-            if (s.altKey) modifiers.push('Alt')
-            if (s.metaKey) modifiers.push('Cmd')
-            
-            const keyCombo = modifiers.length > 0 
-              ? `${modifiers.join('+')}+${s.key}`
-              : s.key
-
-            return `${keyCombo}: ${s.description}`
-          })
-          .join('\n')
-        
-        return `${category}:\n${shortcutList}`
-      })
-      .join('\n\n')
-
-    // Show help in a toast or modal (implementation depends on UI library)
-    toast.info('Keyboard Shortcuts', {
-      description: helpContent,
-      duration: 10000,
-      position: 'top-center'
-    })
-  }, [shortcuts])
-
   const hideHelp = useCallback(() => {
     isHelpVisibleRef.current = false
   }, [])

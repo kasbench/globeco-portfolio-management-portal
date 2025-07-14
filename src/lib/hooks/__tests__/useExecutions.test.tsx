@@ -1,17 +1,19 @@
 import { renderHook, act, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useExecutions } from '../useExecutions';
-import { executionService } from '@/lib/api/executionService';
 import { ExecutionPageDTO, ExecutionFilters } from '@/types/execution';
 
-// Mock the execution service
-jest.mock('@/lib/api/executionService');
-const mockedExecutionService = executionService as jest.Mocked<typeof executionService>;
+// Mock global.fetch
+const originalFetch = global.fetch;
 
-// Mock console methods to avoid noise in tests
-const consoleSpy = {
-  log: jest.spyOn(console, 'log').mockImplementation(() => {}),
-  error: jest.spyOn(console, 'error').mockImplementation(() => {}),
-  warn: jest.spyOn(console, 'warn').mockImplementation(() => {}),
+// Create a QueryClientProvider wrapper for tests
+const createWrapper = () => {
+  const queryClient = new QueryClient();
+  const Wrapper = ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+  Wrapper.displayName = 'QueryClientProviderWrapper';
+  return Wrapper;
 };
 
 describe('useExecutions', () => {
@@ -60,22 +62,23 @@ describe('useExecutions', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    // Mock successful response by default
-    mockedExecutionService.getExecutions.mockResolvedValue(mockExecutionPage);
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => mockExecutionPage
+    });
   });
 
   afterEach(() => {
-    Object.values(consoleSpy).forEach(spy => spy.mockClear());
+    jest.clearAllMocks();
   });
 
   afterAll(() => {
-    Object.values(consoleSpy).forEach(spy => spy.mockRestore());
+    global.fetch = originalFetch;
   });
 
   describe('Basic Functionality', () => {
     it('should fetch executions on mount', async () => {
-      const { result } = renderHook(() => useExecutions());
+      const { result } = renderHook(() => useExecutions(), { wrapper: createWrapper() });
 
       expect(result.current.isLoading).toBe(true);
 
@@ -83,11 +86,10 @@ describe('useExecutions', () => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      expect(mockedExecutionService.getExecutions).toHaveBeenCalledWith({
-        limit: 50,
-        offset: 0,
-        sortBy: '-receivedTimestamp'
-      });
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/executions?'),
+        expect.anything()
+      );
 
       expect(result.current.executions).toEqual(mockExecutionPage.content);
       expect(result.current.data).toEqual(mockExecutionPage);
@@ -101,44 +103,45 @@ describe('useExecutions', () => {
       };
 
       const { result } = renderHook(() => 
-        useExecutions({ initialFilters })
+        useExecutions({ initialFilters }),
+        { wrapper: createWrapper() }
       );
 
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      expect(mockedExecutionService.getExecutions).toHaveBeenCalledWith({
-        executionStatus: ['NEW'],
-        tradeType: ['BUY'],
-        limit: 50,
-        offset: 0,
-        sortBy: '-receivedTimestamp'
-      });
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('executionStatus=NEW'),
+        expect.anything()
+      );
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('tradeType=BUY'),
+        expect.anything()
+      );
     });
 
     it('should handle custom page size', async () => {
       const { result } = renderHook(() => 
-        useExecutions({ initialPageSize: 25 })
+        useExecutions({ initialPageSize: 25 }),
+        { wrapper: createWrapper() }
       );
 
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      expect(mockedExecutionService.getExecutions).toHaveBeenCalledWith({
-        limit: 25,
-        offset: 0,
-        sortBy: '-receivedTimestamp'
-      });
-
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('limit=25'),
+        expect.anything()
+      );
       expect(result.current.pagination.size).toBe(25);
     });
   });
 
   describe('Pagination', () => {
     it('should update pagination correctly', async () => {
-      const { result } = renderHook(() => useExecutions());
+      const { result } = renderHook(() => useExecutions(), { wrapper: createWrapper() });
 
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
@@ -149,11 +152,14 @@ describe('useExecutions', () => {
       });
 
       await waitFor(() => {
-        expect(mockedExecutionService.getExecutions).toHaveBeenCalledWith({
-          limit: 25,
-          offset: 25,
-          sortBy: '-receivedTimestamp'
-        });
+        expect(global.fetch).toHaveBeenCalledWith(
+          expect.stringContaining('offset=25'),
+          expect.anything()
+        );
+        expect(global.fetch).toHaveBeenCalledWith(
+          expect.stringContaining('limit=25'),
+          expect.anything()
+        );
       });
 
       expect(result.current.pagination.page).toBe(1);
@@ -161,7 +167,7 @@ describe('useExecutions', () => {
     });
 
     it('should reset to page 0 when changing page size', async () => {
-      const { result } = renderHook(() => useExecutions());
+      const { result } = renderHook(() => useExecutions(), { wrapper: createWrapper() });
 
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
@@ -190,7 +196,7 @@ describe('useExecutions', () => {
 
   describe('Filtering', () => {
     it('should update filters and refetch data', async () => {
-      const { result } = renderHook(() => useExecutions());
+      const { result } = renderHook(() => useExecutions(), { wrapper: createWrapper() });
 
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
@@ -206,18 +212,19 @@ describe('useExecutions', () => {
       });
 
       await waitFor(() => {
-        expect(mockedExecutionService.getExecutions).toHaveBeenCalledWith({
-          executionStatus: ['FILLED'],
-          tradeType: ['SELL'],
-          limit: 50,
-          offset: 0,
-          sortBy: '-receivedTimestamp'
-        });
+        expect(global.fetch).toHaveBeenCalledWith(
+          expect.stringContaining('executionStatus=FILLED'),
+          expect.anything()
+        );
+        expect(global.fetch).toHaveBeenCalledWith(
+          expect.stringContaining('tradeType=SELL'),
+          expect.anything()
+        );
       });
     });
 
     it('should reset pagination when filters change', async () => {
-      const { result } = renderHook(() => useExecutions());
+      const { result } = renderHook(() => useExecutions(), { wrapper: createWrapper() });
 
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
@@ -245,45 +252,43 @@ describe('useExecutions', () => {
 
   describe('Sorting', () => {
     it('should update sorting and refetch data', async () => {
-      const { result } = renderHook(() => useExecutions());
+      const { result } = renderHook(() => useExecutions(), { wrapper: createWrapper() });
 
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
       });
 
       act(() => {
-        result.current.updateSorting('quantity', 'ASC');
+        result.current.updateSorting([{ field: 'quantity', direction: 'ASC' }]);
       });
 
       await waitFor(() => {
-        expect(mockedExecutionService.getExecutions).toHaveBeenCalledWith({
-          limit: 50,
-          offset: 0,
-          sortBy: 'quantity'
-        });
+        expect(global.fetch).toHaveBeenCalledWith(
+          expect.stringContaining('sortBy=quantity'),
+          expect.anything()
+        );
       });
 
-      expect(result.current.sorting.field).toBe('quantity');
-      expect(result.current.sorting.direction).toBe('ASC');
+      expect(result.current.sorting[0].field).toBe('quantity');
+      expect(result.current.sorting[0].direction).toBe('ASC');
     });
 
     it('should handle descending sort with minus prefix', async () => {
-      const { result } = renderHook(() => useExecutions());
+      const { result } = renderHook(() => useExecutions(), { wrapper: createWrapper() });
 
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
       });
 
       act(() => {
-        result.current.updateSorting('limitPrice', 'DESC');
+        result.current.updateSorting([{ field: 'limitPrice', direction: 'DESC' }]);
       });
 
       await waitFor(() => {
-        expect(mockedExecutionService.getExecutions).toHaveBeenCalledWith({
-          limit: 50,
-          offset: 0,
-          sortBy: '-limitPrice'
-        });
+        expect(global.fetch).toHaveBeenCalledWith(
+          expect.stringContaining('sortBy=-limitPrice'),
+          expect.anything()
+        );
       });
     });
   });
@@ -307,7 +312,7 @@ describe('useExecutions', () => {
       });
 
       // Clear the initial call
-      mockedExecutionService.getExecutions.mockClear();
+      (global.fetch as jest.Mock).mockClear();
 
       // Fast forward 30 seconds
       act(() => {
@@ -315,7 +320,7 @@ describe('useExecutions', () => {
       });
 
       await waitFor(() => {
-        expect(mockedExecutionService.getExecutions).toHaveBeenCalledTimes(1);
+        expect(global.fetch).toHaveBeenCalledTimes(1);
       });
     });
 
@@ -329,7 +334,7 @@ describe('useExecutions', () => {
       });
 
       // Clear the initial call
-      mockedExecutionService.getExecutions.mockClear();
+      (global.fetch as jest.Mock).mockClear();
 
       // Fast forward 30 seconds
       act(() => {
@@ -337,35 +342,38 @@ describe('useExecutions', () => {
       });
 
       // Should not have made additional calls
-      expect(mockedExecutionService.getExecutions).not.toHaveBeenCalled();
+      expect(global.fetch).not.toHaveBeenCalled();
     });
   });
 
   describe('Error Handling', () => {
     it('should handle API errors gracefully', async () => {
-      const mockError = new Error('API Error');
-      mockedExecutionService.getExecutions.mockRejectedValue(mockError);
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        json: async () => ({ error: 'API Error' })
+      });
 
-      const { result } = renderHook(() => useExecutions());
+      const { result } = renderHook(() => useExecutions(), { wrapper: createWrapper() });
 
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      expect(result.current.error).toEqual(mockError);
+      expect(result.current.error).toBeInstanceOf(Error);
       expect(result.current.executions).toEqual([]);
-      expect(result.current.data).toBeNull();
+      expect(result.current.data).toBeUndefined();
     });
 
     it('should handle refetch after error', async () => {
-      const mockError = new Error('API Error');
-      mockedExecutionService.getExecutions.mockRejectedValueOnce(mockError);
-      mockedExecutionService.getExecutions.mockResolvedValueOnce(mockExecutionPage);
+      (global.fetch as jest.Mock)
+        .mockResolvedValueOnce({ ok: false, status: 500, json: async () => ({ error: 'API Error' }) })
+        .mockResolvedValueOnce({ ok: true, json: async () => mockExecutionPage });
 
-      const { result } = renderHook(() => useExecutions());
+      const { result } = renderHook(() => useExecutions(), { wrapper: createWrapper() });
 
       await waitFor(() => {
-        expect(result.current.error).toEqual(mockError);
+        expect(result.current.error).toBeInstanceOf(Error);
       });
 
       act(() => {
@@ -381,26 +389,26 @@ describe('useExecutions', () => {
 
   describe('Manual Refetch', () => {
     it('should refetch data manually', async () => {
-      const { result } = renderHook(() => useExecutions());
+      const { result } = renderHook(() => useExecutions(), { wrapper: createWrapper() });
 
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
       });
 
       // Clear the initial call
-      mockedExecutionService.getExecutions.mockClear();
+      (global.fetch as jest.Mock).mockClear();
 
       act(() => {
         result.current.refetch();
       });
 
       await waitFor(() => {
-        expect(mockedExecutionService.getExecutions).toHaveBeenCalledTimes(1);
+        expect(global.fetch).toHaveBeenCalledTimes(1);
       });
     });
 
     it('should set isRefetching during manual refetch', async () => {
-      const { result } = renderHook(() => useExecutions());
+      const { result } = renderHook(() => useExecutions(), { wrapper: createWrapper() });
 
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);

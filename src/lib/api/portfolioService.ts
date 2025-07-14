@@ -1,3 +1,8 @@
+// This module is for server-side/API route use only. Do NOT import in client-side code.
+if (typeof window !== 'undefined') {
+  throw new Error('portfolioService.ts must not be imported on the client side.');
+}
+
 import axios, { AxiosResponse } from 'axios'
 import { 
   PortfolioResponseDTO, 
@@ -6,10 +11,9 @@ import {
   Portfolio 
 } from '@/types/portfolio'
 
-// Portfolio Service configuration
-// Use localhost for development since Docker service names are not accessible from browser
-const PORTFOLIO_SERVICE_HOST = process.env.NEXT_PUBLIC_PORTFOLIO_SERVICE_HOST || 'localhost'
-const PORTFOLIO_SERVICE_PORT = process.env.NEXT_PUBLIC_PORTFOLIO_SERVICE_PORT || '8001'
+// Portfolio Service configuration (server-side only)
+const PORTFOLIO_SERVICE_HOST = process.env.PORTFOLIO_SERVICE_HOST || 'globeco-portfolio-service.globeco'
+const PORTFOLIO_SERVICE_PORT = process.env.PORTFOLIO_SERVICE_PORT || '8001'
 const BASE_URL = `http://${PORTFOLIO_SERVICE_HOST}:${PORTFOLIO_SERVICE_PORT}`
 
 // Create axios instance with base configuration

@@ -21,7 +21,7 @@ import { useExecutions } from '@/lib/hooks/useExecutions'
 import { ExecutionListTable } from '@/components/tables/ExecutionListTable'
 import { EnhancedExecutionDTO, ExecutionAction, ExecutionFilters, ExecutionSortField, SortDirection } from '@/types/execution'
 import { ExecutionDetailsModal } from '@/components/features/execution-details-modal'
-import { executionService } from '@/lib/api/executionService'
+// import { executionService } from '@/lib/api/executionService'
 import { saveFilters, loadFilters, cleanupExpiredFilters } from '@/lib/utils/filterPersistence'
 import { exportExecutions, getExportSummary } from '@/lib/utils/exportUtils'
 
@@ -266,18 +266,20 @@ const ExecutionManagementPageContent: React.FC<ExecutionManagementPageContentPro
         case 'view':
           // Fetch fresh execution details for the modal
           try {
-            const freshExecution = await executionService.getExecution(execution.id)
+            const res = await fetch(`/api/executions/${execution.id}`);
+            if (!res.ok) throw new Error('Failed to fetch execution details');
+            const freshExecution = await res.json();
             setDetailsModal({
               isOpen: true,
               execution: { ...freshExecution, security: execution.security }
-            })
+            });
           } catch (error) {
-            console.warn('Failed to fetch fresh execution details, using cached data:', error)
+            console.warn('Failed to fetch fresh execution details, using cached data:', error);
             // Fallback to cached execution data
             setDetailsModal({
               isOpen: true,
               execution: execution
-            })
+            });
           }
           break
         case 'cancel':
@@ -298,20 +300,26 @@ const ExecutionManagementPageContent: React.FC<ExecutionManagementPageContentPro
   const handleCancelConfirm = async () => {
     try {
       const { executions: executionsToCancel, isBulk } = cancelConfirmation
-      
       if (isBulk && executionsToCancel.length > 1) {
-        // Bulk cancellation
-        const executionData = executionsToCancel.map(e => ({ id: e.id, version: e.version }))
-        const result = await executionService.cancelExecutionsBatch(executionData)
+        // Bulk cancellation via /api/executions/batch DELETE
+        const res = await fetch('/api/executions/batch', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(executionsToCancel.map(e => ({ id: e.id, version: e.version })))
+        })
+        if (!res.ok) throw new Error('Failed to cancel executions batch')
+        const result = await res.json()
         toast.success(`Successfully cancelled ${result.successful} of ${result.totalCount} executions`)
         setSelectedExecutions(new Set())
       } else if (executionsToCancel.length === 1) {
-        // Single cancellation
+        // Single cancellation via /api/executions/[id]?version= DELETE
         const execution = executionsToCancel[0]
-        await executionService.cancelExecution(execution.id, execution.version)
+        const res = await fetch(`/api/executions/${execution.id}?version=${execution.version}`, {
+          method: 'DELETE'
+        })
+        if (!res.ok) throw new Error('Failed to cancel execution')
         toast.success('Execution cancelled successfully')
       }
-
       setCancelConfirmation({ isOpen: false, executions: [], isBulk: false })
       await refetch()
     } catch (error) {

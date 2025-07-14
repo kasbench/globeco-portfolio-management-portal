@@ -77,3 +77,11 @@
 - Created k8s/deploy.sh: Shell script to create the namespace if needed and apply all manifests using kubectl. 
 - Created k8s/service-nodeport.yaml: NodePort Service manifest for the GlobeCo Portfolio Management Portal (port 3000, nodePort 32080, namespace globeco).
 - Updated k8s/deploy.sh: Now also applies service-nodeport.yaml. 
+
+## 2024-06-10 - Implemented Next.js API routes for /api/trades and /api/trades/[id] using tradeService for backend interaction. Routes support GET, POST, GET by ID, PUT, and return 501 for DELETE. Updated documentation/api-to-server-plan.md to mark trades API as complete and note next steps. 
+- [2024-06-10] Refactored useTradeOrders and useTradeSubmission hooks to use the new /api/trades API route for all trade order data fetching and submission. All trade order-related React components now route through the Next.js API. Proceeding to next resource. 
+- [2024-06-10] Started migration for models resource: refactoring all model-related hooks and components to use the /api/models API routes. 
+- [2024-06-10] Completed models resource migration: all model-related hooks and components now use the /api/models API routes, including rebalance. Updated migration plan accordingly. 
+- [2024-06-10] Started migration for executions resource: verifying and ensuring all execution-related hooks and components use the /api/executions API routes. 
+- [2024-06-10] Refactored execution cancellation (single and batch) to use the /api/executions API routes instead of direct backend service calls. 
+- [2024-06-10] Refactored reference data fetching (blotters) to use the /api/blotters API route. Confirmed that statuses and order types already use API routes. 

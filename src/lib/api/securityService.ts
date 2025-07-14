@@ -1,3 +1,8 @@
+// This module is for server-side/API route use only. Do NOT import in client-side code.
+if (typeof window !== 'undefined') {
+  throw new Error('securityService.ts must not be imported on the client side.');
+}
+
 import axios, { AxiosInstance, AxiosResponse, AxiosError } from 'axios';
 
 export interface SecurityOut {
@@ -24,6 +29,8 @@ export interface SecurityServiceErrorResponse {
 /**
  * Security Service API Client
  * Provides access to the GlobeCo Security Service v1.0.0 API
+ *
+ * NOTE: This module is for server-side/API route use only.
  */
 class SecurityService {
   private api: AxiosInstance;
@@ -33,9 +40,9 @@ class SecurityService {
   private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes in milliseconds
 
   constructor() {
-    this.baseURL = process.env.NODE_ENV === 'production' 
-      ? 'http://globeco-security-service:8000'
-      : 'http://localhost:8000';
+    const SECURITY_SERVICE_HOST = process.env.SECURITY_SERVICE_HOST || 'globeco-security-service.globeco';
+    const SECURITY_SERVICE_PORT = process.env.SECURITY_SERVICE_PORT || '8000';
+    this.baseURL = `http://${SECURITY_SERVICE_HOST}:${SECURITY_SERVICE_PORT}`;
 
     this.api = axios.create({
       baseURL: this.baseURL,

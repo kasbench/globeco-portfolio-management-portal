@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useCallback } from 'react'
 import { X, Plus, Filter, Calendar, Clock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -101,9 +101,9 @@ export function ExecutionFilterPills({
   const [dateRange, setDateRange] = useState<{ from: string; to: string }>({ from: '', to: '' })
 
   // Get field configuration
-  const getFieldConfig = (fieldName: string): FilterField | undefined => {
+  const getFieldConfig = useCallback((fieldName: string): FilterField | undefined => {
     return filterFields.find(f => f.field === fieldName)
-  }
+  }, [filterFields]);
 
   // Get options for select fields
   const getFieldOptions = (fieldName: string): string[] => {
@@ -268,7 +268,7 @@ export function ExecutionFilterPills({
   const currentFieldType = useMemo(() => {
     const fieldConfig = getFieldConfig(newFilterField)
     return fieldConfig?.type || 'text'
-  }, [newFilterField])
+  }, [newFilterField, getFieldConfig])
 
   return (
     <div className={`space-y-4 ${className}`}>
