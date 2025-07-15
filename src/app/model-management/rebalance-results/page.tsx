@@ -13,8 +13,6 @@ import { ErrorBoundary, ErrorDisplay } from '@/components/ui/error-boundary'
 import { toast } from 'sonner'
 
 import { useRebalances } from '@/lib/hooks/useRebalances'
-import { orderServiceApi } from '@/lib/api/orderService'
-import { orderGenerationApi } from '@/lib/api/orderGenerationService'
 import { transformToSubmissionRebalance } from '@/lib/utils/rebalanceTransform'
 import { OrderSubmissionResult, SubmissionState } from '@/types/order'
 import RebalanceTable from '@/components/tables/RebalanceTable'
@@ -138,12 +136,13 @@ export default function RebalanceResultsPage() {
         
         try {
           // Submit the rebalance using the Order Service API
-          const { rebalance: updatedRebalance, result } = await orderServiceApi.submitRebalanceOrders(
-            rebalance,
-            (progress) => {
-              console.log(`Rebalance ${rebalance.rebalance_id} progress:`, progress)
-            }
-          )
+          const res = await fetch('/api/rebalances/submit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(rebalance)
+          });
+          if (!res.ok) throw new Error('Failed to submit rebalance');
+          const { rebalance: updatedRebalance, result } = await res.json();
           
           allResults.push(result)
           
@@ -153,7 +152,10 @@ export default function RebalanceResultsPage() {
             // If all orders were successful and no orders failed, delete the rebalance from backend
             if (result.failedOrders === 0) {
               try {
-                const deleteResult = await orderGenerationApi.deleteRebalance(rebalance.rebalance_id, rebalance.version)
+                const delRes = await fetch(`/api/rebalances/${rebalance.rebalance_id}?version=${rebalance.version}`, {
+                  method: 'DELETE'
+                });
+                const deleteResult = await delRes.json();
                 if (deleteResult.success) {
                   console.log(`Rebalance ${rebalance.rebalance_id} deleted from backend after successful submission`)
                 } else {

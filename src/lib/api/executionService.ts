@@ -31,7 +31,7 @@ class ExecutionService {
   private readonly baseURL: string;
 
   constructor() {
-    const EXECUTION_SERVICE_HOST = process.env.EXECUTION_SERVICE_HOST || 'globeco-execution-service.globeco';
+    const EXECUTION_SERVICE_HOST = process.env.EXECUTION_SERVICE_HOST || 'globeco-execution-service';
     const EXECUTION_SERVICE_PORT = process.env.EXECUTION_SERVICE_PORT || '8084';
     this.baseURL = `http://${EXECUTION_SERVICE_HOST}:${EXECUTION_SERVICE_PORT}`;
 

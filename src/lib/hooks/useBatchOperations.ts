@@ -12,7 +12,7 @@ import {
   OrderPostDTO 
 } from '@/types/order'
 import { orderServiceApi } from '@/lib/api/orderService'
-import { orderGenerationApi } from '@/lib/api/orderGenerationService'
+// import { orderGenerationApi } from '@/lib/api/orderGenerationService'
 import { validateOrderEligibility } from '@/lib/utils/orderMapping'
 import { logOrderSubmission } from '@/lib/utils/orderLogging'
 
@@ -680,8 +680,13 @@ export function useBatchOperations(
         statusMessage: 'Deleting rebalances...'
       })
 
-      // Use the batch deletion API
-      const deletionResult = await orderGenerationApi.deleteRebalances(deletionRequests)
+      // Use the batch deletion API route
+      const delRes = await fetch('/api/rebalances/batch-delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(deletionRequests)
+      });
+      const deletionResult = await delRes.json();
 
       updateProgress({
         currentPhase: 'cleanup',
@@ -708,12 +713,12 @@ export function useBatchOperations(
         overallStatus: deletionResult.totalFailed === 0 ? 'success' : 
                       deletionResult.totalDeleted > 0 ? 'partial' : 'failed',
         results: [
-          ...deletionResult.successful.map(rebalanceId => ({
+          ...deletionResult.successful.map((rebalanceId: string) => ({
             rebalanceId,
             status: 'success' as const,
             message: 'Rebalance deleted successfully'
           })),
-          ...deletionResult.failed.map(failure => ({
+          ...deletionResult.failed.map((failure: { rebalanceId: string; error: string }) => ({
             rebalanceId: failure.rebalanceId,
             status: 'failed' as const,
             message: failure.error

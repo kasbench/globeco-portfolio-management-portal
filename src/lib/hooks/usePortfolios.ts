@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import { Portfolio, PortfolioMap, PortfolioOption } from '@/types/portfolio'
-import { orderGenerationApi } from '@/lib/api/orderGenerationService'
+// import { orderGenerationApi } from '@/lib/api/orderGenerationService'
 
 // Custom hook for portfolio management and mapping
 export function usePortfolios() {
@@ -119,16 +119,15 @@ export function usePortfolio(portfolioId: string) {
 
 // Hook for loading portfolios for a specific rebalance
 export function useRebalancePortfolios(rebalanceId: string, enabled: boolean = true) {
-  // This still uses orderGenerationApi, which should be migrated in a later step
-  return useQuery({
+  // Now uses API route for rebalance portfolios
+  const { data: rebalancePortfolios, isLoading: isLoadingRebalancePortfolios } = useQuery({
     queryKey: ['rebalance-portfolios', rebalanceId],
-    queryFn: () => orderGenerationApi.getRebalancePortfolios(rebalanceId),
-    enabled: enabled && !!rebalanceId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
-    refetchOnWindowFocus: false,
-    retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    queryFn: async () => {
+      const res = await fetch(`/api/rebalances/${rebalanceId}/portfolios`);
+      if (!res.ok) throw new Error('Failed to fetch rebalance portfolios');
+      return res.json();
+    },
+    enabled: !!rebalanceId,
   })
 }
 

@@ -41,7 +41,7 @@ class TradeService {
   private readonly baseURL: string;
 
   constructor() {
-    const TRADE_SERVICE_HOST = process.env.TRADE_SERVICE_HOST || 'globeco-trade-service.globeco';
+    const TRADE_SERVICE_HOST = process.env.TRADE_SERVICE_HOST || 'globeco-trade-service';
     const TRADE_SERVICE_PORT = process.env.TRADE_SERVICE_PORT || '8082';
     this.baseURL = `http://${TRADE_SERVICE_HOST}:${TRADE_SERVICE_PORT}`;
 

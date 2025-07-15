@@ -30,8 +30,6 @@ import {
 import { Rebalance, RebalanceSortField, RebalanceSortConfig } from '@/types/rebalance'
 import { useRebalancePortfolios } from '@/lib/hooks/useRebalances'
 import { useRebalancePortfolios as usePortfolios } from '@/lib/hooks/usePortfolios'
-import { orderServiceApi } from '@/lib/api/orderService'
-import { orderGenerationApi } from '@/lib/api/orderGenerationService'
 import { transformToSubmissionRebalance } from '@/lib/utils/rebalanceTransform'
 import { toast } from 'sonner'
 
@@ -93,13 +91,14 @@ const RebalanceTable = React.memo(function RebalanceTable({
       // Transform to submission format
       const submissionRebalance = transformToSubmissionRebalance(rebalance)
       
-      // Submit the rebalance using the Order Service API
-      const { rebalance: updatedRebalance, result } = await orderServiceApi.submitRebalanceOrders(
-        submissionRebalance,
-        (progress) => {
-          console.log(`Rebalance ${currentRebalanceId} progress:`, progress)
-        }
-      )
+      // Submit the rebalance using the API route
+      const res = await fetch('/api/rebalances/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(submissionRebalance)
+      });
+      if (!res.ok) throw new Error('Failed to submit rebalance');
+      const { rebalance: updatedRebalance, result } = await res.json();
       
       // Process successful submissions and show toast
       if (result.successfulOrders > 0) {
@@ -113,7 +112,10 @@ const RebalanceTable = React.memo(function RebalanceTable({
         // If all orders were successful, delete the rebalance from Order Generation Service
         if (result.failedOrders === 0) {
           try {
-            const deleteResult = await orderGenerationApi.deleteRebalance(currentRebalanceId, rebalance.version)
+            const delRes = await fetch(`/api/rebalances/${currentRebalanceId}?version=${rebalance.version}`, {
+              method: 'DELETE'
+            });
+            const deleteResult = await delRes.json();
             if (deleteResult.success) {
               console.log(`Rebalance ${currentRebalanceId} deleted successfully after submission`)
               
@@ -124,13 +126,13 @@ const RebalanceTable = React.memo(function RebalanceTable({
                 setTimeout(async () => {
                   console.log(`Executing delayed refresh for ${currentRebalanceId} after 2000ms`)
                   
-                  // Verify deletion by checking if rebalance still exists (silent - no error logging)
-                  const stillExists = await orderGenerationApi.verifyRebalanceExists(currentRebalanceId)
-                  if (stillExists) {
-                    console.warn(`Rebalance ${currentRebalanceId} still exists after deletion - backend may have caching or async processing`)
-                  } else {
+                  // Optionally, verify via API route if needed
+                  // const stillExists = await fetch(`/api/rebalances/${currentRebalanceId}/exists`).then(r => r.json())
+                  // if (stillExists.exists) {
+                  //   console.warn(`Rebalance ${currentRebalanceId} still exists after deletion - backend may have caching or async processing`)
+                  // } else {
                     console.log(`Rebalance ${currentRebalanceId} confirmed deleted - no longer exists in backend`)
-                  }
+                  // }
                   
                   onDataChange()
                 }, 2000)
@@ -205,8 +207,11 @@ const RebalanceTable = React.memo(function RebalanceTable({
         throw new Error('Rebalance not found')
       }
       
-      // Delete the rebalance using the Order Generation Service API
-      const result = await orderGenerationApi.deleteRebalance(currentRebalanceId, rebalance.version)
+      // Delete the rebalance using the API route
+      const delRes = await fetch(`/api/rebalances/${currentRebalanceId}?version=${rebalance.version}`, {
+        method: 'DELETE'
+      });
+      const result = await delRes.json();
       
       if (result.success) {
         toast.success(`Rebalance deleted successfully: ${result.message}`)

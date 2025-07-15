@@ -247,24 +247,24 @@ const BatchOperationsPanel: React.FC<BatchOperationsPanelProps> = ({
           selectedRebalancesArray.map(r => r.rebalance_id))
         
         // For now, let's use the OrderService API directly for each selected rebalance
-        const { orderServiceApi } = await import('@/lib/api/orderService')
-        const { transformToSubmissionRebalance } = await import('@/lib/utils/rebalanceTransform')
+        // import { orderServiceApi } from '@/lib/api/orderService'
+        // import { transformToSubmissionRebalance } from '@/lib/utils/rebalanceTransform'
         
         let successfulSubmissions = 0
         let failedSubmissions = 0
         
-        // Import Order Generation API for deletion
-        const { orderGenerationApi } = await import('@/lib/api/orderGenerationService')
+        // import { orderGenerationApi } from '@/lib/api/orderGenerationService'
         
         for (const rebalance of selectedRebalancesArray) {
           try {
-            const submissionRebalance = transformToSubmissionRebalance(rebalance)
-            const { result } = await orderServiceApi.submitRebalanceOrders(
-              submissionRebalance,
-              (progress) => {
-                console.log(`Rebalance ${rebalance.rebalance_id} progress:`, progress)
-              }
-            )
+            const submissionRebalance = rebalance // Assuming rebalance object itself is the submission data
+            const res = await fetch('/api/rebalances/submit', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(submissionRebalance)
+            });
+            if (!res.ok) throw new Error('Failed to submit rebalance');
+            const { result } = await res.json();
             
             if (result.successfulOrders > 0) {
               successfulSubmissions++
@@ -272,7 +272,10 @@ const BatchOperationsPanel: React.FC<BatchOperationsPanelProps> = ({
               // If all orders were successful and no orders failed, delete the rebalance from backend
               if (result.failedOrders === 0) {
                 try {
-                  const deleteResult = await orderGenerationApi.deleteRebalance(rebalance.rebalance_id, rebalance.version)
+                  const delRes = await fetch(`/api/rebalances/${rebalance.rebalance_id}?version=${rebalance.version}`, {
+                    method: 'DELETE'
+                  });
+                  const deleteResult = await delRes.json();
                   if (deleteResult.success) {
                     console.log(`Rebalance ${rebalance.rebalance_id} deleted from backend after successful submission`)
                   } else {
@@ -350,14 +353,18 @@ const BatchOperationsPanel: React.FC<BatchOperationsPanelProps> = ({
           selectedRebalancesArray.map(r => r.rebalance_id))
         
         // Use the Order Generation API for deletion
-        const { orderGenerationApi } = await import('@/lib/api/orderGenerationService')
+        // import { orderGenerationApi } from '@/lib/api/orderGenerationService'
         
         const deletionRequests = selectedRebalancesArray.map(rebalance => ({
           rebalanceId: rebalance.rebalance_id,
           version: rebalance.version
-        }))
-
-        const deletionResult = await orderGenerationApi.deleteRebalances(deletionRequests)
+        }));
+        const delRes = await fetch('/api/rebalances/batch-delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(deletionRequests)
+        });
+        const deletionResult = await delRes.json();
         
         console.log(`Deletion complete: ${deletionResult.totalDeleted} successful, ${deletionResult.totalFailed} failed`)
         

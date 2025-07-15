@@ -1,6 +1,5 @@
 import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState, useMemo } from 'react'
-import { orderGenerationApi } from '@/lib/api/orderGenerationService'
 import { 
   Rebalance,
   RebalancePortfolio,
@@ -45,7 +44,10 @@ export function useRebalances() {
         limit: pageParam === 0 ? REBALANCES_PER_PAGE : REBALANCES_ADDITIONAL_PAGE_SIZE,
         sort_by: sortString
       }
-      return orderGenerationApi.getRebalances(params)
+      const query = new URLSearchParams(params as any).toString();
+      const res = await fetch(`/api/rebalances?${query}`);
+      if (!res.ok) throw new Error('Failed to fetch rebalances');
+      return res.json();
     },
     getNextPageParam: (lastPage, pages) => {
       // If the last page has fewer items than expected, we've reached the end
@@ -111,7 +113,11 @@ export function useRebalances() {
 export function useRebalance(rebalanceId: string, enabled: boolean = true) {
   return useQuery({
     queryKey: ['rebalance', rebalanceId],
-    queryFn: () => orderGenerationApi.getRebalance(rebalanceId),
+    queryFn: async () => {
+      const res = await fetch(`/api/rebalances/${rebalanceId}`);
+      if (!res.ok) throw new Error('Failed to fetch rebalance');
+      return res.json();
+    },
     enabled: enabled && !!rebalanceId,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
@@ -125,7 +131,11 @@ export function useRebalance(rebalanceId: string, enabled: boolean = true) {
 export function useRebalancePortfolios(rebalanceId: string, enabled: boolean = false) {
   return useQuery({
     queryKey: ['rebalance-portfolios', rebalanceId],
-    queryFn: () => orderGenerationApi.getRebalancePortfolios(rebalanceId),
+    queryFn: async () => {
+      const res = await fetch(`/api/rebalances/${rebalanceId}/portfolios`);
+      if (!res.ok) throw new Error('Failed to fetch rebalance portfolios');
+      return res.json();
+    },
     enabled: enabled && !!rebalanceId,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
@@ -143,7 +153,11 @@ export function useRebalancePortfolioPositions(
 ) {
   return useQuery({
     queryKey: ['rebalance-portfolio-positions', rebalanceId, portfolioId],
-    queryFn: () => orderGenerationApi.getRebalancePortfolioPositions(rebalanceId, portfolioId),
+    queryFn: async () => {
+      const res = await fetch(`/api/rebalances/${rebalanceId}/portfolios/${portfolioId}/positions`);
+      if (!res.ok) throw new Error('Failed to fetch rebalance portfolio positions');
+      return res.json();
+    },
     enabled: enabled && !!rebalanceId && !!portfolioId,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
@@ -160,7 +174,11 @@ export function usePrefetchRebalanceData() {
   const prefetchRebalancePortfolios = (rebalanceId: string) => {
     queryClient.prefetchQuery({
       queryKey: ['rebalance-portfolios', rebalanceId],
-      queryFn: () => orderGenerationApi.getRebalancePortfolios(rebalanceId),
+      queryFn: async () => {
+        const res = await fetch(`/api/rebalances/${rebalanceId}/portfolios`);
+        if (!res.ok) throw new Error('Failed to fetch rebalance portfolios');
+        return res.json();
+      },
       staleTime: 5 * 60 * 1000,
     })
   }
@@ -168,7 +186,11 @@ export function usePrefetchRebalanceData() {
   const prefetchPortfolioPositions = (rebalanceId: string, portfolioId: string) => {
     queryClient.prefetchQuery({
       queryKey: ['rebalance-portfolio-positions', rebalanceId, portfolioId],
-      queryFn: () => orderGenerationApi.getRebalancePortfolioPositions(rebalanceId, portfolioId),
+      queryFn: async () => {
+        const res = await fetch(`/api/rebalances/${rebalanceId}/portfolios/${portfolioId}/positions`);
+        if (!res.ok) throw new Error('Failed to fetch rebalance portfolio positions');
+        return res.json();
+      },
       staleTime: 5 * 60 * 1000,
     })
   }

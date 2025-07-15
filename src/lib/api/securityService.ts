@@ -40,7 +40,7 @@ class SecurityService {
   private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes in milliseconds
 
   constructor() {
-    const SECURITY_SERVICE_HOST = process.env.SECURITY_SERVICE_HOST || 'globeco-security-service.globeco';
+    const SECURITY_SERVICE_HOST = process.env.SECURITY_SERVICE_HOST || 'globeco-security-service';
     const SECURITY_SERVICE_PORT = process.env.SECURITY_SERVICE_PORT || '8000';
     this.baseURL = `http://${SECURITY_SERVICE_HOST}:${SECURITY_SERVICE_PORT}`;
 
