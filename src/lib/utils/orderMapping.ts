@@ -6,7 +6,7 @@ import {
   OrderMappingConfig,
   OrderEligibilityResult
 } from '@/types/order'
-import { getOrderServiceConfig } from '@/lib/api/orderService'
+
 
 // Default configuration for order mapping
 export const DEFAULT_ORDER_MAPPING_CONFIG: OrderMappingConfig = {
@@ -75,8 +75,7 @@ export function validateOrderEligibility(position: RebalancePositionWithSubmissi
  */
 export function mapPositionToOrder(
   position: RebalancePositionWithSubmission,
-  portfolioId?: string,
-  config: OrderMappingConfig = DEFAULT_ORDER_MAPPING_CONFIG
+  portfolioId?: string
 ): OrderPostDTO {
   // Get portfolio ID from position if not provided as parameter
   const finalPortfolioId = portfolioId || (position as any).portfolio_id
@@ -88,7 +87,7 @@ export function mapPositionToOrder(
   }
 
   // Map transaction type to order type ID
-  const orderTypeId = config.orderTypeMapping[position.transaction_type as keyof typeof config.orderTypeMapping]
+  const orderTypeId = DEFAULT_ORDER_MAPPING_CONFIG.orderTypeMapping[position.transaction_type as keyof typeof DEFAULT_ORDER_MAPPING_CONFIG.orderTypeMapping]
   if (!orderTypeId) {
     throw new Error(`Invalid transaction type: ${position.transaction_type}. Only BUY and SELL positions are eligible for order submission.`)
   }
@@ -97,8 +96,8 @@ export function mapPositionToOrder(
   const orderTimestamp = generateOrderTimestamp()
 
   return {
-    blotterId: config.defaultBlotterId,
-    statusId: config.defaultStatusId,
+    blotterId: DEFAULT_ORDER_MAPPING_CONFIG.defaultBlotterId,
+    statusId: DEFAULT_ORDER_MAPPING_CONFIG.defaultStatusId,
     portfolioId: finalPortfolioId,
     orderTypeId: orderTypeId,
     securityId: position.security_id,
@@ -106,7 +105,7 @@ export function mapPositionToOrder(
     limitPrice: null, // Market orders (no limit price)
     tradeOrderId: null,
     orderTimestamp: orderTimestamp,
-    version: config.defaultVersion
+    version: DEFAULT_ORDER_MAPPING_CONFIG.defaultVersion
   }
 }
 
@@ -115,13 +114,12 @@ export function mapPositionToOrder(
  */
 export function mapPortfolioPositionsToOrders(
   positions: RebalancePositionWithSubmission[],
-  portfolioId: string,
-  config: OrderMappingConfig = DEFAULT_ORDER_MAPPING_CONFIG
+  portfolioId: string
 ): OrderPostDTO[] {
   const eligiblePositions = positions.filter(isPositionEligibleForSubmission)
   
   return eligiblePositions.map(position => 
-    mapPositionToOrder(position, portfolioId, config)
+    mapPositionToOrder(position, portfolioId)
   )
 }
 
@@ -164,8 +162,7 @@ export interface OrderSubmissionSummary {
 
 export function generateOrderSubmissionSummary(
   positions: RebalancePositionWithSubmission[],
-  portfolioIds: string[],
-  config: OrderMappingConfig = DEFAULT_ORDER_MAPPING_CONFIG
+  portfolioIds: string[]
 ): OrderSubmissionSummary {
   const eligiblePositions = positions.filter(isPositionEligibleForSubmission)
   
@@ -180,7 +177,7 @@ export function generateOrderSubmissionSummary(
     sellOrders,
     totalQuantity,
     portfoliosAffected: portfolioIds,
-    estimatedBatches: Math.ceil(eligiblePositions.length / config.batchSize)
+    estimatedBatches: Math.ceil(eligiblePositions.length / DEFAULT_ORDER_MAPPING_CONFIG.batchSize)
   }
 }
 
@@ -304,16 +301,4 @@ export function validateOrderBatch(orders: OrderPostDTO[]): {
   }
 }
 
-/**
- * Gets the current order mapping configuration with environment overrides
- */
-export function getOrderMappingConfig(): OrderMappingConfig {
-  try {
-    // Try to get configuration from order service
-    return getOrderServiceConfig()
-  } catch (error) {
-    // Fallback to default configuration
-    console.warn('Failed to get order service configuration, using defaults:', error)
-    return DEFAULT_ORDER_MAPPING_CONFIG
-  }
-} 
+ 

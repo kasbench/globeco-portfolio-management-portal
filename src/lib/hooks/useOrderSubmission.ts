@@ -12,7 +12,7 @@ import {
   RebalancePositionWithSubmission 
 } from '@/types/rebalance'
 import { SubmissionState, OrderSubmissionResult } from '@/types/order'
-import { orderServiceApi } from '@/lib/api/orderService'
+// import { orderServiceApi } from '@/lib/api/orderService'
 import { dataTransformationService } from '@/lib/services/dataTransformationService'
 import { responseProcessingService } from '@/lib/services/responseProcessingService'
 import { 
@@ -335,30 +335,23 @@ export function useOrderSubmission(): UseOrderSubmissionReturn {
 
             for (const portfolio of rebalance.portfolios) {
               const portfolioResult = await globalRequestThrottler.throttle(
-                () => orderServiceApi.submitRebalancePositions(
-                  portfolio.positions,
-                  portfolio.portfolio_id,
-                  (progress) => {
-                    updateState({
-                      submissionProgress: {
-                        currentBatch: batchIndex + 1,
-                        totalBatches: submissionRebalances.length,
-                        currentRebalance: rebalance.rebalance_id,
-                        currentPortfolio: portfolio.portfolio_id
-                      }
-                    })
-                  }
-                ),
+                () => fetch(`/api/rebalances/${rebalance.rebalance_id}/submit-positions`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ positions: portfolio.positions })
+                }),
                 1 // Normal priority
               )
 
+              const data = await portfolioResult.json()
+
               // Aggregate results
-              rebalanceResult.totalOrders += portfolioResult.totalOrders
-              rebalanceResult.successfulOrders += portfolioResult.successfulOrders
-              rebalanceResult.failedOrders += portfolioResult.failedOrders
-              rebalanceResult.errors.push(...portfolioResult.errors)
-              rebalanceResult.submittedOrderIds.push(...portfolioResult.submittedOrderIds)
-              rebalanceResult.failedPositions.push(...portfolioResult.failedPositions)
+              rebalanceResult.totalOrders += data.totalOrders
+              rebalanceResult.successfulOrders += data.successfulOrders
+              rebalanceResult.failedOrders += data.failedOrders
+              rebalanceResult.errors.push(...data.errors)
+              rebalanceResult.submittedOrderIds.push(...data.submittedOrderIds)
+              rebalanceResult.failedPositions.push(...data.failedPositions)
             }
 
             const submissionResult = rebalanceResult

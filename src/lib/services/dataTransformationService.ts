@@ -19,8 +19,8 @@ import {
   splitOrdersIntoBatches,
   generateOrderSubmissionSummary,
   validateOrderBatch,
-  getOrderMappingConfig,
-  isPositionEligibleForSubmission
+  isPositionEligibleForSubmission,
+  DEFAULT_ORDER_MAPPING_CONFIG
 } from '@/lib/utils/orderMapping'
 import {
   getAllEligiblePositions,
@@ -74,7 +74,7 @@ export class DataTransformationService {
     config?: Partial<OrderMappingConfig>,
     batchOptimization?: Partial<BatchOptimizationConfig>
   ) {
-    this.config = { ...getOrderMappingConfig(), ...config }
+    this.config = { ...DEFAULT_ORDER_MAPPING_CONFIG, ...config }
     this.batchOptimization = { ...DEFAULT_BATCH_OPTIMIZATION, ...batchOptimization }
   }
 
@@ -147,7 +147,7 @@ export class DataTransformationService {
     for (const [portfolioId, positions] of portfolioGroups.entries()) {
       try {
         const portfolioOrders = positions.map(position => {
-          const order = mapPositionToOrder(position, portfolioId, this.config)
+          const order = mapPositionToOrder(position, portfolioId)
           
           // Generate fresh timestamp if requested
           if (opts.generateTimestamps) {
@@ -165,7 +165,7 @@ export class DataTransformationService {
 
     // Generate summary
     const portfolioIds = Array.from(portfolioGroups.keys())
-    const summary = generateOrderSubmissionSummary(allEligiblePositions, portfolioIds, this.config)
+    const summary = generateOrderSubmissionSummary(allEligiblePositions, portfolioIds)
 
     // Validate orders if requested
     let validationResults: ReturnType<typeof validateOrderBatch> = { isValid: true, errors: [], batchErrors: [] }

@@ -11,7 +11,7 @@ import {
   BatchSubmissionResult,
   OrderPostDTO 
 } from '@/types/order'
-import { orderServiceApi } from '@/lib/api/orderService'
+
 // import { orderGenerationApi } from '@/lib/api/orderGenerationService'
 import { validateOrderEligibility } from '@/lib/utils/orderMapping'
 import { logOrderSubmission } from '@/lib/utils/orderLogging'
@@ -551,23 +551,27 @@ export function useBatchOperations(
           }
 
           for (const portfolio of rebalance.portfolios) {
-            const portfolioResult = await orderServiceApi.submitRebalancePositions(
-              portfolio.positions,
-              portfolio.portfolio_id,
-              (progress) => {
-                updateProgress({
-                  statusMessage: `Processing portfolio ${portfolio.portfolio_id}: ${progress.submitted}/${progress.total} orders...`
-                })
-              }
-            )
+            const response = await fetch('/api/rebalances/submit-positions', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ positions: portfolio.positions, portfolioId: portfolio.portfolio_id })
+            });
+            if (!response.ok) {
+              throw new Error(`Failed to submit positions for portfolio ${portfolio.portfolio_id}: ${response.statusText}`);
+            }
+            const portfolioResult: OrderSubmissionResult = await response.json();
 
             // Aggregate results
-            rebalanceResult.totalOrders += portfolioResult.totalOrders
-            rebalanceResult.successfulOrders += portfolioResult.successfulOrders
-            rebalanceResult.failedOrders += portfolioResult.failedOrders
-            rebalanceResult.errors.push(...portfolioResult.errors)
-            rebalanceResult.submittedOrderIds.push(...portfolioResult.submittedOrderIds)
-            rebalanceResult.failedPositions.push(...portfolioResult.failedPositions)
+            rebalanceResult.totalOrders += portfolioResult.totalOrders;
+            rebalanceResult.successfulOrders += portfolioResult.successfulOrders;
+            rebalanceResult.failedOrders += portfolioResult.failedOrders;
+            rebalanceResult.errors.push(...portfolioResult.errors);
+            rebalanceResult.submittedOrderIds.push(...portfolioResult.submittedOrderIds);
+            rebalanceResult.failedPositions.push(...portfolioResult.failedPositions);
+
+            updateProgress({
+              statusMessage: `Processing portfolio ${portfolio.portfolio_id}: ${portfolioResult.successfulOrders}/${portfolioResult.totalOrders} orders...`
+            });
           }
 
           results.push(rebalanceResult)

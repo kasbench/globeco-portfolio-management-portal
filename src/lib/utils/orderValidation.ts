@@ -13,8 +13,7 @@ import {
   OrderMappingConfig,
   SubmissionState
 } from '@/types/order'
-import { getOrderServiceConfig } from '@/lib/api/orderService'
-import { validateOrder, validateOrderBatch } from './orderMapping'
+import { validateOrder, validateOrderBatch, DEFAULT_ORDER_MAPPING_CONFIG } from './orderMapping'
 
 /**
  * Comprehensive position eligibility validation
@@ -236,7 +235,7 @@ export function validateOrderMapping(
   portfolioId: string,
   config?: OrderMappingConfig
 ): OrderValidationResult {
-  const mappingConfig = config || getOrderServiceConfig()
+  const mappingConfig = config || DEFAULT_ORDER_MAPPING_CONFIG
   
   try {
     // First validate position eligibility
@@ -342,7 +341,7 @@ export function validateBatchSizeConstraints(
   warnings: ValidationError[]
   recommendedBatches: number
 } {
-  const mappingConfig = config || getOrderServiceConfig()
+  const mappingConfig = config || DEFAULT_ORDER_MAPPING_CONFIG
   const errors: ValidationError[] = []
   const warnings: ValidationError[] = []
   
