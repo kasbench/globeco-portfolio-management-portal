@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { orderGenerationApi } from '@/lib/api/orderGenerationService';
+import orderGenerationApi from '@/lib/api/orderGenerationService';
 
 // GET /api/models/[id] - Get model by ID
 export async function GET(req: NextRequest, { params }: any) {
   try {
-    const model = await orderGenerationApi.getModel(params.id);
+    const model = await orderGenerationApi.getModelById(params.id);
     if (!model) {
       return NextResponse.json({ error: 'Model not found' }, { status: 404 });
     }

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { orderGenerationApi } from '@/lib/api/orderGenerationService';
+import orderGenerationApi from '@/lib/api/orderGenerationService';
 
 // POST /api/models/[id]/rebalance - Trigger rebalance for a model
 export async function POST(req: NextRequest, { params }: any) {
