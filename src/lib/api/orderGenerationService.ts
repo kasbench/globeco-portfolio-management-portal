@@ -120,6 +120,21 @@ export const orderGenerationServiceApi = {
       throw error;
     }
   },
+
+  /**
+   * Get portfolios for a specific rebalance
+   */
+  getRebalancePortfolios: async (rebalanceId: string): Promise<any[]> => {
+    try {
+      // Call the correct endpoint
+      const response: AxiosResponse<any> = await apiClient.get(`/api/v1/rebalance/${rebalanceId}`);
+      // Return the portfolios array from the response
+      return response.data.portfolios || [];
+    } catch (error) {
+      console.error(`Error fetching portfolios for rebalance ${rebalanceId}:`, error);
+      throw error;
+    }
+  },
 };
 
 export default orderGenerationServiceApi;

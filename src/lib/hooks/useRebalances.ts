@@ -133,7 +133,10 @@ export function useRebalancePortfolios(rebalanceId: string, enabled: boolean = f
     queryKey: ['rebalance-portfolios', rebalanceId],
     queryFn: async () => {
       const res = await fetch(`/api/rebalances/${rebalanceId}/portfolios`);
-      if (!res.ok) throw new Error('Failed to fetch rebalance portfolios');
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || 'Failed to fetch rebalance portfolios');
+      }
       return res.json();
     },
     enabled: enabled && !!rebalanceId,
