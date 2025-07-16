@@ -245,14 +245,16 @@ const ExpandedPortfolioContent = ({
           </div>
           
           {/* Position Table - Real Data */}
-          <PositionTable
-            positions={positions || []}
-            isLoading={positionsLoading}
-            isError={positionsError}
-            error={positionsErrorData}
-            portfolioId={portfolio.portfolio_id}
-            rebalanceId={rebalanceId}
-          />
+          <div className="max-h-[400px] overflow-y-auto">
+            <PositionTable
+              positions={positions || []}
+              isLoading={positionsLoading}
+              isError={positionsError}
+              error={positionsErrorData}
+              portfolioId={portfolio.portfolio_id}
+              rebalanceId={rebalanceId}
+            />
+          </div>
         </div>
       </TableCell>
     </TableRow>
