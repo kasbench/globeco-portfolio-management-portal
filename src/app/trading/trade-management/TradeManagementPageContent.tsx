@@ -15,7 +15,7 @@ import { TradeOrderEnhancedResponseDTO, TradeOrderAction, TradeOrderFilters, Tra
 import { TradeOrderActionMenu } from '@/components/features/trade-order-action-menu'
 import TradeOrderDetailsModal from '@/components/features/trade-order-details-modal'
 import { TradeSubmissionModal } from '@/components/features/trade-submission-modal'
-import tradeService from '@/lib/api/tradeService'
+// import tradeService from '@/lib/api/tradeService'
 import { OrderFilter } from '@/types/order'
 import { OrderQueryParams } from '@/types/order'
 
@@ -158,7 +158,9 @@ const TradeManagementPageContent: React.FC<TradeManagementPageContentProps> = ()
         break
       case 'delete':
         try {
-          await tradeService.deleteTradeOrder(tradeOrder.id, tradeOrder.version)
+          await fetch(`/api/trade-orders/${tradeOrder.id}?version=${tradeOrder.version}`, {
+            method: 'DELETE',
+          })
           toast.success(`Trade Order #${tradeOrder.id} deleted`)
           refetch()
         } catch (err) {

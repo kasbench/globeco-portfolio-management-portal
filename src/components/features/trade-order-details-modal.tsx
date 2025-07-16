@@ -37,7 +37,7 @@ import {
 } from '@/types/trade'
 import { formatCurrency, formatNumber, formatDateTime } from '@/lib/utils'
 import { useBlotters } from '@/lib/hooks/useBlotters'
-import { tradeService } from '@/lib/api/tradeService'
+// import { tradeService } from '@/lib/api/tradeService'
 
 interface TradeOrderDetailsModalProps {
   tradeOrder: TradeOrderEnhancedResponseDTO | null
@@ -167,7 +167,13 @@ export function TradeOrderDetailsModal({
       }
 
       // Call the update API (v1 returns TradeOrderResponseDTO)
-      const updatedBasicTradeOrder = await tradeService.updateTradeOrder(tradeOrder.id, updateRequest)
+      const response = await fetch(`/api/trade-orders/${tradeOrder.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updateRequest),
+      });
+      if (!response.ok) throw new Error('Failed to update trade order');
+      const updatedBasicTradeOrder = await response.json();
       
       // Merge the updated basic fields with the existing enhanced fields
       const updatedTradeOrder: TradeOrderEnhancedResponseDTO = {

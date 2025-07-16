@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { DestinationResponseDTO } from '@/types/trade';
-import { tradeService } from '@/lib/api/tradeService';
+// import { tradeService } from '@/lib/api/tradeService';
 import { formatDestinationOptions } from '@/lib/utils/tradeUtils';
 
 interface UseDestinationsReturn {
@@ -54,7 +54,9 @@ export function useDestinations(): UseDestinationsReturn {
     try {
       setLoading(true);
       setError(null);
-      const data = await tradeService.getDestinations();
+      const res = await fetch('/api/destinations');
+      if (!res.ok) throw new Error('Failed to fetch destinations');
+      const data = await res.json();
       setDestinations(data);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load destinations';

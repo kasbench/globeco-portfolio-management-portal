@@ -18,7 +18,6 @@ import { TradeOrderActionMenu } from '@/components/features/trade-order-action-m
 import TradeOrderDetailsModal from '@/components/features/trade-order-details-modal'
 import { TradeSubmissionModal } from '@/components/features/trade-submission-modal'
 
-import tradeService from '@/lib/api/tradeService'
 import TradeManagementPageContent from './TradeManagementPageContent'
 
 // Filter configuration for Trade Orders

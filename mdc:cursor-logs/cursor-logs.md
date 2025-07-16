@@ -86,6 +86,8 @@
 - [2024-06-10] Refactored execution cancellation (single and batch) to use the /api/executions API routes instead of direct backend service calls. 
 - [2024-06-10] Refactored reference data fetching (blotters) to use the /api/blotters API route. Confirmed that statuses and order types already use API routes. 
 - [2024-06-10] Refactored all rebalance actions (submit, delete, batch, etc.) in client components and hooks to use server-side API routes instead of direct backend service imports. All direct usage of orderGenerationApi/orderServiceApi for rebalances has been removed from client code. 
+- Implemented DELETE API route at /api/rebalances/[rebalanceId]/route.ts to allow deletion of a rebalance after successful submission.
+- This supports the requirement to prevent double submission and enables UI cleanup of completed rebalances, per requirement-3.md. 
 
 ---
 

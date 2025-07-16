@@ -17,6 +17,56 @@ const apiClient = axios.create({
   },
 });
 
+// Add Axios interceptors for improved logging
+apiClient.interceptors.request.use(
+  (config) => {
+    const fullUrl = config.baseURL
+      ? config.baseURL.replace(/\/$/, '') + (config.url || '')
+      : config.url;
+    console.log(`[${new Date().toISOString()}] API Request:`, {
+      method: config.method?.toUpperCase(),
+      url: fullUrl,
+      params: config.params,
+      data: config.data ? JSON.stringify(config.data) : undefined,
+    });
+    return config;
+  },
+  (error) => {
+    console.error('API Request Error:', error);
+    return Promise.reject(error);
+  }
+);
+
+apiClient.interceptors.response.use(
+  (response) => {
+    const fullUrl = response.config.baseURL
+      ? response.config.baseURL.replace(/\/$/, '') + (response.config.url || '')
+      : response.config.url;
+    console.log(`[${new Date().toISOString()}] API Response:`, {
+      status: response.status,
+      url: fullUrl,
+      data: response.data,
+    });
+    return response;
+  },
+  (error) => {
+    if (error.config) {
+      const fullUrl = error.config.baseURL
+        ? error.config.baseURL.replace(/\/$/, '') + (error.config.url || '')
+        : error.config.url;
+      console.error(`[${new Date().toISOString()}] API Error:`, {
+        status: error.response?.status,
+        url: fullUrl,
+        message: error.message,
+        data: error.response?.data,
+      });
+    } else {
+      console.error(`[${new Date().toISOString()}] API Error:`, error);
+    }
+    return Promise.reject(error);
+  }
+);
+
 export const orderGenerationServiceApi = {
   /**
    * List rebalances with pagination and sorting
@@ -49,9 +99,11 @@ export const orderGenerationServiceApi = {
    */
   deleteRebalance: async (rebalanceId: string, version: number): Promise<void> => {
     try {
+      console.log('[orderGenerationServiceApi] Calling DELETE /api/v1/rebalance', { rebalanceId, version });
       await apiClient.delete(`/api/v1/rebalance/${rebalanceId}`, { params: { version } });
+      console.log('[orderGenerationServiceApi] Successfully deleted rebalance', { rebalanceId, version });
     } catch (error) {
-      console.error(`Error deleting rebalance ${rebalanceId}:`, error);
+      console.error('[orderGenerationServiceApi] Error deleting rebalance', { rebalanceId, version, error });
       throw error;
     }
   },
@@ -132,6 +184,24 @@ export const orderGenerationServiceApi = {
       return response.data.portfolios || [];
     } catch (error) {
       console.error(`Error fetching portfolios for rebalance ${rebalanceId}:`, error);
+      throw error;
+    }
+  },
+
+  /**
+   * Get positions for a specific portfolio in a rebalance
+   */
+  getRebalancePortfolioPositions: async (rebalanceId: string, portfolioId: string): Promise<any[]> => {
+    try {
+      const response: AxiosResponse<any> = await apiClient.get(`/api/v1/rebalance/${rebalanceId}`);
+      const portfolios = response.data.portfolios || [];
+      const portfolio = portfolios.find((p: any) => p.portfolio_id === portfolioId);
+      if (!portfolio) {
+        throw new Error(`Portfolio ${portfolioId} not found in rebalance ${rebalanceId}`);
+      }
+      return portfolio.positions || [];
+    } catch (error) {
+      console.error(`Error fetching positions for rebalance ${rebalanceId}, portfolio ${portfolioId}:`, error);
       throw error;
     }
   },
