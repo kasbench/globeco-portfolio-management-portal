@@ -9,10 +9,14 @@ export async function GET(req: NextRequest) {
     searchParams.forEach((value, key) => {
       params[key] = value;
     });
+    
     const trades = await tradeService.getTradeOrders(params);
     return NextResponse.json(trades);
   } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'Failed to fetch trades' }, { status: 500 });
+    console.error('Trades API route failed:', error);
+    return NextResponse.json({ 
+      error: error.message || 'Failed to fetch trades'
+    }, { status: 500 });
   }
 }
 

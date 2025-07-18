@@ -1,11 +1,8 @@
 import type { Metadata } from "next"
-import { Inter } from "next/font/google"
 import "./globals.css"
 import Header from "@/components/layout/Header"
 import QueryProvider from "@/lib/providers/QueryProvider"
 import { Toaster } from "sonner"
-
-const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "GlobeCo Portfolio Management Portal",
@@ -26,7 +23,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className} suppressHydrationWarning>
+      <body className="font-sans" suppressHydrationWarning>
         <QueryProvider>
           <div className="min-h-screen bg-background font-sans antialiased">
             <Header />

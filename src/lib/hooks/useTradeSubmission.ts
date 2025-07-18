@@ -114,25 +114,22 @@ export function useTradeSubmission(
   );
 
   // Initialize submissions for new orders
-  const initializeSubmissions = useCallback(() => {
-    const newSubmissions: SubmissionState = {};
-    submittableOrders.forEach(order => {
-      if (!submissions[order.id]) {
-        newSubmissions[order.id] = {
-          quantity: getDefaultSubmissionQuantity(order),
-          destinationId: defaultDestinationId || null
-        };
-      } else {
-        newSubmissions[order.id] = submissions[order.id];
-      }
-    });
-    setSubmissions(newSubmissions);
-  }, [submittableOrders, defaultDestinationId, submissions]);
-
-  // Initialize on mount or when orders change
   useEffect(() => {
-    initializeSubmissions();
-  }, [submittableOrders, initializeSubmissions]);
+    setSubmissions(prev => {
+      const newSubmissions: SubmissionState = {};
+      submittableOrders.forEach(order => {
+        if (!prev[order.id]) {
+          newSubmissions[order.id] = {
+            quantity: getDefaultSubmissionQuantity(order),
+            destinationId: defaultDestinationId || null
+          };
+        } else {
+          newSubmissions[order.id] = prev[order.id];
+        }
+      });
+      return newSubmissions;
+    });
+  }, [submittableOrders, defaultDestinationId]);
 
   const setSubmissionQuantity = useCallback((tradeOrderId: number, quantity: number) => {
     setSubmissions(prev => ({
@@ -185,8 +182,7 @@ export function useTradeSubmission(
   const resetSubmissions = useCallback(() => {
     setSubmissions({});
     setError(null);
-    initializeSubmissions();
-  }, [initializeSubmissions]);
+  }, []);
 
   const getSubmissionData = useCallback((): TradeOrderSubmissionData[] => {
     const submissionData: TradeOrderSubmissionData[] = [];
@@ -232,20 +228,33 @@ export function useTradeSubmission(
         throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
       }
       
-      const apiSubmissions: TradeOrderSubmission[] = validation.validSubmissions.map(data => ({
-        tradeOrderId: data.tradeOrder.id,
-        quantity: data.quantity,
-        destinationId: data.destinationId
-      }));
+      let response;
       
-      // POST to /api/trades/batch if available, else fallback to /api/trades
-      const res = await fetch('/api/trades', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(apiSubmissions.length === 1 ? apiSubmissions[0] : apiSubmissions)
-      });
-      if (!res.ok) throw new Error('Failed to submit trade orders');
-      const response = await res.json();
+      // For individual submissions, use the individual submit endpoint
+      if (validation.validSubmissions.length === 1) {
+        const submission = validation.validSubmissions[0];
+        const res = await fetch(`/api/trade-orders/${submission.tradeOrder.id}/submit`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            quantity: submission.quantity,
+            destinationId: submission.destinationId
+          })
+        });
+        if (!res.ok) throw new Error('Failed to submit trade order');
+        const singleResponse = await res.json();
+        response = { successful: 1, failed: 0, results: [singleResponse] };
+      } else {
+        // For batch submissions, use the batch submit endpoint
+        const tradeOrderIds = validation.validSubmissions.map(data => data.tradeOrder.id);
+        const res = await fetch('/api/trade-orders/batch/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tradeOrderIds })
+        });
+        if (!res.ok) throw new Error('Failed to submit trade orders');
+        response = await res.json();
+      }
       
       // Reset submissions on success (check both field names for compatibility)
       const successCount = response.successful || response.successCount || 0;

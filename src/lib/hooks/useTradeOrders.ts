@@ -61,7 +61,7 @@ export const useTradeOrders = (options: UseTradeOrdersOptions = {}): UseTradeOrd
 
   // State management
   const [data, setData] = useState<TradeOrderPageResponseDTO | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(false)
   const [isRefetching, setIsRefetching] = useState(false)
   const [error, setError] = useState<Error | null>(null)
   const [filters, setFilters] = useState<TradeOrderFilters>(initialFilters)
@@ -93,14 +93,19 @@ export const useTradeOrders = (options: UseTradeOrdersOptions = {}): UseTradeOrd
         sort: sortField,
         ...Object.fromEntries(Object.entries(filters).filter(([_, v]) => v !== undefined && v !== null && v !== ''))
       });
+      
       const res = await fetch(`/api/trades?${params.toString()}`);
-      if (!res.ok) throw new Error('Failed to fetch trade orders');
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`Failed to fetch trade orders: ${res.status} ${res.statusText}`);
+      }
+      
       const response = await res.json();
       setData(response);
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Failed to fetch trade orders')
-      setError(error)
       console.error('Error fetching trade orders:', error)
+      setError(error)
     } finally {
       setIsLoading(false)
       setIsRefetching(false)

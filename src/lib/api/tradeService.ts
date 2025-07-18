@@ -249,10 +249,10 @@ class TradeService {
   }
 
   /**
-   * Submit individual trade order (v2)
+   * Submit individual trade order (v1)
    */
-  async submitTradeOrder(id: number): Promise<SubmitOrderResponseDTO> {
-    const response = await this.api.post<SubmitOrderResponseDTO>(`/api/v2/tradeOrders/${id}/submit`);
+  async submitTradeOrder(id: number, submission?: { quantity?: number; destinationId?: number }): Promise<SubmitOrderResponseDTO> {
+    const response = await this.api.post<SubmitOrderResponseDTO>(`/api/v1/tradeOrders/${id}/submit`, submission);
     return response.data;
   }
 

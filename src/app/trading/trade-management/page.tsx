@@ -19,6 +19,7 @@ import TradeOrderDetailsModal from '@/components/features/trade-order-details-mo
 import { TradeSubmissionModal } from '@/components/features/trade-submission-modal'
 
 import TradeManagementPageContent from './TradeManagementPageContent'
+import ErrorBoundary from '@/components/ui/error-boundary'
 
 // Filter configuration for Trade Orders
 const FILTER_FIELDS = [
@@ -52,16 +53,18 @@ const FILTER_FIELDS = [
 
 const TradeManagementPage: React.FC = () => {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-slate-600">Loading Trade Management...</p>
+    <ErrorBoundary>
+      <Suspense fallback={
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-slate-600">Loading Trade Management...</p>
+          </div>
         </div>
-      </div>
-    }>
-      <TradeManagementPageContent />
-    </Suspense>
+      }>
+        <TradeManagementPageContent />
+      </Suspense>
+    </ErrorBoundary>
   )
 }
 
