@@ -1,0 +1,406 @@
+
+> globeco-portfolio-management-portal@0.1.0 start
+> next start
+
+   ▲ Next.js 15.1.6
+   - Local:        http://localhost:3000
+   - Network:      http://10.1.5.35:3000
+
+ ✓ Starting...
+ ✓ Ready in 917ms
+🌐 Middleware: GET /api/health - Start processing
+🔧 Middleware: API route detected: /api/health - metrics will be handled by API handler
+⏱️ Middleware: Request processed in 1ms
+✅ Middleware: GET /api/health - Processing complete
+🔄 withTelemetry: Starting health_check for GET /api/health
+🔍 Starting traced operation: health_check
+📝 Trace attributes set for health_check: {
+  'http.method': 'GET',
+  'http.url': 'http://localhost:3000/api/health',
+  'http.route': '/api/health',
+  'http.status_code': 200
+}
+🚀 Executing traced operation: health_check
+🚀 withTelemetry: Executing handler for /api/health
+🏥 Health check endpoint called
+🔍 Creating span: health-check
+📝 Span attributes set: { 'health.check': true, 'health.timestamp': 1752954425700 }
+✅ Span created successfully: health-check
+👁️ Recording page view: /api/health (user: system)
+✅ Page view metric recorded successfully
+🗄️ Recording DB operation: health_check on database - success (45.01061443242654ms)
+✅ DB operation metrics recorded successfully
+🗄️ Recording DB operation: health_check on external_api - success (57.19757653755236ms)
+✅ DB operation metrics recorded successfully
+🗄️ Recording DB operation: health_check on cache - success (16.21791971505253ms)
+✅ DB operation metrics recorded successfully
+✅ Health check completed successfully
+✅ withTelemetry: Handler completed with status 200
+⏱️ withTelemetry: Request completed in 3ms
+📊 Recording API request: GET /api/health - 200 (3ms)
+✅ API metrics recorded successfully
+✅ Traced operation completed successfully: health_check
+🏁 Span ended: health_check
+🌐 Middleware: GET /api/health - Start processing
+🔧 Middleware: API route detected: /api/health - metrics will be handled by API handler
+⏱️ Middleware: Request processed in 0ms
+✅ Middleware: GET /api/health - Processing complete
+🔄 withTelemetry: Starting health_check for GET /api/health
+🔍 Starting traced operation: health_check
+📝 Trace attributes set for health_check: {
+  'http.method': 'GET',
+  'http.url': 'http://localhost:3000/api/health',
+  'http.route': '/api/health',
+  'http.status_code': 200
+}
+🚀 Executing traced operation: health_check
+🚀 withTelemetry: Executing handler for /api/health
+🏥 Health check endpoint called
+🔍 Creating span: health-check
+📝 Span attributes set: { 'health.check': true, 'health.timestamp': 1752954440586 }
+✅ Span created successfully: health-check
+👁️ Recording page view: /api/health (user: system)
+✅ Page view metric recorded successfully
+🗄️ Recording DB operation: health_check on database - success (32.98472796525604ms)
+✅ DB operation metrics recorded successfully
+🗄️ Recording DB operation: health_check on external_api - success (74.66138878720687ms)
+✅ DB operation metrics recorded successfully
+🗄️ Recording DB operation: health_check on cache - success (7.455608547259686ms)
+✅ DB operation metrics recorded successfully
+✅ Health check completed successfully
+✅ withTelemetry: Handler completed with status 200
+⏱️ withTelemetry: Request completed in 1ms
+📊 Recording API request: GET /api/health - 200 (1ms)
+✅ API metrics recorded successfully
+✅ Traced operation completed successfully: health_check
+🏁 Span ended: health_check
+🌐 Middleware: GET /api/health - Start processing
+🔧 Middleware: API route detected: /api/health - metrics will be handled by API handler
+⏱️ Middleware: Request processed in 1ms
+✅ Middleware: GET /api/health - Processing complete
+🔄 withTelemetry: Starting health_check for GET /api/health
+🔍 Starting traced operation: health_check
+📝 Trace attributes set for health_check: {
+  'http.method': 'GET',
+  'http.url': 'http://localhost:3000/api/health',
+  'http.route': '/api/health',
+  'http.status_code': 200
+}
+🚀 Executing traced operation: health_check
+🚀 withTelemetry: Executing handler for /api/health
+🏥 Health check endpoint called
+🔍 Creating span: health-check
+📝 Span attributes set: { 'health.check': true, 'health.timestamp': 1752954455581 }
+✅ Span created successfully: health-check
+👁️ Recording page view: /api/health (user: system)
+✅ Page view metric recorded successfully
+🗄️ Recording DB operation: health_check on database - success (17.399658741641133ms)
+✅ DB operation metrics recorded successfully
+🗄️ Recording DB operation: health_check on external_api - success (112.08897178356179ms)
+✅ DB operation metrics recorded successfully
+🗄️ Recording DB operation: health_check on cache - success (22.579803509193262ms)
+✅ DB operation metrics recorded successfully
+✅ Health check completed successfully
+✅ withTelemetry: Handler completed with status 200
+⏱️ withTelemetry: Request completed in 1ms
+📊 Recording API request: GET /api/health - 200 (1ms)
+✅ API metrics recorded successfully
+✅ Traced operation completed successfully: health_check
+🏁 Span ended: health_check
+🌐 Middleware: GET /api/health - Start processing
+🔧 Middleware: API route detected: /api/health - metrics will be handled by API handler
+⏱️ Middleware: Request processed in 0ms
+✅ Middleware: GET /api/health - Processing complete
+🔄 withTelemetry: Starting health_check for GET /api/health
+🔍 Starting traced operation: health_check
+📝 Trace attributes set for health_check: {
+  'http.method': 'GET',
+  'http.url': 'http://localhost:3000/api/health',
+  'http.route': '/api/health',
+  'http.status_code': 200
+}
+🚀 Executing traced operation: health_check
+🚀 withTelemetry: Executing handler for /api/health
+🏥 Health check endpoint called
+🔍 Creating span: health-check
+📝 Span attributes set: { 'health.check': true, 'health.timestamp': 1752954467931 }
+✅ Span created successfully: health-check
+👁️ Recording page view: /api/health (user: system)
+✅ Page view metric recorded successfully
+🗄️ Recording DB operation: health_check on database - success (38.54956946253115ms)
+✅ DB operation metrics recorded successfully
+🗄️ Recording DB operation: health_check on external_api - success (49.19774421331862ms)
+✅ DB operation metrics recorded successfully
+🗄️ Recording DB operation: health_check on cache - success (6.153864208085633ms)
+✅ DB operation metrics recorded successfully
+✅ Health check completed successfully
+✅ withTelemetry: Handler completed with status 200
+⏱️ withTelemetry: Request completed in 1ms
+📊 Recording API request: GET /api/health - 200 (1ms)
+✅ API metrics recorded successfully
+✅ Traced operation completed successfully: health_check
+🏁 Span ended: health_check
+🌐 Middleware: GET /api/health - Start processing
+🔧 Middleware: API route detected: /api/health - metrics will be handled by API handler
+⏱️ Middleware: Request processed in 0ms
+✅ Middleware: GET /api/health - Processing complete
+🔄 withTelemetry: Starting health_check for GET /api/health
+🔍 Starting traced operation: health_check
+📝 Trace attributes set for health_check: {
+  'http.method': 'GET',
+  'http.url': 'http://localhost:3000/api/health',
+  'http.route': '/api/health',
+  'http.status_code': 200
+}
+🚀 Executing traced operation: health_check
+🚀 withTelemetry: Executing handler for /api/health
+🏥 Health check endpoint called
+🔍 Creating span: health-check
+📝 Span attributes set: { 'health.check': true, 'health.timestamp': 1752954470581 }
+✅ Span created successfully: health-check
+👁️ Recording page view: /api/health (user: system)
+✅ Page view metric recorded successfully
+🗄️ Recording DB operation: health_check on database - success (10.693209490698631ms)
+✅ DB operation metrics recorded successfully
+🗄️ Recording DB operation: health_check on external_api - success (99.45863908357434ms)
+✅ DB operation metrics recorded successfully
+🗄️ Recording DB operation: health_check on cache - success (29.609378952099966ms)
+✅ DB operation metrics recorded successfully
+✅ Health check completed successfully
+✅ withTelemetry: Handler completed with status 200
+⏱️ withTelemetry: Request completed in 1ms
+📊 Recording API request: GET /api/health - 200 (1ms)
+✅ API metrics recorded successfully
+✅ Traced operation completed successfully: health_check
+🏁 Span ended: health_check
+🌐 Middleware: GET /api/health - Start processing
+🔧 Middleware: API route detected: /api/health - metrics will be handled by API handler
+⏱️ Middleware: Request processed in 0ms
+✅ Middleware: GET /api/health - Processing complete
+🔄 withTelemetry: Starting health_check for GET /api/health
+🔍 Starting traced operation: health_check
+📝 Trace attributes set for health_check: {
+  'http.method': 'GET',
+  'http.url': 'http://localhost:3000/api/health',
+  'http.route': '/api/health',
+  'http.status_code': 200
+}
+🚀 Executing traced operation: health_check
+🚀 withTelemetry: Executing handler for /api/health
+🏥 Health check endpoint called
+🔍 Creating span: health-check
+📝 Span attributes set: { 'health.check': true, 'health.timestamp': 1752954485580 }
+✅ Span created successfully: health-check
+👁️ Recording page view: /api/health (user: system)
+✅ Page view metric recorded successfully
+🗄️ Recording DB operation: health_check on database - success (15.041325107393813ms)
+✅ DB operation metrics recorded successfully
+🗄️ Recording DB operation: health_check on external_api - success (109.68558527266988ms)
+✅ DB operation metrics recorded successfully
+🗄️ Recording DB operation: health_check on cache - success (33.0323174323575ms)
+✅ DB operation metrics recorded successfully
+✅ Health check completed successfully
+✅ withTelemetry: Handler completed with status 200
+⏱️ withTelemetry: Request completed in 1ms
+📊 Recording API request: GET /api/health - 200 (1ms)
+✅ API metrics recorded successfully
+✅ Traced operation completed successfully: health_check
+🏁 Span ended: health_check
+🌐 Middleware: GET /api/health - Start processing
+🔧 Middleware: API route detected: /api/health - metrics will be handled by API handler
+⏱️ Middleware: Request processed in 1ms
+✅ Middleware: GET /api/health - Processing complete
+🔄 withTelemetry: Starting health_check for GET /api/health
+🔍 Starting traced operation: health_check
+📝 Trace attributes set for health_check: {
+  'http.method': 'GET',
+  'http.url': 'http://localhost:3000/api/health',
+  'http.route': '/api/health',
+  'http.status_code': 200
+}
+🚀 Executing traced operation: health_check
+🚀 withTelemetry: Executing handler for /api/health
+🏥 Health check endpoint called
+🔍 Creating span: health-check
+📝 Span attributes set: { 'health.check': true, 'health.timestamp': 1752954497928 }
+✅ Span created successfully: health-check
+👁️ Recording page view: /api/health (user: system)
+✅ Page view metric recorded successfully
+🗄️ Recording DB operation: health_check on database - success (15.249548337942112ms)
+✅ DB operation metrics recorded successfully
+🗄️ Recording DB operation: health_check on external_api - success (59.5132132315011ms)
+✅ DB operation metrics recorded successfully
+🗄️ Recording DB operation: health_check on cache - success (7.580976771523387ms)
+✅ DB operation metrics recorded successfully
+✅ Health check completed successfully
+✅ withTelemetry: Handler completed with status 200
+⏱️ withTelemetry: Request completed in 1ms
+📊 Recording API request: GET /api/health - 200 (1ms)
+✅ API metrics recorded successfully
+✅ Traced operation completed successfully: health_check
+🏁 Span ended: health_check
+🌐 Middleware: GET /api/health - Start processing
+🔧 Middleware: API route detected: /api/health - metrics will be handled by API handler
+⏱️ Middleware: Request processed in 0ms
+✅ Middleware: GET /api/health - Processing complete
+🔄 withTelemetry: Starting health_check for GET /api/health
+🔍 Starting traced operation: health_check
+📝 Trace attributes set for health_check: {
+  'http.method': 'GET',
+  'http.url': 'http://localhost:3000/api/health',
+  'http.route': '/api/health',
+  'http.status_code': 200
+}
+🚀 Executing traced operation: health_check
+🚀 withTelemetry: Executing handler for /api/health
+🏥 Health check endpoint called
+🔍 Creating span: health-check
+📝 Span attributes set: { 'health.check': true, 'health.timestamp': 1752954500580 }
+✅ Span created successfully: health-check
+👁️ Recording page view: /api/health (user: system)
+✅ Page view metric recorded successfully
+🗄️ Recording DB operation: health_check on database - success (58.17565394420505ms)
+✅ DB operation metrics recorded successfully
+🗄️ Recording DB operation: health_check on external_api - success (59.21399734932203ms)
+✅ DB operation metrics recorded successfully
+🗄️ Recording DB operation: health_check on cache - success (22.819645555228348ms)
+✅ DB operation metrics recorded successfully
+✅ Health check completed successfully
+✅ withTelemetry: Handler completed with status 200
+⏱️ withTelemetry: Request completed in 1ms
+📊 Recording API request: GET /api/health - 200 (1ms)
+✅ API metrics recorded successfully
+✅ Traced operation completed successfully: health_check
+🏁 Span ended: health_check
+🌐 Middleware: GET /api/health - Start processing
+🔧 Middleware: API route detected: /api/health - metrics will be handled by API handler
+⏱️ Middleware: Request processed in 0ms
+✅ Middleware: GET /api/health - Processing complete
+🔄 withTelemetry: Starting health_check for GET /api/health
+🔍 Starting traced operation: health_check
+📝 Trace attributes set for health_check: {
+  'http.method': 'GET',
+  'http.url': 'http://localhost:3000/api/health',
+  'http.route': '/api/health',
+  'http.status_code': 200
+}
+🚀 Executing traced operation: health_check
+🚀 withTelemetry: Executing handler for /api/health
+🏥 Health check endpoint called
+🔍 Creating span: health-check
+📝 Span attributes set: { 'health.check': true, 'health.timestamp': 1752954515580 }
+✅ Span created successfully: health-check
+👁️ Recording page view: /api/health (user: system)
+✅ Page view metric recorded successfully
+🗄️ Recording DB operation: health_check on database - success (52.91001651142183ms)
+✅ DB operation metrics recorded successfully
+🗄️ Recording DB operation: health_check on external_api - success (80.53780136984699ms)
+✅ DB operation metrics recorded successfully
+🗄️ Recording DB operation: health_check on cache - success (17.07989031029339ms)
+✅ DB operation metrics recorded successfully
+✅ Health check completed successfully
+✅ withTelemetry: Handler completed with status 200
+⏱️ withTelemetry: Request completed in 0ms
+📊 Recording API request: GET /api/health - 200 (0ms)
+✅ API metrics recorded successfully
+✅ Traced operation completed successfully: health_check
+🏁 Span ended: health_check
+🌐 Middleware: GET /api/health - Start processing
+🔧 Middleware: API route detected: /api/health - metrics will be handled by API handler
+⏱️ Middleware: Request processed in 0ms
+✅ Middleware: GET /api/health - Processing complete
+🔄 withTelemetry: Starting health_check for GET /api/health
+🔍 Starting traced operation: health_check
+📝 Trace attributes set for health_check: {
+  'http.method': 'GET',
+  'http.url': 'http://localhost:3000/api/health',
+  'http.route': '/api/health',
+  'http.status_code': 200
+}
+🚀 Executing traced operation: health_check
+🚀 withTelemetry: Executing handler for /api/health
+🏥 Health check endpoint called
+🔍 Creating span: health-check
+📝 Span attributes set: { 'health.check': true, 'health.timestamp': 1752954527928 }
+✅ Span created successfully: health-check
+👁️ Recording page view: /api/health (user: system)
+✅ Page view metric recorded successfully
+🗄️ Recording DB operation: health_check on database - success (22.33346319742472ms)
+✅ DB operation metrics recorded successfully
+🗄️ Recording DB operation: health_check on external_api - success (104.33892204651326ms)
+✅ DB operation metrics recorded successfully
+🗄️ Recording DB operation: health_check on cache - success (11.278410666217859ms)
+✅ DB operation metrics recorded successfully
+✅ Health check completed successfully
+✅ withTelemetry: Handler completed with status 200
+⏱️ withTelemetry: Request completed in 1ms
+📊 Recording API request: GET /api/health - 200 (1ms)
+✅ API metrics recorded successfully
+✅ Traced operation completed successfully: health_check
+🏁 Span ended: health_check
+🌐 Middleware: GET /api/health - Start processing
+🔧 Middleware: API route detected: /api/health - metrics will be handled by API handler
+⏱️ Middleware: Request processed in 0ms
+✅ Middleware: GET /api/health - Processing complete
+🔄 withTelemetry: Starting health_check for GET /api/health
+🔍 Starting traced operation: health_check
+📝 Trace attributes set for health_check: {
+  'http.method': 'GET',
+  'http.url': 'http://localhost:3000/api/health',
+  'http.route': '/api/health',
+  'http.status_code': 200
+}
+🚀 Executing traced operation: health_check
+🚀 withTelemetry: Executing handler for /api/health
+🏥 Health check endpoint called
+🔍 Creating span: health-check
+📝 Span attributes set: { 'health.check': true, 'health.timestamp': 1752954530579 }
+✅ Span created successfully: health-check
+👁️ Recording page view: /api/health (user: system)
+✅ Page view metric recorded successfully
+🗄️ Recording DB operation: health_check on database - success (13.809809358321715ms)
+✅ DB operation metrics recorded successfully
+🗄️ Recording DB operation: health_check on external_api - success (112.03207257828778ms)
+✅ DB operation metrics recorded successfully
+🗄️ Recording DB operation: health_check on cache - success (13.255663193906994ms)
+✅ DB operation metrics recorded successfully
+✅ Health check completed successfully
+✅ withTelemetry: Handler completed with status 200
+⏱️ withTelemetry: Request completed in 1ms
+📊 Recording API request: GET /api/health - 200 (1ms)
+✅ API metrics recorded successfully
+✅ Traced operation completed successfully: health_check
+🏁 Span ended: health_check
+🌐 Middleware: GET /api/health - Start processing
+🔧 Middleware: API route detected: /api/health - metrics will be handled by API handler
+⏱️ Middleware: Request processed in 1ms
+✅ Middleware: GET /api/health - Processing complete
+🔄 withTelemetry: Starting health_check for GET /api/health
+🔍 Starting traced operation: health_check
+📝 Trace attributes set for health_check: {
+  'http.method': 'GET',
+  'http.url': 'http://localhost:3000/api/health',
+  'http.route': '/api/health',
+  'http.status_code': 200
+}
+🚀 Executing traced operation: health_check
+🚀 withTelemetry: Executing handler for /api/health
+🏥 Health check endpoint called
+🔍 Creating span: health-check
+📝 Span attributes set: { 'health.check': true, 'health.timestamp': 1752954545581 }
+✅ Span created successfully: health-check
+👁️ Recording page view: /api/health (user: system)
+✅ Page view metric recorded successfully
+🗄️ Recording DB operation: health_check on database - success (23.62087671492127ms)
+✅ DB operation metrics recorded successfully
+🗄️ Recording DB operation: health_check on external_api - success (119.80590326288778ms)
+✅ DB operation metrics recorded successfully
+🗄️ Recording DB operation: health_check on cache - success (7.915649305044557ms)
+✅ DB operation metrics recorded successfully
+✅ Health check completed successfully
+✅ withTelemetry: Handler completed with status 200
+⏱️ withTelemetry: Request completed in 2ms
+📊 Recording API request: GET /api/health - 200 (2ms)
+✅ API metrics recorded successfully
+✅ Traced operation completed successfully: health_check
+🏁 Span ended: health_check

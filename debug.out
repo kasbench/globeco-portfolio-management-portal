@@ -1,0 +1,318 @@
+🔍 OpenTelemetry Debugging Script
+==================================
+
+📋 Checking deployment status...
+NAME                                  READY   UP-TO-DATE   AVAILABLE   AGE
+globeco-portfolio-management-portal   1/1     1            1           9m3s
+
+🔍 Checking pod status...
+NAME                                                   READY   STATUS    RESTARTS   AGE
+globeco-portfolio-management-portal-6d4f64f668-xfsfw   1/1     Running   0          9m3s
+
+📊 Checking environment variables in the pod...
+Pod name: globeco-portfolio-management-portal-6d4f64f668-xfsfw
+
+🌍 OpenTelemetry environment variables:
+OTEL_DEBUG=true
+OTEL_ENABLE_AUTO_INSTRUMENTATION=true
+OTEL_ENABLE_CUSTOM_METRICS=true
+OTEL_ENABLE_CUSTOM_TRACING=true
+OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector-collector.monitoring.svc.cluster.local:4318
+OTEL_EXPORTER_OTLP_INSECURE=true
+OTEL_EXPORTER_OTLP_METRICS_ENDPOINT=http://otel-collector-collector.monitoring.svc.cluster.local:4318/v1/metrics
+OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://otel-collector-collector.monitoring.svc.cluster.local:4318/v1/traces
+OTEL_LOG_LEVEL=debug
+OTEL_METRIC_EXPORT_INTERVAL=5000
+OTEL_METRIC_EXPORT_TIMEOUT=30000
+OTEL_METRICS_EXPORTER=otlp
+OTEL_RESOURCE_ATTRIBUTES=service.name=globeco-portfolio-management-portal,service.version=0.1.0,deployment.environment=production,service.namespace=globeco
+OTEL_SERVICE_NAME=globeco-portfolio-management-portal
+OTEL_SERVICE_VERSION=0.1.0
+OTEL_TRACE_EXPORT_TIMEOUT=30000
+OTEL_TRACES_EXPORTER=otlp
+
+📝 Checking application logs (last 50 lines)...
+📝 Span attributes set: { 'health.check': true, 'health.timestamp': 1752946627186 }
+✅ Span created successfully: health-check
+👁️ Recording page view: /api/health (user: system)
+✅ Page view metric recorded successfully
+🗄️ Recording DB operation: health_check on database - success (41.170821948222105ms)
+✅ DB operation metrics recorded successfully
+🗄️ Recording DB operation: health_check on external_api - success (34.495478959688036ms)
+✅ DB operation metrics recorded successfully
+🗄️ Recording DB operation: health_check on cache - success (6.321648458499791ms)
+✅ DB operation metrics recorded successfully
+✅ Health check completed successfully
+✅ withTelemetry: Handler completed with status 200
+⏱️ withTelemetry: Request completed in 0ms
+📊 Recording API request: GET /api/health - 200 (0ms)
+✅ API metrics recorded successfully
+✅ Traced operation completed successfully: health_check
+🏁 Span ended: health_check
+🌐 Middleware: GET /api/health - Start processing
+🔧 Middleware: API route detected: /api/health - metrics will be handled by API handler
+⏱️ Middleware: Request processed in 0ms
+✅ Middleware: GET /api/health - Processing complete
+🔄 withTelemetry: Starting health_check for GET /api/health
+🔍 Starting traced operation: health_check
+📝 Trace attributes set for health_check: {
+  'http.method': 'GET',
+  'http.url': 'http://localhost:3000/api/health',
+  'http.route': '/api/health',
+  'http.status_code': 200
+}
+🚀 Executing traced operation: health_check
+🚀 withTelemetry: Executing handler for /api/health
+🏥 Health check endpoint called
+🔍 Creating span: health-check
+📝 Span attributes set: { 'health.check': true, 'health.timestamp': 1752946630462 }
+✅ Span created successfully: health-check
+👁️ Recording page view: /api/health (user: system)
+✅ Page view metric recorded successfully
+🗄️ Recording DB operation: health_check on database - success (48.67930118769972ms)
+✅ DB operation metrics recorded successfully
+🗄️ Recording DB operation: health_check on external_api - success (33.840138079962095ms)
+✅ DB operation metrics recorded successfully
+🗄️ Recording DB operation: health_check on cache - success (28.296902678011037ms)
+✅ DB operation metrics recorded successfully
+✅ Health check completed successfully
+✅ withTelemetry: Handler completed with status 200
+⏱️ withTelemetry: Request completed in 1ms
+📊 Recording API request: GET /api/health - 200 (1ms)
+✅ API metrics recorded successfully
+✅ Traced operation completed successfully: health_check
+🏁 Span ended: health_check
+
+🔗 Testing collector connectivity...
+Port forwarding to test connectivity...
+Forwarding from 127.0.0.1:3000 -> 3000
+Forwarding from [::1]:3000 -> 3000
+
+🧪 Testing debug endpoints...
+Testing collector connectivity debug endpoint...
+Handling connection for 3000
+{
+  "timestamp": "2025-07-19T17:37:18.963Z",
+  "environment": {
+    "NODE_ENV": "production",
+    "OTEL_SERVICE_NAME": "globeco-portfolio-management-portal",
+    "OTEL_EXPORTER_OTLP_ENDPOINT": "http://otel-collector-collector.monitoring.svc.cluster.local:4318",
+    "OTEL_EXPORTER_OTLP_TRACES_ENDPOINT": "http://otel-collector-collector.monitoring.svc.cluster.local:4318/v1/traces",
+    "OTEL_EXPORTER_OTLP_METRICS_ENDPOINT": "http://otel-collector-collector.monitoring.svc.cluster.local:4318/v1/metrics"
+  },
+  "connectivity": [
+    {
+      "endpoint": "http://otel-collector-collector.monitoring.svc.cluster.local:4317",
+      "method": "GET",
+      "success": false,
+      "status": null,
+      "statusText": "",
+      "error": "fetch failed",
+      "responseTime": 4,
+      "headers": {}
+    },
+    {
+      "endpoint": "http://otel-collector-collector.monitoring.svc.cluster.local:4318",
+      "method": "GET",
+      "success": true,
+      "status": 404,
+      "statusText": "Not Found",
+      "error": null,
+      "responseTime": 4,
+      "headers": {
+        "content-length": "19",
+        "content-type": "text/plain; charset=utf-8",
+        "date": "Sat, 19 Jul 2025 17:37:18 GMT",
+        "vary": "Origin",
+        "x-content-type-options": "nosniff"
+      }
+    },
+    {
+      "endpoint": "http://otel-collector-collector.monitoring.svc.cluster.local:4317/v1/traces",
+      "method": "GET",
+      "success": false,
+      "status": null,
+      "statusText": "",
+      "error": "fetch failed",
+      "responseTime": 3,
+      "headers": {}
+    },
+    {
+      "endpoint": "http://otel-collector-collector.monitoring.svc.cluster.local:4318/v1/traces",
+      "method": "GET",
+      "success": true,
+      "status": 405,
+      "statusText": "Method Not Allowed",
+      "error": null,
+      "responseTime": 1,
+      "headers": {
+        "content-length": "41",
+        "content-type": "text/plain",
+        "date": "Sat, 19 Jul 2025 17:37:18 GMT",
+        "vary": "Origin"
+      }
+    },
+    {
+      "endpoint": "http://otel-collector-collector.monitoring.svc.cluster.local:4317/v1/metrics",
+      "method": "GET",
+      "success": false,
+      "status": null,
+      "statusText": "",
+      "error": "fetch failed",
+      "responseTime": 4,
+      "headers": {}
+    },
+    {
+      "endpoint": "http://otel-collector-collector.monitoring.svc.cluster.local:4318/v1/metrics",
+      "method": "GET",
+      "success": true,
+      "status": 405,
+      "statusText": "Method Not Allowed",
+      "error": null,
+      "responseTime": 1,
+      "headers": {
+        "content-length": "41",
+        "content-type": "text/plain",
+        "date": "Sat, 19 Jul 2025 17:37:18 GMT",
+        "vary": "Origin"
+      }
+    },
+    {
+      "endpoint": "http://otel-collector-collector.monitoring.svc.cluster.local:4317/v1/traces",
+      "method": "POST",
+      "success": false,
+      "status": null,
+      "statusText": "",
+      "error": "fetch failed",
+      "responseTime": 4,
+      "headers": {}
+    },
+    {
+      "endpoint": "http://otel-collector-collector.monitoring.svc.cluster.local:4318/v1/traces",
+      "method": "POST",
+      "success": true,
+      "status": 200,
+      "statusText": "OK",
+      "error": null,
+      "responseTime": 2,
+      "headers": {
+        "content-length": "21",
+        "content-type": "application/json",
+        "date": "Sat, 19 Jul 2025 17:37:18 GMT",
+        "vary": "Origin"
+      }
+    },
+    {
+      "endpoint": "http://otel-collector-collector.monitoring.svc.cluster.local:4317/v1/metrics",
+      "method": "POST",
+      "success": false,
+      "status": null,
+      "statusText": "",
+      "error": "fetch failed",
+      "responseTime": 5,
+      "headers": {}
+    },
+    {
+      "endpoint": "http://otel-collector-collector.monitoring.svc.cluster.local:4318/v1/metrics",
+      "method": "POST",
+      "success": true,
+      "status": 200,
+      "statusText": "OK",
+      "error": null,
+      "responseTime": 1,
+      "headers": {
+        "content-length": "21",
+        "content-type": "application/json",
+        "date": "Sat, 19 Jul 2025 17:37:18 GMT",
+        "vary": "Origin"
+      }
+    }
+  ],
+  "summary": {
+    "total": 10,
+    "successful": 5,
+    "failed": 5,
+    "successRate": "50%"
+  }
+}
+
+🏥 Testing health endpoint...
+Handling connection for 3000
+{
+  "status": "healthy",
+  "timestamp": "2025-07-19T17:37:19.016Z",
+  "service": "globeco-portfolio-management-portal",
+  "version": "0.1.0",
+  "checks": [
+    {
+      "name": "database",
+      "status": "healthy",
+      "duration": 29.24670057286535
+    },
+    {
+      "name": "external_api",
+      "status": "healthy",
+      "duration": 71.37067026331523
+    },
+    {
+      "name": "cache",
+      "status": "healthy",
+      "duration": 20.827831264106713
+    }
+  ],
+  "telemetry": {
+    "service_name": "globeco-portfolio-management-portal",
+    "collector_endpoint": "http://otel-collector-collector.monitoring.svc.cluster.local:4318",
+    "debug_mode": true
+  }
+}
+
+🧪 Testing telemetry test endpoint...
+Handling connection for 3000
+{
+  "message": "Telemetry test completed",
+  "timestamp": "2025-07-19T17:37:19.134Z",
+  "service": "globeco-portfolio-management-portal",
+  "endpoint": "http://otel-collector-collector.monitoring.svc.cluster.local:4318"
+}
+
+📊 Testing instrumented API endpoints...
+Handling connection for 3000
+[{"id":"6875996f6ba8d303aac5f22b","name":"Portfolio 0","dateCreated":"2025-07-14T23:57:35.229Z","version":1},{"id":"6875996f6ba8d303aac5f22c","name":"Portfolio 1","dateCreated":"2025-07-14T23:57:35.24
+Handling connection for 3000
+{"pagination":{"hasNext":true,"currentPage":0,"totalElements":800,"hasPrevious":false,"pageSize":50,"totalPages":16},"content":[{"id":1,"blotter":{"id":1,"name":"Default","version":1},"status":{"id":2
+
+🔍 Checking OpenTelemetry Collector status...
+
+📝 Checking collector logs (last 20 lines)...
+❌ Collector pod not found
+
+🔍 Checking Prometheus status...
+
+🔍 Checking Jaeger status...
+NAME                      READY   STATUS    RESTARTS       AGE
+jaeger-76f94cd66b-sh7js   1/1     Running   10 (14h ago)   10d
+
+📊 Summary and Next Steps:
+=========================
+
+1. Check the application logs above for OpenTelemetry initialization messages
+2. Look for these key messages:
+   - '🚀 Starting OpenTelemetry initialization...'
+   - '✅ OpenTelemetry SDK started successfully!'
+   - '🧪 Test span created and ended'
+   - '✅ Test metric recorded'
+
+3. Check the collector connectivity test results
+4. Verify that the collector, Prometheus, and Jaeger pods are running
+
+🔧 If issues persist:
+   - Check collector configuration for OTLP receivers
+   - Verify network policies allow communication
+   - Check if the collector is exporting to Prometheus/Jaeger correctly
+
+📞 For manual testing:
+   kubectl port-forward deployment/globeco-portfolio-management-portal 3000:3000 -n globeco
+   curl http://localhost:3000/api/debug/collector
+   curl http://localhost:3000/api/telemetry/test

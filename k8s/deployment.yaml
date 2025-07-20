@@ -21,6 +21,77 @@ spec:
           imagePullPolicy: Always
           ports:
             - containerPort: 3000
+          env:
+            # OpenTelemetry Configuration
+            - name: OTEL_SERVICE_NAME
+              value: "globeco-portfolio-management-portal"
+            - name: OTEL_SERVICE_VERSION
+              value: "0.1.0"
+            # Try HTTP endpoint first (port 4318)
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://otel-collector-collector.monitoring.svc.cluster.local:4318"
+            - name: OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
+              value: "http://otel-collector-collector.monitoring.svc.cluster.local:4318/v1/traces"
+            - name: OTEL_EXPORTER_OTLP_METRICS_ENDPOINT
+              value: "http://otel-collector-collector.monitoring.svc.cluster.local:4318/v1/metrics"
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: "service.name=globeco-portfolio-management-portal,service.version=0.1.0,deployment.environment=production,service.namespace=globeco"
+            # Enable debug mode for better visibility
+            - name: OTEL_DEBUG
+              value: "true"
+            - name: OTEL_LOG_LEVEL
+              value: "debug"
+            # Additional OTLP configuration
+            - name: OTEL_EXPORTER_OTLP_INSECURE
+              value: "true"
+            - name: OTEL_EXPORTER_OTLP_PROTOCOL
+              value: "http/protobuf"
+            # Metric export configuration
+            - name: OTEL_METRIC_EXPORT_INTERVAL
+              value: "5000"
+            - name: OTEL_METRIC_EXPORT_TIMEOUT
+              value: "30000"
+            - name: OTEL_TRACE_EXPORT_TIMEOUT
+              value: "30000"
+            # Feature flags
+            - name: OTEL_ENABLE_AUTO_INSTRUMENTATION
+              value: "true"
+            - name: OTEL_ENABLE_CUSTOM_METRICS
+              value: "true"
+            - name: OTEL_ENABLE_CUSTOM_TRACING
+              value: "true"
+            # Additional debugging
+            - name: OTEL_TRACES_EXPORTER
+              value: "otlp"
+            - name: OTEL_METRICS_EXPORTER
+              value: "otlp"
+            # Next.js configuration
+            - name: NODE_ENV
+              value: "production"
+            - name: NEXT_RUNTIME
+              value: "nodejs"
+            # Hostname for service instance identification
+            - name: HOSTNAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          # Health checks that will generate telemetry data
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
           resources:
             requests:
               cpu: "100m"

@@ -1,0 +1,11 @@
+E0719 13:37:22.227334   30499 portforward.go:391] "Unhandled Error" err="error copying from remote stream to local connection: readfrom tcp6 [::1]:3000->[::1]:62424: write tcp6 [::1]:3000->[::1]:62424: write: broken pipe"
+No resources found in monitoring namespace.
+scripts/debug-telemetry.sh: line 80: 30499 Terminated: 15          kubectl port-forward deployment/globeco-portfolio-management-portal 3000:3000 -n globeco
+error: error executing jsonpath "{.items[0].metadata.name}": Error executing template: array index out of bounds: index 0, length 0. Printing more information for debugging the template:
+	template was:
+		{.items[0].metadata.name}
+	object given to jsonpath engine was:
+		map[string]interface {}{"apiVersion":"v1", "items":[]interface {}{}, "kind":"List", "metadata":map[string]interface {}{"resourceVersion":""}}
+
+
+No resources found in monitor namespace.

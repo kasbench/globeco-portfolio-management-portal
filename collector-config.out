@@ -1,0 +1,328 @@
+🔍 Checking OpenTelemetry Collector Configuration
+===============================================
+
+📋 Collector Pod Details:
+Name:             otel-collector-collector-7f95b7dfc6-ckvjn
+Namespace:        monitoring
+Priority:         0
+Service Account:  otel-collector
+Node:             node-2/192.168.0.104
+Start Time:       Thu, 17 Jul 2025 19:13:47 -0400
+Labels:           app.kubernetes.io/component=opentelemetry-collector
+                  app.kubernetes.io/instance=monitoring.otel-collector
+                  app.kubernetes.io/managed-by=opentelemetry-operator
+                  app.kubernetes.io/name=otel-collector-collector
+                  app.kubernetes.io/part-of=opentelemetry
+                  app.kubernetes.io/version=latest
+                  pod-template-hash=7f95b7dfc6
+Annotations:      opentelemetry-operator-config/sha256: 27200a978d89f88fe1ef37f4b7852d0e22b32df84c76d086ab7504b92845cf78
+                  prometheus.io/path: /metrics
+                  prometheus.io/port: 8889
+                  prometheus.io/scrape: true
+Status:           Running
+IP:               10.1.3.209
+IPs:
+  IP:           10.1.3.209
+Controlled By:  ReplicaSet/otel-collector-collector-7f95b7dfc6
+Containers:
+  otc-container:
+    Container ID:  containerd://5d1fb085347eb2a812b2377654c303f514133d8da0fa2b1a3ee2c66697173fbf
+    Image:         otel/opentelemetry-collector-contrib:latest
+    Image ID:      docker.io/otel/opentelemetry-collector-contrib@sha256:867d1074c2f750936fb9358ec9eefa009308053cf156b2c7ca1761ba5ef78452
+    Ports:         13133/TCP, 8888/TCP, 4317/TCP, 4318/TCP, 1777/TCP, 8889/TCP, 55679/TCP
+    Host Ports:    0/TCP, 0/TCP, 0/TCP, 0/TCP, 0/TCP, 0/TCP, 0/TCP
+    Args:
+      --config=/conf/collector.yaml
+    State:          Running
+      Started:      Thu, 17 Jul 2025 19:14:10 -0400
+    Ready:          True
+    Restart Count:  0
+    Limits:
+      cpu:     500m
+      memory:  512Mi
+    Requests:
+      cpu:      100m
+      memory:   128Mi
+    Liveness:   http-get http://:13133/ delay=0s timeout=1s period=10s #success=1 #failure=3
+    Readiness:  http-get http://:13133/ delay=0s timeout=1s period=10s #success=1 #failure=3
+    Environment:
+      MY_POD_IP:      (v1:status.podIP)
+      MY_POD_NAME:   otel-collector-collector-7f95b7dfc6-ckvjn (v1:metadata.name)
+      MY_NODE_NAME:   (v1:spec.nodeName)
+      MY_NAMESPACE:  monitoring (v1:metadata.namespace)
+      POD_NAME:      otel-collector-collector-7f95b7dfc6-ckvjn (v1:metadata.name)
+    Mounts:
+      /conf from otc-internal (rw)
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-l6wv7 (ro)
+Conditions:
+  Type                        Status
+  PodReadyToStartContainers   True 
+  Initialized                 True 
+  Ready                       True 
+  ContainersReady             True 
+  PodScheduled                True 
+Volumes:
+  otc-internal:
+    Type:      ConfigMap (a volume populated by a ConfigMap)
+    Name:      otel-collector-collector-27200a97
+    Optional:  false
+  kube-api-access-l6wv7:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    ConfigMapOptional:       <nil>
+    DownwardAPI:             true
+QoS Class:                   Burstable
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:                      <none>
+
+🔧 Collector ConfigMap (if exists):
+otel-collector-collector-27200a97   1      10d
+
+📝 Looking for collector configuration...
+Found collector ConfigMap: configmap/otel-collector-collector-27200a97
+apiVersion: v1
+data:
+  collector.yaml: |
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+          http:
+            cors:
+              allowed_origins:
+                - http://*
+                - https://*
+            endpoint: 0.0.0.0:4318
+    exporters:
+      debug: {}
+      otlp:
+        endpoint: jaeger.observability.svc.cluster.local:4317
+        tls:
+          insecure: true
+      prometheus:
+        add_metric_suffixes: true
+        const_labels:
+          collector: otel-collector
+          environment: production
+        enable_open_metrics: true
+        endpoint: 0.0.0.0:8889
+        metric_expiration: 180m
+        namespace: ""
+        resource_to_telemetry_conversion:
+          enabled: true
+    processors:
+      batch:
+        send_batch_max_size: 2048
+        send_batch_size: 1024
+        timeout: 1s
+      k8sattributes:
+        auth_type: serviceAccount
+        extract:
+          labels:
+            - from: pod
+              key: app
+              tag_name: k8s.pod.label.app
+            - from: pod
+              key: version
+              tag_name: k8s.pod.label.version
+          metadata:
+            - k8s.pod.name
+            - k8s.pod.uid
+            - k8s.deployment.name
+            - k8s.namespace.name
+            - k8s.node.name
+            - k8s.pod.start_time
+        filter:
+          node_from_env_var: MY_NODE_NAME
+        passthrough: false
+        pod_association:
+          - sources:
+              - from: resource_attribute
+                name: k8s.pod.ip
+          - sources:
+              - from: resource_attribute
+                name: k8s.pod.name
+              - from: resource_attribute
+                name: k8s.namespace.name
+          - sources:
+              - from: connection
+      memory_limiter:
+        check_interval: 5s
+        limit_mib: 512
+        spike_limit_mib: 128
+      resource:
+        attributes:
+          - action: upsert
+            key: collector.name
+            value: otel-collector
+          - action: upsert
+            key: collector.version
+            value: 1.0.0
+          - action: upsert
+            from_attribute: k8s.pod.name
+            key: k8s.pod.name
+          - action: upsert
+            key: k8s.pod.ip
+            value: ${env:MY_POD_IP}
+          - action: upsert
+            key: k8s.node.name
+            value: ${env:MY_NODE_NAME}
+          - action: upsert
+            key: k8s.namespace.name
+            value: ${env:MY_NAMESPACE}
+    extensions:
+      health_check:
+        endpoint: 0.0.0.0:13133
+        path: /
+      pprof:
+        endpoint: 0.0.0.0:1777
+      zpages:
+        endpoint: 0.0.0.0:55679
+    service:
+      extensions:
+        - health_check
+        - pprof
+        - zpages
+      telemetry:
+        metrics:
+          readers:
+            - pull:
+                exporter:
+                  prometheus:
+                    host: 0.0.0.0
+                    port: 8888
+      pipelines:
+        logs:
+          exporters:
+            - debug
+          processors:
+            - memory_limiter
+            - k8sattributes
+            - resource
+            - batch
+          receivers:
+            - otlp
+        metrics:
+          exporters:
+            - prometheus
+            - debug
+          processors:
+            - memory_limiter
+            - k8sattributes
+            - resource
+            - batch
+          receivers:
+            - otlp
+        traces:
+          exporters:
+            - otlp
+          processors:
+            - memory_limiter
+            - k8sattributes
+            - resource
+            - batch
+          receivers:
+            - otlp
+kind: ConfigMap
+metadata:
+  creationTimestamp: "2025-07-09T14:38:56Z"
+  labels:
+    app.kubernetes.io/component: opentelemetry-collector
+    app.kubernetes.io/instance: monitoring.otel-collector
+    app.kubernetes.io/managed-by: opentelemetry-operator
+    app.kubernetes.io/name: otel-collector-collector
+    app.kubernetes.io/part-of: opentelemetry
+    app.kubernetes.io/version: latest
+  name: otel-collector-collector-27200a97
+  namespace: monitoring
+  ownerReferences:
+  - apiVersion: opentelemetry.io/v1beta1
+    blockOwnerDeletion: true
+    controller: true
+    kind: OpenTelemetryCollector
+    name: otel-collector
+    uid: 1274f7aa-9ec5-486e-b0e3-2d4c09efdb76
+  resourceVersion: "674329"
+  uid: 075c333a-635b-4996-a7b7-d70ec3f2c0d5
+
+🌐 Collector Service Details:
+otel-collector-collector              ClusterIP   10.111.197.93    <none>        4317/TCP,4318/TCP,8889/TCP,1777/TCP,55679/TCP   10d
+otel-collector-collector-extension    ClusterIP   10.98.136.77     <none>        13133/TCP                                       10d
+otel-collector-collector-headless     ClusterIP   None             <none>        4317/TCP,4318/TCP,8889/TCP,1777/TCP,55679/TCP   10d
+otel-collector-collector-monitoring   ClusterIP   10.108.127.234   <none>        8888/TCP                                        10d
+Name:                     otel-collector-collector
+Namespace:                monitoring
+Labels:                   app.kubernetes.io/component=opentelemetry-collector
+                          app.kubernetes.io/instance=monitoring.otel-collector
+                          app.kubernetes.io/managed-by=opentelemetry-operator
+                          app.kubernetes.io/name=otel-collector-collector
+                          app.kubernetes.io/part-of=opentelemetry
+                          app.kubernetes.io/version=latest
+                          operator.opentelemetry.io/collector-service-type=base
+Annotations:              <none>
+Selector:                 app.kubernetes.io/component=opentelemetry-collector,app.kubernetes.io/instance=monitoring.otel-collector,app.kubernetes.io/managed-by=opentelemetry-operator,app.kubernetes.io/part-of=opentelemetry
+Type:                     ClusterIP
+IP Family Policy:         SingleStack
+IP Families:              IPv4
+IP:                       10.111.197.93
+IPs:                      10.111.197.93
+Port:                     otlp-grpc  4317/TCP
+TargetPort:               4317/TCP
+Endpoints:                10.1.3.209:4317
+Port:                     otlp-http  4318/TCP
+TargetPort:               4318/TCP
+Endpoints:                10.1.3.209:4318
+Port:                     prometheus  8889/TCP
+TargetPort:               8889/TCP
+Endpoints:                10.1.3.209:8889
+Port:                     pprof  1777/TCP
+TargetPort:               1777/TCP
+Endpoints:                10.1.3.209:1777
+Port:                     zpages  55679/TCP
+TargetPort:               55679/TCP
+Endpoints:                10.1.3.209:55679
+Session Affinity:         None
+Internal Traffic Policy:  Cluster
+Events:                   <none>
+
+🔍 All services in monitoring namespace:
+NAME                                  TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)                                         AGE
+otel-collector-collector              ClusterIP   10.111.197.93    <none>        4317/TCP,4318/TCP,8889/TCP,1777/TCP,55679/TCP   10d
+otel-collector-collector-extension    ClusterIP   10.98.136.77     <none>        13133/TCP                                       10d
+otel-collector-collector-headless     ClusterIP   None             <none>        4317/TCP,4318/TCP,8889/TCP,1777/TCP,55679/TCP   10d
+otel-collector-collector-monitoring   ClusterIP   10.108.127.234   <none>        8888/TCP                                        10d
+
+📊 Checking if collector is exposing metrics endpoint:
+Trying to access collector's own metrics...
+Forwarding from 127.0.0.1:8888 -> 8888
+Forwarding from [::1]:8888 -> 8888
+Handling connection for 8888
+Handling connection for 8888
+Checking collector's internal metrics...
+Handling connection for 8888
+# HELP otelcol_exporter_queue_capacity__batches_ Fixed capacity of the retry queue (in batches) [alpha]
+# TYPE otelcol_exporter_queue_capacity__batches_ gauge
+otelcol_exporter_queue_capacity__batches_{data_type="traces",exporter="otlp",otel_scope_name="go.opentelemetry.io/collector/exporter/exporterhelper",otel_scope_schema_url="",otel_scope_version=""} 1000
+# HELP otelcol_exporter_queue_size__batches_ Current size of the retry queue (in batches) [alpha]
+# TYPE otelcol_exporter_queue_size__batches_ gauge
+otelcol_exporter_queue_size__batches_{data_type="traces",exporter="otlp",otel_scope_name="go.opentelemetry.io/collector/exporter/exporterhelper",otel_scope_schema_url="",otel_scope_version=""} 0
+# HELP otelcol_exporter_send_failed_metric_points__datapoints__total Number of metric points in failed attempts to send to destination. [alpha]
+# TYPE otelcol_exporter_send_failed_metric_points__datapoints__total counter
+otelcol_exporter_send_failed_metric_points__datapoints__total{exporter="debug",otel_scope_name="go.opentelemetry.io/collector/exporter/exporterhelper",otel_scope_schema_url="",otel_scope_version=""} 0
+otelcol_exporter_send_failed_metric_points__datapoints__total{exporter="prometheus",otel_scope_name="go.opentelemetry.io/collector/exporter/exporterhelper",otel_scope_schema_url="",otel_scope_version=""} 0
+# HELP otelcol_exporter_send_failed_spans__spans__total Number of spans in failed attempts to send to destination. [alpha]
+# TYPE otelcol_exporter_send_failed_spans__spans__total counter
+otelcol_exporter_send_failed_spans__spans__total{exporter="otlp",otel_scope_name="go.opentelemetry.io/collector/exporter/exporterhelper",otel_scope_schema_url="",otel_scope_version=""} 0
+# HELP otelcol_exporter_sent_metric_points__datapoints__total Number of metric points successfully sent to destination. [alpha]
+# TYPE otelcol_exporter_sent_metric_points__datapoints__total counter
+otelcol_exporter_sent_metric_points__datapoints__total{exporter="debug",otel_scope_name="go.opentelemetry.io/collector/exporter/exporterhelper",otel_scope_schema_url="",otel_scope_version=""} 1.7848e+06
+otelcol_exporter_sent_metric_points__datapoints__total{exporter="prometheus",otel_scope_name="go.opentelemetry.io/collector/exporter/exporterhelper",otel_scope_schema_url="",otel_scope_version=""} 1.7848e+06
+# HELP otelcol_exporter_sent_spans__spans__total Number of spans successfully sent to destination. [alpha]
+# TYPE otelcol_exporter_sent_spans__spans__total counter
+otelcol_exporter_sent_spans__spans__total{exporter="otlp",otel_scope_name="go.opentelemetry.io/collector/exporter/exporterhelper",otel_scope_schema_url="",otel_scope_version=""} 1.108209e+06
+
+🧪 Testing collector endpoints from within cluster:
