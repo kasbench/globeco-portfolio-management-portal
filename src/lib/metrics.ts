@@ -1,67 +1,180 @@
 import { metrics, trace, SpanStatusCode } from '@opentelemetry/api';
 
-// Create a meter for custom metrics
-const meter = metrics.getMeter('globeco-portfolio-management-portal', '0.1.0');
+// Lazy initialization to ensure SDK is ready
+let meter: ReturnType<typeof metrics.getMeter> | null = null;
+let tracer: ReturnType<typeof trace.getTracer> | null = null;
+let customMetricsCache: any = null;
 
-// Create a tracer for custom spans
-const tracer = trace.getTracer('globeco-portfolio-management-portal', '0.1.0');
+// Initialize meter and tracer with minimal logging
+let initializationAttempts = 0;
+const MAX_INIT_ATTEMPTS = 3;
 
-// Custom metrics
+const initializeTelemetry = () => {
+  if (!meter && initializationAttempts < MAX_INIT_ATTEMPTS) {
+    initializationAttempts++;
+
+    try {
+      // Check if we're in the right environment
+      if (typeof window !== 'undefined') {
+        return false;
+      }
+
+      const meterProvider = metrics.getMeterProvider();
+
+      // Check if we have a proper meter provider (not the NoopMeterProvider)
+      if (meterProvider.constructor.name === 'NoopMeterProvider') {
+        if (initializationAttempts < MAX_INIT_ATTEMPTS) {
+          return false;
+        }
+      }
+
+      meter = metrics.getMeter('globeco-portfolio-management-portal', '0.1.0');
+      tracer = trace.getTracer('globeco-portfolio-management-portal', '0.1.0');
+
+      // Only log success if debug is enabled
+      if (process.env.OTEL_DEBUG === 'true') {
+        console.log('✅ Custom telemetry initialized');
+      }
+      
+      return true;
+    } catch (error) {
+      // Only log errors, not debug info
+      if (initializationAttempts >= MAX_INIT_ATTEMPTS) {
+        console.error('❌ Telemetry initialization failed after', MAX_INIT_ATTEMPTS, 'attempts');
+      }
+      return false;
+    }
+  }
+  return meter !== null;
+};
+
+// No-op metric that does nothing if telemetry is not available
+const createNoOpMetric = () => ({
+  add: () => {},
+  record: () => {},
+});
+
+// Custom metrics with lazy initialization and null safety
 export const customMetrics = {
-  // Counter for API requests
-  apiRequestCounter: meter.createCounter('api_requests_total', {
-    description: 'Total number of API requests',
-  }),
+  get apiRequestCounter() {
+    initializeTelemetry();
+    if (!meter) return createNoOpMetric();
+    if (!customMetricsCache?.apiRequestCounter) {
+      customMetricsCache = customMetricsCache || {};
+      customMetricsCache.apiRequestCounter = meter.createCounter('api_requests_total', {
+        description: 'Total number of API requests',
+      });
+    }
+    return customMetricsCache.apiRequestCounter;
+  },
 
-  // Histogram for API response times
-  apiResponseTime: meter.createHistogram('api_response_duration_ms', {
-    description: 'API response time in milliseconds',
-  }),
+  get apiResponseTime() {
+    initializeTelemetry();
+    if (!meter) return createNoOpMetric();
+    if (!customMetricsCache?.apiResponseTime) {
+      customMetricsCache = customMetricsCache || {};
+      customMetricsCache.apiResponseTime = meter.createHistogram('api_response_duration_ms', {
+        description: 'API response time in milliseconds',
+      });
+    }
+    return customMetricsCache.apiResponseTime;
+  },
 
-  // Counter for page views
-  pageViewCounter: meter.createCounter('page_views_total', {
-    description: 'Total number of page views',
-  }),
+  get pageViewCounter() {
+    initializeTelemetry();
+    if (!meter) return createNoOpMetric();
+    if (!customMetricsCache?.pageViewCounter) {
+      customMetricsCache = customMetricsCache || {};
+      customMetricsCache.pageViewCounter = meter.createCounter('page_views_total', {
+        description: 'Total number of page views',
+      });
+    }
+    return customMetricsCache.pageViewCounter;
+  },
 
-  // Gauge for active users (if applicable)
-  activeUsers: meter.createUpDownCounter('active_users', {
-    description: 'Number of active users',
-  }),
+  get activeUsers() {
+    initializeTelemetry();
+    if (!meter) return createNoOpMetric();
+    if (!customMetricsCache?.activeUsers) {
+      customMetricsCache = customMetricsCache || {};
+      customMetricsCache.activeUsers = meter.createUpDownCounter('active_users', {
+        description: 'Number of active users',
+      });
+    }
+    return customMetricsCache.activeUsers;
+  },
 
-  // Counter for errors
-  errorCounter: meter.createCounter('errors_total', {
-    description: 'Total number of errors',
-  }),
+  get errorCounter() {
+    initializeTelemetry();
+    if (!meter) return createNoOpMetric();
+    if (!customMetricsCache?.errorCounter) {
+      customMetricsCache = customMetricsCache || {};
+      customMetricsCache.errorCounter = meter.createCounter('errors_total', {
+        description: 'Total number of errors',
+      });
+    }
+    return customMetricsCache.errorCounter;
+  },
 
-  // Counter for database operations
-  dbOperationCounter: meter.createCounter('db_operations_total', {
-    description: 'Total number of database operations',
-  }),
+  get dbOperationCounter() {
+    initializeTelemetry();
+    if (!meter) return createNoOpMetric();
+    if (!customMetricsCache?.dbOperationCounter) {
+      customMetricsCache = customMetricsCache || {};
+      customMetricsCache.dbOperationCounter = meter.createCounter('db_operations_total', {
+        description: 'Total number of database operations',
+      });
+    }
+    return customMetricsCache.dbOperationCounter;
+  },
 
-  // Histogram for database operation duration
-  dbOperationDuration: meter.createHistogram('db_operation_duration_ms', {
-    description: 'Database operation duration in milliseconds',
-  }),
+  get dbOperationDuration() {
+    initializeTelemetry();
+    if (!meter) return createNoOpMetric();
+    if (!customMetricsCache?.dbOperationDuration) {
+      customMetricsCache = customMetricsCache || {};
+      customMetricsCache.dbOperationDuration = meter.createHistogram('db_operation_duration_ms', {
+        description: 'Database operation duration in milliseconds',
+      });
+    }
+    return customMetricsCache.dbOperationDuration;
+  },
 };
 
 // Custom tracing utilities
 export const customTracing = {
-  tracer,
+  get tracer() {
+    initializeTelemetry();
+    return tracer;
+  },
 
   // Helper function to create a span
   createSpan: (name: string, attributes?: Record<string, string | number | boolean>) => {
     try {
-      console.log(`🔍 Creating span: ${name}`);
+      initializeTelemetry();
+      if (!tracer) {
+        // Return a no-op span if tracer is not available
+        return {
+          setAttributes: () => {},
+          setStatus: () => {},
+          recordException: () => {},
+          end: () => {},
+        };
+      }
       const span = tracer.startSpan(name);
       if (attributes) {
         span.setAttributes(attributes);
-        console.log(`📝 Span attributes set:`, attributes);
       }
-      console.log(`✅ Span created successfully: ${name}`);
       return span;
     } catch (error) {
       console.error(`❌ Error creating span ${name}:`, error);
-      throw error;
+      // Return a no-op span to prevent crashes
+      return {
+        setAttributes: () => {},
+        setStatus: () => {},
+        recordException: () => {},
+        end: () => {},
+      };
     }
   },
 
@@ -71,22 +184,24 @@ export const customTracing = {
     operation: () => Promise<T>,
     attributes?: Record<string, string | number | boolean>
   ): Promise<T> => {
-    console.log(`🔍 Starting traced operation: ${name}`);
+    initializeTelemetry();
+    
+    if (!tracer) {
+      // If tracer is not available, just run the operation without tracing
+      return await operation();
+    }
+
     const span = tracer.startSpan(name);
 
     if (attributes) {
       span.setAttributes(attributes);
-      console.log(`📝 Trace attributes set for ${name}:`, attributes);
     }
 
     try {
-      console.log(`🚀 Executing traced operation: ${name}`);
       const result = await operation();
       span.setStatus({ code: SpanStatusCode.OK });
-      console.log(`✅ Traced operation completed successfully: ${name}`);
       return result;
     } catch (error) {
-      console.error(`❌ Traced operation failed: ${name}`, error);
       span.setStatus({
         code: SpanStatusCode.ERROR,
         message: error instanceof Error ? error.message : 'Unknown error',
@@ -95,7 +210,6 @@ export const customTracing = {
       throw error;
     } finally {
       span.end();
-      console.log(`🏁 Span ended: ${name}`);
     }
   },
 };
@@ -105,8 +219,6 @@ export const telemetryUtils = {
   // Record API request
   recordApiRequest: (method: string, endpoint: string, statusCode: number, duration: number) => {
     try {
-      console.log(`📊 Recording API request: ${method} ${endpoint} - ${statusCode} (${duration}ms)`);
-
       customMetrics.apiRequestCounter.add(1, {
         method,
         endpoint,
@@ -118,14 +230,6 @@ export const telemetryUtils = {
         endpoint,
         status_code: statusCode.toString(),
       });
-
-      console.log(`✅ API metrics recorded successfully`);
-
-      // Force immediate export for debugging
-      if (process.env.OTEL_DEBUG === 'true') {
-        console.log(`🔄 Debug mode: Forcing metric export...`);
-        // The metrics will be exported on the next export cycle
-      }
     } catch (error) {
       console.error('❌ Error recording API request metrics:', error);
     }
@@ -134,14 +238,10 @@ export const telemetryUtils = {
   // Record page view
   recordPageView: (page: string, userId?: string) => {
     try {
-      console.log(`👁️ Recording page view: ${page} (user: ${userId || 'anonymous'})`);
-
       customMetrics.pageViewCounter.add(1, {
         page,
         user_id: userId || 'anonymous',
       });
-
-      console.log(`✅ Page view metric recorded successfully`);
     } catch (error) {
       console.error('❌ Error recording page view metric:', error);
     }
@@ -150,14 +250,10 @@ export const telemetryUtils = {
   // Record error
   recordError: (errorType: string, errorMessage: string, context?: string) => {
     try {
-      console.log(`🚨 Recording error: ${errorType} - ${errorMessage} (context: ${context || 'unknown'})`);
-
       customMetrics.errorCounter.add(1, {
         error_type: errorType,
         context: context || 'unknown',
       });
-
-      console.log(`✅ Error metric recorded successfully`);
     } catch (error) {
       console.error('❌ Error recording error metric:', error);
     }
@@ -166,8 +262,6 @@ export const telemetryUtils = {
   // Record database operation
   recordDbOperation: (operation: string, table: string, duration: number, success: boolean) => {
     try {
-      console.log(`🗄️ Recording DB operation: ${operation} on ${table} - ${success ? 'success' : 'failure'} (${duration}ms)`);
-
       customMetrics.dbOperationCounter.add(1, {
         operation,
         table,
@@ -178,8 +272,6 @@ export const telemetryUtils = {
         operation,
         table,
       });
-
-      console.log(`✅ DB operation metrics recorded successfully`);
     } catch (error) {
       console.error('❌ Error recording DB operation metrics:', error);
     }

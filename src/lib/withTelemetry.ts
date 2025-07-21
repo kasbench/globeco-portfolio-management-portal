@@ -30,7 +30,10 @@ export function withTelemetry(handler: ApiHandler, operationName?: string) {
     const spanName = operationName || `${method} ${endpoint}`;
     let statusCode = 200;
     
-    console.log(`🔄 withTelemetry: Starting ${spanName} for ${method} ${endpoint}`);
+    // Only log in debug mode
+    if (process.env.OTEL_DEBUG === 'true') {
+      console.log(`🔄 withTelemetry: Starting ${spanName} for ${method} ${endpoint}`);
+    }
     
     return await customTracing.traceAsyncOperation(
       spanName,
@@ -38,10 +41,8 @@ export function withTelemetry(handler: ApiHandler, operationName?: string) {
         let response: NextResponse;
         
         try {
-          console.log(`🚀 withTelemetry: Executing handler for ${endpoint}`);
           response = await handler(req, context);
           statusCode = response.status;
-          console.log(`✅ withTelemetry: Handler completed with status ${statusCode}`);
           return response;
         } catch (error) {
           statusCode = 500;
@@ -54,7 +55,6 @@ export function withTelemetry(handler: ApiHandler, operationName?: string) {
           throw error;
         } finally {
           const duration = Date.now() - start;
-          console.log(`⏱️ withTelemetry: Request completed in ${duration}ms`);
           telemetryUtils.recordApiRequest(method, endpoint, statusCode, duration);
         }
       },

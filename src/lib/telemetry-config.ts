@@ -8,8 +8,8 @@ export const telemetryConfig = {
   serviceName: process.env.OTEL_SERVICE_NAME || 'globeco-portfolio-management-portal',
   serviceVersion: process.env.OTEL_SERVICE_VERSION || '0.1.0',
   
-  // Debug settings
-  debugMode: process.env.OTEL_DEBUG === 'true' || process.env.NODE_ENV === 'development',
+  // Debug settings - only enable if explicitly set to true
+  debugMode: process.env.OTEL_DEBUG === 'true',
   logLevel: process.env.OTEL_LOG_LEVEL || 'info',
   
   // Export settings
