@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { orderServiceApi } from '@/lib/api/orderService';
+import { withTelemetry } from '@/lib/withTelemetry';
 
 // GET /api/orders/[id] - Get order by ID
-export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const GET = withTelemetry(async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   try {
     const { id } = await params;
     const order = await orderServiceApi.getOrderById(Number(id));
@@ -13,7 +14,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Failed to fetch order' }, { status: 500 });
   }
-}
+}, 'get_order_by_id');
 
 // PUT /api/orders/[id] - Update order
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {

@@ -79,7 +79,7 @@ Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists fo
 Events:                      <none>
 
 🔧 Collector ConfigMap (if exists):
-otel-collector-collector-27200a97   1      10d
+otel-collector-collector-27200a97   1      12d
 
 📝 Looking for collector configuration...
 Found collector ConfigMap: configmap/otel-collector-collector-27200a97
@@ -250,10 +250,10 @@ metadata:
   uid: 075c333a-635b-4996-a7b7-d70ec3f2c0d5
 
 🌐 Collector Service Details:
-otel-collector-collector              ClusterIP   10.111.197.93    <none>        4317/TCP,4318/TCP,8889/TCP,1777/TCP,55679/TCP   10d
-otel-collector-collector-extension    ClusterIP   10.98.136.77     <none>        13133/TCP                                       10d
-otel-collector-collector-headless     ClusterIP   None             <none>        4317/TCP,4318/TCP,8889/TCP,1777/TCP,55679/TCP   10d
-otel-collector-collector-monitoring   ClusterIP   10.108.127.234   <none>        8888/TCP                                        10d
+otel-collector-collector              ClusterIP   10.111.197.93    <none>        4317/TCP,4318/TCP,8889/TCP,1777/TCP,55679/TCP   12d
+otel-collector-collector-extension    ClusterIP   10.98.136.77     <none>        13133/TCP                                       12d
+otel-collector-collector-headless     ClusterIP   None             <none>        4317/TCP,4318/TCP,8889/TCP,1777/TCP,55679/TCP   12d
+otel-collector-collector-monitoring   ClusterIP   10.108.127.234   <none>        8888/TCP                                        12d
 Name:                     otel-collector-collector
 Namespace:                monitoring
 Labels:                   app.kubernetes.io/component=opentelemetry-collector
@@ -291,17 +291,15 @@ Events:                   <none>
 
 🔍 All services in monitoring namespace:
 NAME                                  TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)                                         AGE
-otel-collector-collector              ClusterIP   10.111.197.93    <none>        4317/TCP,4318/TCP,8889/TCP,1777/TCP,55679/TCP   10d
-otel-collector-collector-extension    ClusterIP   10.98.136.77     <none>        13133/TCP                                       10d
-otel-collector-collector-headless     ClusterIP   None             <none>        4317/TCP,4318/TCP,8889/TCP,1777/TCP,55679/TCP   10d
-otel-collector-collector-monitoring   ClusterIP   10.108.127.234   <none>        8888/TCP                                        10d
+otel-collector-collector              ClusterIP   10.111.197.93    <none>        4317/TCP,4318/TCP,8889/TCP,1777/TCP,55679/TCP   12d
+otel-collector-collector-extension    ClusterIP   10.98.136.77     <none>        13133/TCP                                       12d
+otel-collector-collector-headless     ClusterIP   None             <none>        4317/TCP,4318/TCP,8889/TCP,1777/TCP,55679/TCP   12d
+otel-collector-collector-monitoring   ClusterIP   10.108.127.234   <none>        8888/TCP                                        12d
 
 📊 Checking if collector is exposing metrics endpoint:
 Trying to access collector's own metrics...
 Forwarding from 127.0.0.1:8888 -> 8888
 Forwarding from [::1]:8888 -> 8888
-Handling connection for 8888
-Handling connection for 8888
 Checking collector's internal metrics...
 Handling connection for 8888
 # HELP otelcol_exporter_queue_capacity__batches_ Fixed capacity of the retry queue (in batches) [alpha]
@@ -319,10 +317,10 @@ otelcol_exporter_send_failed_metric_points__datapoints__total{exporter="promethe
 otelcol_exporter_send_failed_spans__spans__total{exporter="otlp",otel_scope_name="go.opentelemetry.io/collector/exporter/exporterhelper",otel_scope_schema_url="",otel_scope_version=""} 0
 # HELP otelcol_exporter_sent_metric_points__datapoints__total Number of metric points successfully sent to destination. [alpha]
 # TYPE otelcol_exporter_sent_metric_points__datapoints__total counter
-otelcol_exporter_sent_metric_points__datapoints__total{exporter="debug",otel_scope_name="go.opentelemetry.io/collector/exporter/exporterhelper",otel_scope_schema_url="",otel_scope_version=""} 1.7848e+06
-otelcol_exporter_sent_metric_points__datapoints__total{exporter="prometheus",otel_scope_name="go.opentelemetry.io/collector/exporter/exporterhelper",otel_scope_schema_url="",otel_scope_version=""} 1.7848e+06
+otelcol_exporter_sent_metric_points__datapoints__total{exporter="debug",otel_scope_name="go.opentelemetry.io/collector/exporter/exporterhelper",otel_scope_schema_url="",otel_scope_version=""} 1.7840188e+07
+otelcol_exporter_sent_metric_points__datapoints__total{exporter="prometheus",otel_scope_name="go.opentelemetry.io/collector/exporter/exporterhelper",otel_scope_schema_url="",otel_scope_version=""} 1.7840188e+07
 # HELP otelcol_exporter_sent_spans__spans__total Number of spans successfully sent to destination. [alpha]
 # TYPE otelcol_exporter_sent_spans__spans__total counter
-otelcol_exporter_sent_spans__spans__total{exporter="otlp",otel_scope_name="go.opentelemetry.io/collector/exporter/exporterhelper",otel_scope_schema_url="",otel_scope_version=""} 1.108209e+06
+otelcol_exporter_sent_spans__spans__total{exporter="otlp",otel_scope_name="go.opentelemetry.io/collector/exporter/exporterhelper",otel_scope_schema_url="",otel_scope_version=""} 2.487108e+06
 
 🧪 Testing collector endpoints from within cluster:

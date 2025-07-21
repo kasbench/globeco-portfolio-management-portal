@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { executionService } from '@/lib/api/executionService';
+import { withTelemetry } from '@/lib/withTelemetry';
 
 // GET /api/executions - List executions (with query params)
-export async function GET(req: NextRequest) {
+export const GET = withTelemetry(async (req: NextRequest) => {
   try {
     const { searchParams } = new URL(req.url);
     // Build query params object
@@ -16,7 +17,7 @@ export async function GET(req: NextRequest) {
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Failed to fetch executions' }, { status: 500 });
   }
-}
+}, 'list_executions');
 
 // POST /api/executions - Create a new execution
 export async function POST(req: NextRequest) {

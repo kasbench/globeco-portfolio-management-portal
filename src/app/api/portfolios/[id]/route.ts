@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { portfolioApi } from '@/lib/api/portfolioService';
+import { withTelemetry } from '@/lib/withTelemetry';
 
 // GET /api/portfolios/[id] - Get portfolio by ID
-export async function GET(req: NextRequest, { params }: any) {
+export const GET = withTelemetry(async (req: NextRequest, { params }: any) => {
   try {
     const portfolio = await portfolioApi.getPortfolio(params.id);
     if (!portfolio) {
@@ -12,7 +13,7 @@ export async function GET(req: NextRequest, { params }: any) {
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Failed to fetch portfolio' }, { status: 500 });
   }
-}
+}, 'get_portfolio_by_id');
 
 // PUT /api/portfolios/[id] - Update portfolio
 export async function PUT(req: NextRequest, { params }: any) {

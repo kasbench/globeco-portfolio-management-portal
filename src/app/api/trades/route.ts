@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { tradeService } from '@/lib/api/tradeService';
+import { withTelemetry } from '@/lib/withTelemetry';
 
 // GET /api/trades - List trade orders (with optional filtering, sorting, pagination)
-export async function GET(req: NextRequest) {
+export const GET = withTelemetry(async (req: NextRequest) => {
   try {
     const { searchParams } = new URL(req.url);
     const params: Record<string, any> = {};
@@ -18,7 +19,7 @@ export async function GET(req: NextRequest) {
       error: error.message || 'Failed to fetch trades'
     }, { status: 500 });
   }
-}
+}, 'list_trades');
 
 // POST /api/trades - Create a new trade order
 export async function POST(req: NextRequest) {

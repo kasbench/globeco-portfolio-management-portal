@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { orderGenerationServiceApi } from '@/lib/api/orderGenerationService';
+import { withTelemetry } from '@/lib/withTelemetry';
 
-export async function GET(request: Request) {
+export const GET = withTelemetry(async (request: Request) => {
   try {
     const { searchParams } = new URL(request.url);
     const offset = parseInt(searchParams.get('offset') || '0', 10);
@@ -22,4 +23,4 @@ export async function GET(request: Request) {
       { status: 500 }
     );
   }
-}
+}, 'list_rebalances');

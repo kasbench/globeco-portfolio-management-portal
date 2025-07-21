@@ -1,52 +1,53 @@
 import { metrics, trace, SpanStatusCode } from '@opentelemetry/api';
 
-// Lazy initialization to ensure SDK is ready
+// Simple metrics setup
 let meter: ReturnType<typeof metrics.getMeter> | null = null;
 let tracer: ReturnType<typeof trace.getTracer> | null = null;
-let customMetricsCache: any = null;
+let metricsInitialized = false;
+const customMetricsCache: any = {};
 
-// Initialize meter and tracer with minimal logging
-let initializationAttempts = 0;
-const MAX_INIT_ATTEMPTS = 3;
+console.log('🔧 METRICS: Starting metrics initialization...');
 
-const initializeTelemetry = () => {
-  if (!meter && initializationAttempts < MAX_INIT_ATTEMPTS) {
-    initializationAttempts++;
-
-    try {
-      // Check if we're in the right environment
-      if (typeof window !== 'undefined') {
-        return false;
-      }
-
-      const meterProvider = metrics.getMeterProvider();
-
-      // Check if we have a proper meter provider (not the NoopMeterProvider)
-      if (meterProvider.constructor.name === 'NoopMeterProvider') {
-        if (initializationAttempts < MAX_INIT_ATTEMPTS) {
-          return false;
-        }
-      }
-
-      meter = metrics.getMeter('globeco-portfolio-management-portal', '0.1.0');
-      tracer = trace.getTracer('globeco-portfolio-management-portal', '0.1.0');
-
-      // Only log success if debug is enabled
-      if (process.env.OTEL_DEBUG === 'true') {
-        console.log('✅ Custom telemetry initialized');
-      }
-      
-      return true;
-    } catch (error) {
-      // Only log errors, not debug info
-      if (initializationAttempts >= MAX_INIT_ATTEMPTS) {
-        console.error('❌ Telemetry initialization failed after', MAX_INIT_ATTEMPTS, 'attempts');
-      }
-      return false;
-    }
+// Initialize metrics function
+const initializeMetrics = () => {
+  if (metricsInitialized || typeof window !== 'undefined') {
+    return meter !== null;
   }
-  return meter !== null;
+
+  try {
+    console.log('🚀 METRICS: Creating meter and tracer...');
+    
+    // Create meter and tracer
+    meter = metrics.getMeter('globeco-portfolio-management-portal', '0.1.0');
+    tracer = trace.getTracer('globeco-portfolio-management-portal', '0.1.0');
+    
+    metricsInitialized = true;
+    console.log('✅ METRICS: Meter and tracer created successfully');
+    
+    // Test metric creation and immediate use
+    const testCounter = meter.createCounter('metrics_initialization_test', {
+      description: 'Test counter to verify metrics are working'
+    });
+    testCounter.add(1, { test: 'initialization', timestamp: Date.now().toString() });
+    console.log('✅ METRICS: Test counter created and incremented');
+    
+    return true;
+    
+  } catch (error) {
+    console.error('❌ METRICS: Initialization failed:', error);
+    metricsInitialized = false;
+    return false;
+  }
 };
+
+// Initialize immediately on server side
+if (typeof window === 'undefined') {
+  // Add a small delay to ensure telemetry SDK is ready
+  setTimeout(() => {
+    const success = initializeMetrics();
+    console.log(`🔧 METRICS: Initialization result: ${success ? 'SUCCESS' : 'FAILED'}`);
+  }, 100);
+}
 
 // No-op metric that does nothing if telemetry is not available
 const createNoOpMetric = () => ({
@@ -54,104 +55,72 @@ const createNoOpMetric = () => ({
   record: () => {},
 });
 
-// Custom metrics with lazy initialization and null safety
+// Simple function to get or create a metric
+const getOrCreateMetric = (name: string, type: 'counter' | 'histogram' | 'updowncounter', description: string) => {
+  if (!meter) {
+    console.log(`⚠️ METRICS: Meter not available for ${name}, returning no-op`);
+    return createNoOpMetric();
+  }
+  
+  if (!customMetricsCache[name]) {
+    try {
+      switch (type) {
+        case 'counter':
+          customMetricsCache[name] = meter.createCounter(name, { description });
+          break;
+        case 'histogram':
+          customMetricsCache[name] = meter.createHistogram(name, { description });
+          break;
+        case 'updowncounter':
+          customMetricsCache[name] = meter.createUpDownCounter(name, { description });
+          break;
+      }
+      console.log(`✅ METRICS: Created ${type} metric: ${name}`);
+    } catch (error) {
+      console.error(`❌ METRICS: Failed to create ${name}:`, error);
+      return createNoOpMetric();
+    }
+  }
+  
+  return customMetricsCache[name];
+};
+
+// Simple custom metrics
 export const customMetrics = {
   get apiRequestCounter() {
-    initializeTelemetry();
-    if (!meter) return createNoOpMetric();
-    if (!customMetricsCache?.apiRequestCounter) {
-      customMetricsCache = customMetricsCache || {};
-      customMetricsCache.apiRequestCounter = meter.createCounter('api_requests_total', {
-        description: 'Total number of API requests',
-      });
-    }
-    return customMetricsCache.apiRequestCounter;
+    return getOrCreateMetric('api_requests_total', 'counter', 'Total number of API requests');
   },
-
   get apiResponseTime() {
-    initializeTelemetry();
-    if (!meter) return createNoOpMetric();
-    if (!customMetricsCache?.apiResponseTime) {
-      customMetricsCache = customMetricsCache || {};
-      customMetricsCache.apiResponseTime = meter.createHistogram('api_response_duration_ms', {
-        description: 'API response time in milliseconds',
-      });
-    }
-    return customMetricsCache.apiResponseTime;
+    return getOrCreateMetric('api_response_duration_ms', 'histogram', 'API response time in milliseconds');
   },
-
   get pageViewCounter() {
-    initializeTelemetry();
-    if (!meter) return createNoOpMetric();
-    if (!customMetricsCache?.pageViewCounter) {
-      customMetricsCache = customMetricsCache || {};
-      customMetricsCache.pageViewCounter = meter.createCounter('page_views_total', {
-        description: 'Total number of page views',
-      });
-    }
-    return customMetricsCache.pageViewCounter;
+    return getOrCreateMetric('page_views_total', 'counter', 'Total number of page views');
   },
-
   get activeUsers() {
-    initializeTelemetry();
-    if (!meter) return createNoOpMetric();
-    if (!customMetricsCache?.activeUsers) {
-      customMetricsCache = customMetricsCache || {};
-      customMetricsCache.activeUsers = meter.createUpDownCounter('active_users', {
-        description: 'Number of active users',
-      });
-    }
-    return customMetricsCache.activeUsers;
+    return getOrCreateMetric('active_users', 'updowncounter', 'Number of active users');
   },
-
   get errorCounter() {
-    initializeTelemetry();
-    if (!meter) return createNoOpMetric();
-    if (!customMetricsCache?.errorCounter) {
-      customMetricsCache = customMetricsCache || {};
-      customMetricsCache.errorCounter = meter.createCounter('errors_total', {
-        description: 'Total number of errors',
-      });
-    }
-    return customMetricsCache.errorCounter;
+    return getOrCreateMetric('errors_total', 'counter', 'Total number of errors');
   },
-
   get dbOperationCounter() {
-    initializeTelemetry();
-    if (!meter) return createNoOpMetric();
-    if (!customMetricsCache?.dbOperationCounter) {
-      customMetricsCache = customMetricsCache || {};
-      customMetricsCache.dbOperationCounter = meter.createCounter('db_operations_total', {
-        description: 'Total number of database operations',
-      });
-    }
-    return customMetricsCache.dbOperationCounter;
+    return getOrCreateMetric('db_operations_total', 'counter', 'Total number of database operations');
   },
-
   get dbOperationDuration() {
-    initializeTelemetry();
-    if (!meter) return createNoOpMetric();
-    if (!customMetricsCache?.dbOperationDuration) {
-      customMetricsCache = customMetricsCache || {};
-      customMetricsCache.dbOperationDuration = meter.createHistogram('db_operation_duration_ms', {
-        description: 'Database operation duration in milliseconds',
-      });
-    }
-    return customMetricsCache.dbOperationDuration;
+    return getOrCreateMetric('db_operation_duration_ms', 'histogram', 'Database operation duration in milliseconds');
   },
 };
 
 // Custom tracing utilities
 export const customTracing = {
   get tracer() {
-    initializeTelemetry();
+    initializeMetrics();
     return tracer;
   },
 
   // Helper function to create a span
   createSpan: (name: string, attributes?: Record<string, string | number | boolean>) => {
     try {
-      initializeTelemetry();
+      initializeMetrics();
       if (!tracer) {
         // Return a no-op span if tracer is not available
         return {
@@ -184,7 +153,7 @@ export const customTracing = {
     operation: () => Promise<T>,
     attributes?: Record<string, string | number | boolean>
   ): Promise<T> => {
-    initializeTelemetry();
+    initializeMetrics();
     
     if (!tracer) {
       // If tracer is not available, just run the operation without tracing
@@ -252,6 +221,7 @@ export const telemetryUtils = {
     try {
       customMetrics.errorCounter.add(1, {
         error_type: errorType,
+        error_message: errorMessage.substring(0, 100), // Truncate to avoid large labels
         context: context || 'unknown',
       });
     } catch (error) {

@@ -1,71 +1,64 @@
-// Minimal telemetry setup to avoid console flooding
+// Simple, straightforward telemetry setup
 
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
 import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-http';
 import { telemetryConfig } from './telemetry-config';
 
-// Only initialize once on server side
+// Global state
 let isInitialized = false;
 
-if (typeof window === 'undefined' && !isInitialized) {
-  isInitialized = true;
-  
-  const init = async () => {
-    try {
-      // Minimal setup - only essential configuration
-      const collectorBaseUrl = telemetryConfig.collectorBaseUrl;
-      
-      // Set essential environment variables
-      process.env.OTEL_EXPORTER_OTLP_ENDPOINT = collectorBaseUrl;
-      process.env.OTEL_SERVICE_NAME = telemetryConfig.serviceName;
-      process.env.OTEL_SERVICE_VERSION = telemetryConfig.serviceVersion;
-      process.env.OTEL_RESOURCE_ATTRIBUTES = [
-        `service.name=${telemetryConfig.serviceName}`,
-        `service.version=${telemetryConfig.serviceVersion}`,
-        `deployment.environment=${process.env.NODE_ENV || 'development'}`,
-        `service.namespace=globeco`,
-      ].join(',');
+console.log('🔧 TELEMETRY: Starting initialization process...');
 
-      // Create metric exporter and reader
-      const metricExporter = new OTLPMetricExporter({
-        url: `${collectorBaseUrl}/v1/metrics`,
-        headers: {},
-      });
-      
-      const metricReader = new PeriodicExportingMetricReader({
-        exporter: metricExporter,
-        exportIntervalMillis: telemetryConfig.metricExportInterval,
-        exportTimeoutMillis: 5000,
-      });
-      
-      // Initialize SDK with minimal configuration
-      const sdk = new NodeSDK({
-        instrumentations: [], // No auto-instrumentations to avoid issues
-        metricReader,
-      });
-      
-      // Start SDK
-      await sdk.start();
-      
-      // Only log success if debug is enabled
-      if (process.env.OTEL_DEBUG === 'true') {
-        console.log('✅ OpenTelemetry initialized');
-      }
+// Simple initialization function
+export const initializeTelemetry = (): boolean => {
+  if (isInitialized || typeof window !== 'undefined') {
+    console.log('🔧 TELEMETRY: Already initialized or running in browser, skipping');
+    return isInitialized;
+  }
 
-      // Set startup time for metrics initialization
-      process.env.TELEMETRY_STARTUP_TIME = Date.now().toString();
+  try {
+    console.log('🚀 TELEMETRY: Initializing OpenTelemetry SDK...');
+    console.log(`🔧 TELEMETRY: Collector URL: ${telemetryConfig.collectorBaseUrl}`);
+    console.log(`🔧 TELEMETRY: Service Name: ${telemetryConfig.serviceName}`);
+    
+    // Create metric exporter
+    const metricExporter = new OTLPMetricExporter({
+      url: `${telemetryConfig.collectorBaseUrl}/v1/metrics`,
+      headers: {},
+    });
+    
+    // Create metric reader
+    const metricReader = new PeriodicExportingMetricReader({
+      exporter: metricExporter,
+      exportIntervalMillis: 10000, // Export every 10 seconds
+      exportTimeoutMillis: 5000,
+    });
+    
+    // Initialize SDK
+    const sdk = new NodeSDK({
+      instrumentations: [],
+      metricReader,
+    });
+    
+    // Start SDK synchronously
+    sdk.start();
+    isInitialized = true;
+    
+    console.log('✅ TELEMETRY: OpenTelemetry SDK initialized successfully');
+    console.log('✅ TELEMETRY: Metrics will be exported every 10 seconds');
 
-      // Graceful shutdown
-      process.on('SIGTERM', () => {
-        sdk.shutdown().finally(() => process.exit(0));
-      });
+    return true;
 
-    } catch (error) {
-      // Only log errors, don't flood console
-      console.error('❌ OpenTelemetry initialization failed:', error);
-    }
-  };
+  } catch (error) {
+    console.error('❌ TELEMETRY: Initialization failed:', error);
+    isInitialized = false;
+    return false;
+  }
+};
 
-  init();
-}
+// Initialize immediately
+const success = initializeTelemetry();
+console.log(`🔧 TELEMETRY: Initialization result: ${success ? 'SUCCESS' : 'FAILED'}`);
+
+export { isInitialized };

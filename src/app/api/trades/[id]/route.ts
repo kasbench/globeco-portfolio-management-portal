@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { tradeService } from '@/lib/api/tradeService';
+import { withTelemetry } from '@/lib/withTelemetry';
 
 // GET /api/trades/[id] - Get trade order by ID
-export async function GET(req: NextRequest, { params }: any) {
+export const GET = withTelemetry(async (req: NextRequest, { params }: any) => {
   try {
     const trade = await tradeService.getTradeOrder(Number(params.id));
     if (!trade) {
@@ -12,7 +13,7 @@ export async function GET(req: NextRequest, { params }: any) {
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Failed to fetch trade order' }, { status: 500 });
   }
-}
+}, 'get_trade_by_id');
 
 // PUT /api/trades/[id] - Update trade order
 export async function PUT(req: NextRequest, { params }: any) {

@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { executionService } from '@/lib/api/executionService';
+import { withTelemetry } from '@/lib/withTelemetry';
 
 // GET /api/executions/summary - Get execution summary statistics
-export async function GET(req: NextRequest) {
+export const GET = withTelemetry(async (req: NextRequest) => {
   try {
     const { searchParams } = new URL(req.url);
     const filters: Record<string, any> = {};
@@ -14,4 +15,4 @@ export async function GET(req: NextRequest) {
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Failed to fetch execution summary' }, { status: 500 });
   }
-} 
+}, 'get_execution_summary'); 

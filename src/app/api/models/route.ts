@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import orderGenerationApi from '@/lib/api/orderGenerationService';
+import { withTelemetry } from '@/lib/withTelemetry';
 
 // GET /api/models - List all models (with optional pagination/sorting)
-export async function GET(req: NextRequest) {
+export const GET = withTelemetry(async (req: NextRequest) => {
   try {
     const { searchParams } = new URL(req.url);
     const params: Record<string, any> = {};
@@ -14,7 +15,7 @@ export async function GET(req: NextRequest) {
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Failed to fetch models' }, { status: 500 });
   }
-}
+}, 'list_models');
 
 // POST /api/models - Create a new model
 export async function POST(req: NextRequest) {

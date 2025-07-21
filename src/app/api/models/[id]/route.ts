@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import orderGenerationApi from '@/lib/api/orderGenerationService';
+import { withTelemetry } from '@/lib/withTelemetry';
 
 // GET /api/models/[id] - Get model by ID
-export async function GET(req: NextRequest, { params }: any) {
+export const GET = withTelemetry(async (req: NextRequest, { params }: any) => {
   try {
     const model = await orderGenerationApi.getModelById(params.id);
     if (!model) {
@@ -12,7 +13,7 @@ export async function GET(req: NextRequest, { params }: any) {
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Failed to fetch model' }, { status: 500 });
   }
-}
+}, 'get_model_by_id');
 
 // PUT /api/models/[id] - Update model
 export async function PUT(req: NextRequest, { params }: any) {

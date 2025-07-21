@@ -3,50 +3,29 @@ import { telemetryUtils, customTracing } from './metrics';
 
 type ApiHandler = (req: NextRequest, context?: any) => Promise<NextResponse> | NextResponse;
 
-// Initialize telemetry on first API call
-let telemetryInitialized = false;
-const initializeTelemetry = async () => {
-  if (!telemetryInitialized && typeof window === 'undefined') {
-    console.log('🔧 withTelemetry: Initializing OpenTelemetry...');
-    try {
-      await import('./telemetry');
-      telemetryInitialized = true;
-      console.log('✅ withTelemetry: OpenTelemetry initialized successfully');
-    } catch (error) {
-      console.error('❌ withTelemetry: Failed to initialize OpenTelemetry:', error);
-    }
-  }
-};
-
 export function withTelemetry(handler: ApiHandler, operationName?: string) {
   return async (req: NextRequest, context?: any): Promise<NextResponse> => {
-    // Initialize telemetry on first API call
-    await initializeTelemetry();
-    
     const start = Date.now();
     const method = req.method;
     const url = new URL(req.url);
     const endpoint = url.pathname;
     const spanName = operationName || `${method} ${endpoint}`;
     let statusCode = 200;
-    
-    // Only log in debug mode
-    if (process.env.OTEL_DEBUG === 'true') {
-      console.log(`🔄 withTelemetry: Starting ${spanName} for ${method} ${endpoint}`);
-    }
-    
+
+    console.log(`🔄 API: ${method} ${endpoint} - Recording metrics`);
+
     return await customTracing.traceAsyncOperation(
       spanName,
       async () => {
         let response: NextResponse;
-        
+
         try {
           response = await handler(req, context);
           statusCode = response.status;
           return response;
         } catch (error) {
           statusCode = 500;
-          console.error(`❌ withTelemetry: Handler error for ${endpoint}:`, error);
+          console.error(`❌ API Error for ${endpoint}:`, error);
           telemetryUtils.recordError(
             'api_error',
             error instanceof Error ? error.message : 'Unknown API error',
@@ -56,6 +35,7 @@ export function withTelemetry(handler: ApiHandler, operationName?: string) {
         } finally {
           const duration = Date.now() - start;
           telemetryUtils.recordApiRequest(method, endpoint, statusCode, duration);
+          console.log(`✅ API: ${method} ${endpoint} - ${statusCode} (${duration}ms) - Metrics recorded`);
         }
       },
       {
@@ -75,7 +55,7 @@ export function withDbTelemetry<T>(
   tableName: string
 ): Promise<T> {
   const start = Date.now();
-  
+
   return customTracing.traceAsyncOperation(
     `db.${operationType}`,
     async () => {
