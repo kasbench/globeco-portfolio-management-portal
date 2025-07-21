@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useMemo } from 'react'
+import { withFetchTelemetry } from '@/lib/telemetry-axios'
 import { Portfolio, PortfolioMap, PortfolioOption } from '@/types/portfolio'
 // import { orderGenerationApi } from '@/lib/api/orderGenerationService'
 
@@ -15,7 +16,11 @@ export function usePortfolios() {
   } = useQuery({
     queryKey: ['portfolios'],
     queryFn: async () => {
-      const res = await fetch('/api/portfolios')
+      const res = await withFetchTelemetry(
+        async () => fetch('/api/portfolios'),
+        'fetchPortfolios',
+        'frontend-api'
+      )()
       if (!res.ok) throw new Error('Failed to fetch portfolios')
       return res.json()
     },
@@ -100,7 +105,11 @@ export function usePortfolio(portfolioId: string) {
   const { data: portfolio, isLoading, isError, error } = useQuery({
     queryKey: ['portfolio', portfolioId],
     queryFn: async () => {
-      const res = await fetch(`/api/portfolios/${portfolioId}`)
+      const res = await withFetchTelemetry(
+        async () => fetch(`/api/portfolios/${portfolioId}`),
+        'fetchPortfolio',
+        'frontend-api'
+      )()
       if (!res.ok) throw new Error('Failed to fetch portfolio')
       return res.json()
     },
@@ -123,7 +132,11 @@ export function useRebalancePortfolios(rebalanceId: string, enabled: boolean = t
   const { data: rebalancePortfolios, isLoading: isLoadingRebalancePortfolios } = useQuery({
     queryKey: ['rebalance-portfolios', rebalanceId],
     queryFn: async () => {
-      const res = await fetch(`/api/rebalances/${rebalanceId}/portfolios`);
+      const res = await withFetchTelemetry(
+        async () => fetch(`/api/rebalances/${rebalanceId}/portfolios`),
+        'fetchRebalancePortfolios',
+        'frontend-api'
+      )();
       if (!res.ok) throw new Error('Failed to fetch rebalance portfolios');
       return res.json();
     },

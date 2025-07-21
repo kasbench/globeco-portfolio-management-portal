@@ -3,6 +3,13 @@ console.log('🔧 TELEMETRY FILE: typeof window =', typeof window);
 
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
+import { W3CTraceContextPropagator } from '@opentelemetry/core';
+import { B3Propagator } from '@opentelemetry/propagator-b3';
+import { CompositePropagator } from '@opentelemetry/core';
+import { propagation } from '@opentelemetry/api';
+import { PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
+import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-http';
+
 import { telemetryConfig, logTelemetryConfig } from './telemetry-config';
 
 console.log('🔧 TELEMETRY FILE: Imports completed successfully');
@@ -83,17 +90,8 @@ if (typeof window === 'undefined') {
       // Log configuration
       logTelemetryConfig();
 
-      // Test both ports to see which one works
-      const baseUrls = [
-        'http://otel-collector-collector.monitoring.svc.cluster.local:4318',
-        'http://otel-collector-collector.monitoring.svc.cluster.local:4317',
-      ];
-      
-      console.log('🔍 Testing collector endpoints on both ports...');
-      for (const baseUrl of baseUrls) {
-        console.log(`\n📡 Testing collector at: ${baseUrl}`);
-        await testCollectorConnectivity(baseUrl);
-      }
+      // Skip connectivity tests since tracing works - they're causing initialization issues
+      console.log('🔍 Skipping connectivity tests (tracing works, so collector is accessible)');
       
       // Use the configured collector URL
       const collectorBaseUrl = telemetryConfig.collectorBaseUrl;
@@ -205,6 +203,9 @@ if (typeof window === 'undefined') {
           '@opentelemetry/instrumentation-fs': {
             enabled: false, // Disable file system instrumentation to reduce noise
           },
+          '@opentelemetry/instrumentation-winston': {
+            enabled: false, // Disable winston instrumentation to avoid missing dependency warnings
+          },
           '@opentelemetry/instrumentation-http': {
             enabled: true,
             requestHook: (span, request) => {
@@ -223,6 +224,31 @@ if (typeof window === 'undefined') {
 
       console.log(`✅ Auto-instrumentations configured (${instrumentations.length} instrumentations)`);
 
+      // Configure trace context propagation
+      console.log('🔧 Configuring trace context propagation...');
+      const propagators = process.env.OTEL_PROPAGATORS?.split(',') || ['tracecontext', 'baggage', 'b3'];
+      console.log(`📡 Configured propagators: ${propagators.join(', ')}`);
+      
+      const propagatorInstances = [];
+      if (propagators.includes('tracecontext')) {
+        propagatorInstances.push(new W3CTraceContextPropagator());
+        console.log('✅ W3C Trace Context Propagator enabled');
+      }
+      if (propagators.includes('b3')) {
+        propagatorInstances.push(new B3Propagator());
+        console.log('✅ B3 Propagator enabled');
+      }
+      
+      if (propagatorInstances.length > 0) {
+        const compositePropagator = new CompositePropagator({
+          propagators: propagatorInstances,
+        });
+        propagation.setGlobalPropagator(compositePropagator);
+        console.log(`✅ Global propagator configured with ${propagatorInstances.length} propagators`);
+      } else {
+        console.log('⚠️ No propagators configured - trace context will not be propagated');
+      }
+
       // Configure explicit exporters using environment variables
       // This ensures the SDK actually uses the OTLP exporters
       console.log('🔧 Configuring explicit OTLP exporters...');
@@ -237,17 +263,54 @@ if (typeof window === 'undefined') {
       console.log(`   OTEL_METRICS_EXPORTER: ${process.env.OTEL_METRICS_EXPORTER}`);
       console.log(`   OTEL_LOGS_EXPORTER: ${process.env.OTEL_LOGS_EXPORTER}`);
 
-      // Initialize the SDK with environment variable configuration
-      console.log('🏗️ Initializing NodeSDK with forced OTLP exporters...');
+      // Configure additional environment variables for proper metric export
+      console.log('🏗️ Configuring metric export settings...');
+      
+      // Skip setting metric export env vars to avoid conflicts with explicit reader
+      console.log(`⏰ Using explicit metric reader with ${telemetryConfig.metricExportInterval}ms export interval`);
+
+      // Create explicit metric reader for reliable metric export
+      console.log('🏗️ Creating explicit metric reader...');
+      const metricExporter = new OTLPMetricExporter({
+        url: `${collectorBaseUrl}/v1/metrics`,
+        headers: {},
+      });
+      console.log(`✅ OTLP Metric Exporter created for: ${collectorBaseUrl}/v1/metrics`);
+      
+      const metricReader = new PeriodicExportingMetricReader({
+        exporter: metricExporter,
+        exportIntervalMillis: telemetryConfig.metricExportInterval,
+        exportTimeoutMillis: Math.min(telemetryConfig.metricExportInterval - 100, 5000), // Timeout must be less than interval
+      });
+      console.log(`✅ Periodic Metric Reader created`);
+      console.log(`📊 Metric reader configured with ${telemetryConfig.metricExportInterval}ms export interval`);
+      
+      // Initialize the SDK with explicit metric reader and environment-based trace configuration
+      console.log('🏗️ Initializing NodeSDK with explicit metric reader...');
       const sdk = new NodeSDK({
         instrumentations,
+        metricReader,
       });
+      
+      console.log('✅ NodeSDK created with explicit metric reader');
 
       console.log('🔧 NodeSDK configured, starting...');
 
       // Start the SDK
       await sdk.start();
       console.log('✅ OpenTelemetry SDK started successfully!');
+      
+      // Test the metric reader immediately after SDK start
+      console.log('🧪 Testing metric reader after SDK start...');
+      setTimeout(async () => {
+        try {
+          console.log('🔄 Forcing metric flush...');
+          await metricReader.forceFlush();
+          console.log('✅ Metric reader force flush completed successfully');
+        } catch (error) {
+          console.error('❌ Metric reader force flush failed:', error);
+        }
+      }, 2000);
 
       // Test that telemetry is working by creating a test span
       if (telemetryConfig.enableCustomTracing) {

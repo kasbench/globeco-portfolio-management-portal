@@ -13,7 +13,7 @@ export const telemetryConfig = {
   logLevel: process.env.OTEL_LOG_LEVEL || 'info',
   
   // Export settings
-  metricExportInterval: parseInt(process.env.OTEL_METRIC_EXPORT_INTERVAL || '5000'),
+  metricExportInterval: parseInt(process.env.OTEL_METRIC_EXPORT_INTERVAL || '2000'), // Reduced to 2 seconds for faster testing
   traceExportTimeout: parseInt(process.env.OTEL_TRACE_EXPORT_TIMEOUT || '30000'),
   
   // Feature flags

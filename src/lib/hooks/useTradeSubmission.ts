@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
+import { withFetchTelemetry } from '@/lib/telemetry-axios';
 import { 
   TradeOrderEnhancedResponseDTO, 
   TradeOrderSubmissionData, 
@@ -233,25 +234,33 @@ export function useTradeSubmission(
       // For individual submissions, use the individual submit endpoint
       if (validation.validSubmissions.length === 1) {
         const submission = validation.validSubmissions[0];
-        const res = await fetch(`/api/trade-orders/${submission.tradeOrder.id}/submit`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            quantity: submission.quantity,
-            destinationId: submission.destinationId
-          })
-        });
+        const res = await withFetchTelemetry(
+          async () => fetch(`/api/trade-orders/${submission.tradeOrder.id}/submit`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              quantity: submission.quantity,
+              destinationId: submission.destinationId
+            })
+          }),
+          'submitTradeOrder',
+          'frontend-api'
+        )();
         if (!res.ok) throw new Error('Failed to submit trade order');
         const singleResponse = await res.json();
         response = { successful: 1, failed: 0, results: [singleResponse] };
       } else {
         // For batch submissions, use the batch submit endpoint
         const tradeOrderIds = validation.validSubmissions.map(data => data.tradeOrder.id);
-        const res = await fetch('/api/trade-orders/batch/submit', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ tradeOrderIds })
-        });
+        const res = await withFetchTelemetry(
+          async () => fetch('/api/trade-orders/batch/submit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ tradeOrderIds })
+          }),
+          'submitTradeOrderBatch',
+          'frontend-api'
+        )();
         if (!res.ok) throw new Error('Failed to submit trade orders');
         response = await res.json();
       }

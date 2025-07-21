@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
+import { withFetchTelemetry } from '@/lib/telemetry-axios'
 import { 
   RebalanceWithSubmission, 
   RebalancePortfolioWithSubmission,
@@ -551,11 +552,15 @@ export function useBatchOperations(
           }
 
           for (const portfolio of rebalance.portfolios) {
-            const response = await fetch('/api/rebalances/submit-positions', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ positions: portfolio.positions, portfolioId: portfolio.portfolio_id })
-            });
+            const response = await withFetchTelemetry(
+              async () => fetch('/api/rebalances/submit-positions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ positions: portfolio.positions, portfolioId: portfolio.portfolio_id })
+              }),
+              'submitRebalancePositions',
+              'frontend-api'
+            )();
             if (!response.ok) {
               throw new Error(`Failed to submit positions for portfolio ${portfolio.portfolio_id}: ${response.statusText}`);
             }
@@ -685,11 +690,15 @@ export function useBatchOperations(
       })
 
       // Use the batch deletion API route
-      const delRes = await fetch('/api/rebalances/batch-delete', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(deletionRequests)
-      });
+      const delRes = await withFetchTelemetry(
+        async () => fetch('/api/rebalances/batch-delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(deletionRequests)
+        }),
+        'batchDeleteRebalances',
+        'frontend-api'
+      )();
       const deletionResult = await delRes.json();
 
       updateProgress({

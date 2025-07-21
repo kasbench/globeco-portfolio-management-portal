@@ -4,6 +4,7 @@ if (typeof window !== 'undefined') {
 }
 
 import axios, { AxiosInstance, AxiosResponse, AxiosError } from 'axios';
+import { wrapAxiosWithTelemetry, withHttpTelemetry } from '../telemetry-axios';
 
 export interface SecurityOut {
   securityId: string;
@@ -52,6 +53,9 @@ class SecurityService {
         'Accept': 'application/json',
       },
     });
+
+    // Wrap the axios instance with telemetry
+    wrapAxiosWithTelemetry(this.api, 'security-service');
 
     this.setupInterceptors();
   }
@@ -154,86 +158,110 @@ class SecurityService {
    * Get a specific security by ID with caching
    */
   async getSecurity(securityId: string): Promise<SecurityOut> {
-    // Check cache first
-    if (this.cache.has(securityId) && this.isCacheValid(securityId)) {
-      return this.cache.get(securityId)!;
-    }
+    return withHttpTelemetry(
+      async () => {
+        // Check cache first
+        if (this.cache.has(securityId) && this.isCacheValid(securityId)) {
+          return this.cache.get(securityId)!;
+        }
 
-    try {
-      const response = await this.api.get(`/api/v1/security/${securityId}`);
-      const security: SecurityOut = response.data;
-      
-      // Update cache
-      this.cache.set(securityId, security);
-      this.cacheTimestamps.set(securityId, Date.now());
-      
-      return security;
-    } catch (error) {
-      // If security not found or service unavailable, throw error
-      throw error;
-    }
+        try {
+          const response = await this.api.get(`/api/v1/security/${securityId}`);
+          const security: SecurityOut = response.data;
+          
+          // Update cache
+          this.cache.set(securityId, security);
+          this.cacheTimestamps.set(securityId, Date.now());
+          
+          return security;
+        } catch (error) {
+          // If security not found or service unavailable, throw error
+          throw error;
+        }
+      },
+      'getSecurity',
+      'security-service'
+    )();
   }
 
   /**
    * Get multiple securities by IDs with batch optimization
    */
   async getSecurities(securityIds: string[]): Promise<Map<string, SecurityOut>> {
-    const result = new Map<string, SecurityOut>();
-    const uncachedIds: string[] = [];
+    return withHttpTelemetry(
+      async () => {
+        const result = new Map<string, SecurityOut>();
+        const uncachedIds: string[] = [];
 
-    // Check cache for each security
-    for (const securityId of securityIds) {
-      if (this.cache.has(securityId) && this.isCacheValid(securityId)) {
-        result.set(securityId, this.cache.get(securityId)!);
-      } else {
-        uncachedIds.push(securityId);
-      }
-    }
+        // Check cache for each security
+        for (const securityId of securityIds) {
+          if (this.cache.has(securityId) && this.isCacheValid(securityId)) {
+            result.set(securityId, this.cache.get(securityId)!);
+          } else {
+            uncachedIds.push(securityId);
+          }
+        }
 
-    // Fetch uncached securities individually
-    // Note: This could be optimized with a batch endpoint if available
-    const fetchPromises = uncachedIds.map(async (securityId) => {
-      try {
-        const security = await this.getSecurity(securityId);
-        result.set(securityId, security);
-        return { securityId, security };
-      } catch (error) {
-        console.warn(`Failed to fetch security ${securityId}:`, error);
-        return { securityId, security: null };
-      }
-    });
+        // Fetch uncached securities individually
+        // Note: This could be optimized with a batch endpoint if available
+        const fetchPromises = uncachedIds.map(async (securityId) => {
+          try {
+            const security = await this.getSecurity(securityId);
+            result.set(securityId, security);
+            return { securityId, security };
+          } catch (error) {
+            console.warn(`Failed to fetch security ${securityId}:`, error);
+            return { securityId, security: null };
+          }
+        });
 
-    await Promise.all(fetchPromises);
-    return result;
+        await Promise.all(fetchPromises);
+        return result;
+      },
+      'getSecurities',
+      'security-service'
+    )();
   }
 
   /**
    * Get ticker for a security ID (convenience method)
    */
   async getTicker(securityId: string): Promise<string | null> {
-    try {
-      const security = await this.getSecurity(securityId);
-      return security.ticker;
-    } catch (error) {
-      console.warn(`Failed to fetch ticker for security ${securityId}:`, error);
-      return null;
-    }
+    return withHttpTelemetry(
+      async () => {
+        try {
+          const security = await this.getSecurity(securityId);
+          return security.ticker;
+        } catch (error) {
+          console.warn(`Failed to fetch ticker for security ${securityId}:`, error);
+          return null;
+        }
+      },
+      'getTicker',
+      'security-service'
+    )();
   }
 
   /**
    * Get tickers for multiple security IDs
    */
   async getTickers(securityIds: string[]): Promise<Map<string, string>> {
-    const securities = await this.getSecurities(securityIds);
-    const tickers = new Map<string, string>();
-    
-    for (const [securityId, security] of securities) {
-      if (security) {
-        tickers.set(securityId, security.ticker);
-      }
-    }
-    
-    return tickers;
+    return withHttpTelemetry(
+      async () => {
+        const securities = await this.getSecurities(securityIds);
+        const tickers = new Map<string, string>();
+        
+        for (const [securityId, security] of securities) {
+          if (security) {
+            tickers.set(securityId, security.ticker);
+          }
+        }
+        
+        return tickers;
+      },
+      'getTickers',
+      'security-service'
+    )();
   }
 
   /**

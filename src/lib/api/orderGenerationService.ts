@@ -5,6 +5,7 @@ if (typeof window !== 'undefined') {
 
 import axios, { AxiosResponse, AxiosError } from 'axios';
 import { Rebalance, RebalancesQueryParams } from '@/types/rebalance';
+import { wrapAxiosWithTelemetry, withHttpTelemetry } from '../telemetry-axios';
 
 const ORDER_GENERATION_SERVICE_HOST = process.env.ORDER_GENERATION_SERVICE_HOST || 'globeco-order-generation-service';
 const ORDER_GENERATION_SERVICE_PORT = process.env.ORDER_GENERATION_SERVICE_PORT || '8088';
@@ -16,6 +17,9 @@ const apiClient = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+// Wrap the axios instance with telemetry
+wrapAxiosWithTelemetry(apiClient, 'order-generation-service');
 
 // Add Axios interceptors for improved logging
 apiClient.interceptors.request.use(

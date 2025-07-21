@@ -47,8 +47,8 @@ spec:
             - name: OTEL_EXPORTER_OTLP_PROTOCOL
               value: "http/protobuf"
             # Metric export configuration
-            - name: OTEL_METRIC_EXPORT_INTERVAL
-              value: "5000"
+            # - name: OTEL_METRIC_EXPORT_INTERVAL
+            #   value: "5000"
             - name: OTEL_METRIC_EXPORT_TIMEOUT
               value: "30000"
             - name: OTEL_TRACE_EXPORT_TIMEOUT
@@ -65,6 +65,9 @@ spec:
               value: "otlp"
             - name: OTEL_METRICS_EXPORTER
               value: "otlp"
+            # Trace context propagation configuration
+            - name: OTEL_PROPAGATORS
+              value: "tracecontext,baggage,b3"
             # Next.js configuration
             - name: NODE_ENV
               value: "production"

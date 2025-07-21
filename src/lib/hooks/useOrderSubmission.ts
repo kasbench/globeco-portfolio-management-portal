@@ -5,6 +5,7 @@
 
 import { useState, useCallback, useMemo } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
+import { withFetchTelemetry } from '@/lib/telemetry-axios'
 
 import { 
   RebalanceWithSubmission,
@@ -335,11 +336,15 @@ export function useOrderSubmission(): UseOrderSubmissionReturn {
 
             for (const portfolio of rebalance.portfolios) {
               const portfolioResult = await globalRequestThrottler.throttle(
-                () => fetch(`/api/rebalances/${rebalance.rebalance_id}/submit-positions`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ positions: portfolio.positions })
-                }),
+                () => withFetchTelemetry(
+                  async () => fetch(`/api/rebalances/${rebalance.rebalance_id}/submit-positions`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ positions: portfolio.positions })
+                  }),
+                  'submitRebalancePositions',
+                  'frontend-api'
+                )(),
                 1 // Normal priority
               )
 

@@ -1,5 +1,6 @@
 import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState, useMemo } from 'react'
+import { withFetchTelemetry } from '@/lib/telemetry-axios'
 import { 
   Model, 
   ModelCreateRequest, 
@@ -49,7 +50,11 @@ export function useModels() {
           query.set(key, String(value))
         }
       })
-      const res = await fetch(`/api/models?${query.toString()}`)
+      const res = await withFetchTelemetry(
+        async () => fetch(`/api/models?${query.toString()}`),
+        'fetchModels',
+        'frontend-api'
+      )()
       if (!res.ok) throw new Error('Failed to fetch models')
       return res.json()
     },
@@ -71,11 +76,15 @@ export function useModels() {
   // Create model mutation
   const createModelMutation = useMutation({
     mutationFn: async (model: ModelCreateRequest) => {
-      const res = await fetch('/api/models', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(model),
-      })
+      const res = await withFetchTelemetry(
+        async () => fetch('/api/models', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(model),
+        }),
+        'createModel',
+        'frontend-api'
+      )()
       if (!res.ok) throw new Error('Failed to create model')
       return res.json()
     },
@@ -87,11 +96,15 @@ export function useModels() {
   // Update model mutation
   const updateModelMutation = useMutation({
     mutationFn: async ({ modelId, model }: { modelId: string, model: ModelUpdateRequest }) => {
-      const res = await fetch(`/api/models/${modelId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(model),
-      })
+      const res = await withFetchTelemetry(
+        async () => fetch(`/api/models/${modelId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(model),
+        }),
+        'updateModel',
+        'frontend-api'
+      )()
       if (!res.ok) throw new Error('Failed to update model')
       return res.json()
     },
@@ -103,10 +116,14 @@ export function useModels() {
   // Rebalance model mutation (now uses /api/models/[id]/rebalance API route)
   const rebalanceModelMutation = useMutation({
     mutationFn: async (modelId: string) => {
-      const res = await fetch(`/api/models/${modelId}/rebalance`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
+      const res = await withFetchTelemetry(
+        async () => fetch(`/api/models/${modelId}/rebalance`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        }),
+        'rebalanceModel',
+        'frontend-api'
+      )();
       if (!res.ok) throw new Error('Failed to rebalance model');
       return res.json();
     },
@@ -174,7 +191,11 @@ export function useModel(modelId: string) {
   const { data: model, isLoading, isError, error } = useQuery({
     queryKey: ['model', modelId],
     queryFn: async () => {
-      const res = await fetch(`/api/models/${modelId}`)
+      const res = await withFetchTelemetry(
+        async () => fetch(`/api/models/${modelId}`),
+        'fetchModel',
+        'frontend-api'
+      )()
       if (!res.ok) throw new Error('Failed to fetch model')
       return res.json()
     },
@@ -184,11 +205,15 @@ export function useModel(modelId: string) {
   // Update model mutation
   const updateModelMutation = useMutation({
     mutationFn: async (modelData: ModelUpdateRequest) => {
-      const res = await fetch(`/api/models/${modelId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(modelData),
-      })
+      const res = await withFetchTelemetry(
+        async () => fetch(`/api/models/${modelId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(modelData),
+        }),
+        'updateModelById',
+        'frontend-api'
+      )()
       if (!res.ok) throw new Error('Failed to update model')
       return res.json()
     },
@@ -201,10 +226,14 @@ export function useModel(modelId: string) {
   // Rebalance model mutation (now uses /api/models/[id]/rebalance API route)
   const rebalanceModelMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch(`/api/models/${modelId}/rebalance`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
+      const res = await withFetchTelemetry(
+        async () => fetch(`/api/models/${modelId}/rebalance`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        }),
+        'rebalanceModelById',
+        'frontend-api'
+      )();
       if (!res.ok) throw new Error('Failed to rebalance model');
       return res.json();
     },

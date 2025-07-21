@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { withFetchTelemetry } from '@/lib/telemetry-axios';
 import { DestinationResponseDTO } from '@/types/trade';
 // import { tradeService } from '@/lib/api/tradeService';
 import { formatDestinationOptions } from '@/lib/utils/tradeUtils';
@@ -54,7 +55,11 @@ export function useDestinations(): UseDestinationsReturn {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch('/api/destinations');
+      const res = await withFetchTelemetry(
+        async () => fetch('/api/destinations'),
+        'fetchDestinations',
+        'frontend-api'
+      )();
       if (!res.ok) throw new Error('Failed to fetch destinations');
       const data = await res.json();
       setDestinations(data);

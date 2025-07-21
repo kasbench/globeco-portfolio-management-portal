@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { withFetchTelemetry } from '@/lib/telemetry-axios'
 import { 
   EnhancedExecutionDTO,
   ExecutionFilters, 
@@ -116,7 +117,11 @@ export const useExecutions = (options: UseExecutionsOptions = {}): UseExecutions
       console.log('Fetching executions with params:', params)
       // Build query string
       const queryString = new URLSearchParams(params as any).toString()
-      const res = await fetch(`/api/executions?${queryString}`)
+      const res = await withFetchTelemetry(
+        async () => fetch(`/api/executions?${queryString}`),
+        'fetchExecutions',
+        'frontend-api'
+      )()
       if (!res.ok) throw new Error('Failed to fetch executions')
       return res.json()
     },

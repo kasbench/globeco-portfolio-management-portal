@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
+import { withFetchTelemetry } from '@/lib/telemetry-axios'
 import {
   OrderWithDetailsDTO,
   OrderPageResponseDTO,
@@ -192,7 +193,11 @@ export function useOrders(options: UseOrdersOptions = {}): UseOrdersReturn {
           query.set(key, String(value))
         }
       })
-      const res = await fetch(`/api/orders?${query.toString()}`)
+      const res = await withFetchTelemetry(
+        async () => fetch(`/api/orders?${query.toString()}`),
+        'fetchOrders',
+        'frontend-api'
+      )()
       if (!res.ok) throw new Error('Failed to fetch orders')
       const response: OrderPageResponseDTO = await res.json()
       return response.content

@@ -4,6 +4,7 @@ if (typeof window !== 'undefined') {
 }
 
 import axios, { AxiosInstance, AxiosResponse, AxiosError } from 'axios';
+import { wrapAxiosWithTelemetry, withHttpTelemetry } from '../telemetry-axios';
 import {
   ExecutionDTO,
   EnhancedExecutionDTO,
@@ -43,6 +44,9 @@ class ExecutionService {
         'Accept': 'application/json',
       },
     });
+
+    // Wrap the axios instance with telemetry
+    wrapAxiosWithTelemetry(this.api, 'execution-service');
 
     this.setupInterceptors();
   }
@@ -171,61 +175,97 @@ class ExecutionService {
    * Get executions with filtering, sorting, and pagination
    */
   async getExecutions(params: ExecutionQueryParams = {}): Promise<ExecutionPageDTO> {
-    const queryParams = this.buildQueryParams(params);
-    const response = await this.api.get('/api/v1/executions', {
-      params: queryParams,
-    });
-    
-    return response.data;
+    return withHttpTelemetry(
+      async () => {
+        const queryParams = this.buildQueryParams(params);
+        const response = await this.api.get('/api/v1/executions', {
+          params: queryParams,
+        });
+        
+        return response.data;
+      },
+      'getExecutions',
+      'execution-service'
+    )();
   }
 
   /**
    * Get a specific execution by ID
    */
   async getExecution(id: number): Promise<ExecutionDTO> {
-    const response = await this.api.get(`/api/v1/execution/${id}`);
-    return response.data;
+    return withHttpTelemetry(
+      async () => {
+        const response = await this.api.get(`/api/v1/execution/${id}`);
+        return response.data;
+      },
+      'getExecution',
+      'execution-service'
+    )();
   }
 
   /**
    * Create a new execution
    */
   async createExecution(execution: ExecutionPostDTO): Promise<ExecutionDTO> {
-    const response = await this.api.post('/api/v1/executions', execution);
-    return response.data;
+    return withHttpTelemetry(
+      async () => {
+        const response = await this.api.post('/api/v1/executions', execution);
+        return response.data;
+      },
+      'createExecution',
+      'execution-service'
+    )();
   }
 
   /**
    * Create multiple executions in batch
    */
   async createExecutionsBatch(request: BatchExecutionRequestDTO): Promise<BatchExecutionResponseDTO> {
-    if (request.executions.length > 100) {
-      throw new Error('Batch size cannot exceed 100 executions');
-    }
+    return withHttpTelemetry(
+      async () => {
+        if (request.executions.length > 100) {
+          throw new Error('Batch size cannot exceed 100 executions');
+        }
 
-    const response = await this.api.post('/api/v1/executions/batch', request);
-    return response.data;
+        const response = await this.api.post('/api/v1/executions/batch', request);
+        return response.data;
+      },
+      'createExecutionsBatch',
+      'execution-service'
+    )();
   }
 
   /**
    * Update an execution (fill quantities and average price)
    */
   async updateExecution(id: number, execution: ExecutionPutDTO): Promise<ExecutionDTO> {
-    const response = await this.api.put(`/api/v1/execution/${id}`, execution);
-    return response.data;
+    return withHttpTelemetry(
+      async () => {
+        const response = await this.api.put(`/api/v1/execution/${id}`, execution);
+        return response.data;
+      },
+      'updateExecution',
+      'execution-service'
+    )();
   }
 
   /**
    * Cancel an execution by updating its status to CANCEL
    */
   async cancelExecution(id: number, version: number): Promise<ExecutionDTO> {
-    const executionToCancel: ExecutionCancelDTO = {
-      executionStatus: 'CANCEL',
-      version: version
-    };
+    return withHttpTelemetry(
+      async () => {
+        const executionToCancel: ExecutionCancelDTO = {
+          executionStatus: 'CANCEL',
+          version: version
+        };
 
-    const response = await this.api.put(`/api/v1/execution/${id}`, executionToCancel);
-    return response.data;
+        const response = await this.api.put(`/api/v1/execution/${id}`, executionToCancel);
+        return response.data;
+      },
+      'cancelExecution',
+      'execution-service'
+    )();
   }
 
   /**
@@ -312,59 +352,71 @@ class ExecutionService {
     tradeTypeBreakdown: Record<string, number>;
     destinationBreakdown: Record<string, number>;
   }> {
-    const params: ExecutionQueryParams = {
-      ...filters,
-      limit: 1000, // Get a large sample for summary
-      offset: 0
-    };
+    return withHttpTelemetry(
+      async () => {
+        const params: ExecutionQueryParams = {
+          ...filters,
+          limit: 1000, // Get a large sample for summary
+          offset: 0
+        };
 
-    const response = await this.getExecutions(params);
-    const executions = response.content;
+        const response = await this.getExecutions(params);
+        const executions = response.content;
 
-    const statusBreakdown: Record<string, number> = {};
-    const tradeTypeBreakdown: Record<string, number> = {};
-    const destinationBreakdown: Record<string, number> = {};
+        const statusBreakdown: Record<string, number> = {};
+        const tradeTypeBreakdown: Record<string, number> = {};
+        const destinationBreakdown: Record<string, number> = {};
 
-    executions.forEach(execution => {
-      // Status breakdown
-      statusBreakdown[execution.executionStatus] = 
-        (statusBreakdown[execution.executionStatus] || 0) + 1;
+        executions.forEach(execution => {
+          // Status breakdown
+          statusBreakdown[execution.executionStatus] = 
+            (statusBreakdown[execution.executionStatus] || 0) + 1;
 
-      // Trade type breakdown
-      tradeTypeBreakdown[execution.tradeType] = 
-        (tradeTypeBreakdown[execution.tradeType] || 0) + 1;
+          // Trade type breakdown
+          tradeTypeBreakdown[execution.tradeType] = 
+            (tradeTypeBreakdown[execution.tradeType] || 0) + 1;
 
-      // Destination breakdown
-      destinationBreakdown[execution.destination] = 
-        (destinationBreakdown[execution.destination] || 0) + 1;
-    });
+          // Destination breakdown
+          destinationBreakdown[execution.destination] = 
+            (destinationBreakdown[execution.destination] || 0) + 1;
+        });
 
-    return {
-      totalExecutions: response.pagination.totalElements,
-      statusBreakdown,
-      tradeTypeBreakdown,
-      destinationBreakdown
-    };
+        return {
+          totalExecutions: response.pagination.totalElements,
+          statusBreakdown,
+          tradeTypeBreakdown,
+          destinationBreakdown
+        };
+      },
+      'getExecutionSummary',
+      'execution-service'
+    )();
   }
 
   /**
    * Health check endpoint
    */
   async healthCheck(): Promise<{ status: string; timestamp: string }> {
-    try {
-      // Since the API doesn't have a specific health check endpoint,
-      // we'll use a simple GET request with minimal data
-      const response = await this.api.get('/api/v1/executions', {
-        params: { limit: 1, offset: 0 }
-      });
-      
-      return {
-        status: 'healthy',
-        timestamp: new Date().toISOString()
-      };
-    } catch (error) {
-      throw new Error('Execution Service health check failed');
-    }
+    return withHttpTelemetry(
+      async () => {
+        try {
+          // Since the API doesn't have a specific health check endpoint,
+          // we'll use a simple GET request with minimal data
+          const response = await this.api.get('/api/v1/executions', {
+            params: { limit: 1, offset: 0 }
+          });
+          
+          return {
+            status: 'healthy',
+            timestamp: new Date().toISOString()
+          };
+        } catch (error) {
+          throw new Error('Execution Service health check failed');
+        }
+      },
+      'healthCheck',
+      'execution-service'
+    )();
   }
 
   /**
@@ -375,24 +427,30 @@ class ExecutionService {
     tradeTypes: string[];
     destinations: string[];
   }> {
-    // Get a sample of executions to determine available filter options
-    const response = await this.getExecutions({ limit: 100, offset: 0 });
-    
-    const executionStatuses = new Set<string>();
-    const tradeTypes = new Set<string>();
-    const destinations = new Set<string>();
+    return withHttpTelemetry(
+      async () => {
+        // Get a sample of executions to determine available filter options
+        const response = await this.getExecutions({ limit: 100, offset: 0 });
+        
+        const executionStatuses = new Set<string>();
+        const tradeTypes = new Set<string>();
+        const destinations = new Set<string>();
 
-    response.content.forEach(execution => {
-      executionStatuses.add(execution.executionStatus);
-      tradeTypes.add(execution.tradeType);
-      destinations.add(execution.destination);
-    });
+        response.content.forEach(execution => {
+          executionStatuses.add(execution.executionStatus);
+          tradeTypes.add(execution.tradeType);
+          destinations.add(execution.destination);
+        });
 
-    return {
-      executionStatuses: Array.from(executionStatuses).sort(),
-      tradeTypes: Array.from(tradeTypes).sort(),
-      destinations: Array.from(destinations).sort()
-    };
+        return {
+          executionStatuses: Array.from(executionStatuses).sort(),
+          tradeTypes: Array.from(tradeTypes).sort(),
+          destinations: Array.from(destinations).sort()
+        };
+      },
+      'getFilterOptions',
+      'execution-service'
+    )();
   }
 
   /**
@@ -434,22 +492,34 @@ class ExecutionService {
    * Get executions with filtering, sorting, and pagination - enhanced with ticker information
    */
   async getExecutionsEnhanced(params: ExecutionQueryParams = {}): Promise<{ content: EnhancedExecutionDTO[]; pagination: PaginationDTO }> {
-    const response = await this.getExecutions(params);
-    const enhancedExecutions = await this.enhanceExecutionsWithTickers(response.content);
-    
-    return {
-      content: enhancedExecutions,
-      pagination: response.pagination
-    };
+    return withHttpTelemetry(
+      async () => {
+        const response = await this.getExecutions(params);
+        const enhancedExecutions = await this.enhanceExecutionsWithTickers(response.content);
+        
+        return {
+          content: enhancedExecutions,
+          pagination: response.pagination
+        };
+      },
+      'getExecutionsEnhanced',
+      'execution-service'
+    )();
   }
 
   /**
    * Get a specific execution by ID - enhanced with ticker information
    */
   async getExecutionEnhanced(id: number): Promise<EnhancedExecutionDTO> {
-    const execution = await this.getExecution(id);
-    const enhanced = await this.enhanceExecutionsWithTickers([execution]);
-    return enhanced[0];
+    return withHttpTelemetry(
+      async () => {
+        const execution = await this.getExecution(id);
+        const enhanced = await this.enhanceExecutionsWithTickers([execution]);
+        return enhanced[0];
+      },
+      'getExecutionEnhanced',
+      'execution-service'
+    )();
   }
 }
 

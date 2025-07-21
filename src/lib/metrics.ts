@@ -47,7 +47,7 @@ export const customMetrics = {
 // Custom tracing utilities
 export const customTracing = {
   tracer,
-  
+
   // Helper function to create a span
   createSpan: (name: string, attributes?: Record<string, string | number | boolean>) => {
     try {
@@ -73,7 +73,7 @@ export const customTracing = {
   ): Promise<T> => {
     console.log(`🔍 Starting traced operation: ${name}`);
     const span = tracer.startSpan(name);
-    
+
     if (attributes) {
       span.setAttributes(attributes);
       console.log(`📝 Trace attributes set for ${name}:`, attributes);
@@ -106,20 +106,26 @@ export const telemetryUtils = {
   recordApiRequest: (method: string, endpoint: string, statusCode: number, duration: number) => {
     try {
       console.log(`📊 Recording API request: ${method} ${endpoint} - ${statusCode} (${duration}ms)`);
-      
+
       customMetrics.apiRequestCounter.add(1, {
         method,
         endpoint,
         status_code: statusCode.toString(),
       });
-      
+
       customMetrics.apiResponseTime.record(duration, {
         method,
         endpoint,
         status_code: statusCode.toString(),
       });
-      
+
       console.log(`✅ API metrics recorded successfully`);
+
+      // Force immediate export for debugging
+      if (process.env.OTEL_DEBUG === 'true') {
+        console.log(`🔄 Debug mode: Forcing metric export...`);
+        // The metrics will be exported on the next export cycle
+      }
     } catch (error) {
       console.error('❌ Error recording API request metrics:', error);
     }
@@ -129,12 +135,12 @@ export const telemetryUtils = {
   recordPageView: (page: string, userId?: string) => {
     try {
       console.log(`👁️ Recording page view: ${page} (user: ${userId || 'anonymous'})`);
-      
+
       customMetrics.pageViewCounter.add(1, {
         page,
         user_id: userId || 'anonymous',
       });
-      
+
       console.log(`✅ Page view metric recorded successfully`);
     } catch (error) {
       console.error('❌ Error recording page view metric:', error);
@@ -145,12 +151,12 @@ export const telemetryUtils = {
   recordError: (errorType: string, errorMessage: string, context?: string) => {
     try {
       console.log(`🚨 Recording error: ${errorType} - ${errorMessage} (context: ${context || 'unknown'})`);
-      
+
       customMetrics.errorCounter.add(1, {
         error_type: errorType,
         context: context || 'unknown',
       });
-      
+
       console.log(`✅ Error metric recorded successfully`);
     } catch (error) {
       console.error('❌ Error recording error metric:', error);
@@ -161,18 +167,18 @@ export const telemetryUtils = {
   recordDbOperation: (operation: string, table: string, duration: number, success: boolean) => {
     try {
       console.log(`🗄️ Recording DB operation: ${operation} on ${table} - ${success ? 'success' : 'failure'} (${duration}ms)`);
-      
+
       customMetrics.dbOperationCounter.add(1, {
         operation,
         table,
         success: success.toString(),
       });
-      
+
       customMetrics.dbOperationDuration.record(duration, {
         operation,
         table,
       });
-      
+
       console.log(`✅ DB operation metrics recorded successfully`);
     } catch (error) {
       console.error('❌ Error recording DB operation metrics:', error);

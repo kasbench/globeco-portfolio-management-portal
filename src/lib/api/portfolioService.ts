@@ -4,6 +4,7 @@ if (typeof window !== 'undefined') {
 }
 
 import axios, { AxiosResponse } from 'axios'
+import { wrapAxiosWithTelemetry, withHttpTelemetry } from '../telemetry-axios'
 import { 
   PortfolioResponseDTO, 
   PortfolioPostDTO, 
@@ -24,6 +25,9 @@ const apiClient = axios.create({
     'Content-Type': 'application/json',
   },
 })
+
+// Wrap the axios instance with telemetry
+wrapAxiosWithTelemetry(apiClient, 'portfolio-service')
 
 // Add request interceptor to log requests in development
 apiClient.interceptors.request.use(
@@ -79,35 +83,55 @@ function transformPortfolioDTO(dto: PortfolioResponseDTO): Portfolio {
 // Portfolio Service API Functions
 export const portfolioApi = {
   // Get all portfolios
-  getPortfolios: async (): Promise<Portfolio[]> => {
-    const response: AxiosResponse<PortfolioResponseDTO[]> = await apiClient.get('/api/v1/portfolios')
-    return response.data.map(transformPortfolioDTO)
-  },
+  getPortfolios: withHttpTelemetry(
+    async (): Promise<Portfolio[]> => {
+      const response: AxiosResponse<PortfolioResponseDTO[]> = await apiClient.get('/api/v1/portfolios')
+      return response.data.map(transformPortfolioDTO)
+    },
+    'getPortfolios',
+    'portfolio-service'
+  ),
 
   // Get portfolio by ID
-  getPortfolio: async (portfolioId: string): Promise<Portfolio> => {
-    const response: AxiosResponse<PortfolioResponseDTO> = await apiClient.get(`/api/v1/portfolio/${portfolioId}`)
-    return transformPortfolioDTO(response.data)
-  },
+  getPortfolio: withHttpTelemetry(
+    async (portfolioId: string): Promise<Portfolio> => {
+      const response: AxiosResponse<PortfolioResponseDTO> = await apiClient.get(`/api/v1/portfolio/${portfolioId}`)
+      return transformPortfolioDTO(response.data)
+    },
+    'getPortfolio',
+    'portfolio-service'
+  ),
 
   // Create new portfolio
-  createPortfolio: async (portfolio: PortfolioPostDTO): Promise<Portfolio> => {
-    const response: AxiosResponse<PortfolioResponseDTO> = await apiClient.post('/api/v1/portfolios', portfolio)
-    return transformPortfolioDTO(response.data)
-  },
+  createPortfolio: withHttpTelemetry(
+    async (portfolio: PortfolioPostDTO): Promise<Portfolio> => {
+      const response: AxiosResponse<PortfolioResponseDTO> = await apiClient.post('/api/v1/portfolios', portfolio)
+      return transformPortfolioDTO(response.data)
+    },
+    'createPortfolio',
+    'portfolio-service'
+  ),
 
   // Update existing portfolio
-  updatePortfolio: async (portfolioId: string, portfolio: PortfolioPutDTO): Promise<Portfolio> => {
-    const response: AxiosResponse<PortfolioResponseDTO> = await apiClient.put(`/api/v1/portfolio/${portfolioId}`, portfolio)
-    return transformPortfolioDTO(response.data)
-  },
+  updatePortfolio: withHttpTelemetry(
+    async (portfolioId: string, portfolio: PortfolioPutDTO): Promise<Portfolio> => {
+      const response: AxiosResponse<PortfolioResponseDTO> = await apiClient.put(`/api/v1/portfolio/${portfolioId}`, portfolio)
+      return transformPortfolioDTO(response.data)
+    },
+    'updatePortfolio',
+    'portfolio-service'
+  ),
 
   // Delete portfolio
-  deletePortfolio: async (portfolioId: string, version: number): Promise<void> => {
-    await apiClient.delete(`/api/v1/portfolio/${portfolioId}`, {
-      params: { version }
-    })
-  },
+  deletePortfolio: withHttpTelemetry(
+    async (portfolioId: string, version: number): Promise<void> => {
+      await apiClient.delete(`/api/v1/portfolio/${portfolioId}`, {
+        params: { version }
+      })
+    },
+    'deletePortfolio',
+    'portfolio-service'
+  ),
 }
 
 export default portfolioApi 

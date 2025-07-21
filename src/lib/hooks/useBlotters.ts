@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { withFetchTelemetry } from '@/lib/telemetry-axios'
 import { BlotterResponseDTO } from '@/types/trade'
 import { tradeService } from '@/lib/api/tradeService'
 
@@ -50,7 +51,11 @@ export function useBlotters(): UseBlottersResult {
       }
 
       console.log('Fetching blotters from /api/blotters API route')
-      const res = await fetch('/api/blotters')
+      const res = await withFetchTelemetry(
+        async () => fetch('/api/blotters'),
+        'fetchBlotters',
+        'frontend-api'
+      )()
       if (!res.ok) throw new Error('Failed to fetch blotters')
       const data = await res.json()
       

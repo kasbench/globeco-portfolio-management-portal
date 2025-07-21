@@ -1,5 +1,6 @@
 import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState, useMemo } from 'react'
+import { withFetchTelemetry } from '@/lib/telemetry-axios'
 import { 
   Rebalance,
   RebalancePortfolio,
@@ -45,7 +46,11 @@ export function useRebalances() {
         sort_by: sortString
       }
       const query = new URLSearchParams(params as any).toString();
-      const res = await fetch(`/api/rebalances?${query}`);
+      const res = await withFetchTelemetry(
+        async () => fetch(`/api/rebalances?${query}`),
+        'fetchRebalances',
+        'frontend-api'
+      )();
       if (!res.ok) throw new Error('Failed to fetch rebalances');
       return res.json();
     },
@@ -114,7 +119,11 @@ export function useRebalance(rebalanceId: string, enabled: boolean = true) {
   return useQuery({
     queryKey: ['rebalance', rebalanceId],
     queryFn: async () => {
-      const res = await fetch(`/api/rebalances/${rebalanceId}`);
+      const res = await withFetchTelemetry(
+        async () => fetch(`/api/rebalances/${rebalanceId}`),
+        'fetchRebalance',
+        'frontend-api'
+      )();
       if (!res.ok) throw new Error('Failed to fetch rebalance');
       return res.json();
     },
@@ -132,7 +141,11 @@ export function useRebalancePortfolios(rebalanceId: string, enabled: boolean = f
   return useQuery({
     queryKey: ['rebalance-portfolios', rebalanceId],
     queryFn: async () => {
-      const res = await fetch(`/api/rebalances/${rebalanceId}/portfolios`);
+      const res = await withFetchTelemetry(
+        async () => fetch(`/api/rebalances/${rebalanceId}/portfolios`),
+        'fetchRebalancePortfolios',
+        'frontend-api'
+      )();
       if (!res.ok) {
         const errorData = await res.json();
         throw new Error(errorData.message || 'Failed to fetch rebalance portfolios');
@@ -157,7 +170,11 @@ export function useRebalancePortfolioPositions(
   return useQuery({
     queryKey: ['rebalance-portfolio-positions', rebalanceId, portfolioId],
     queryFn: async () => {
-      const res = await fetch(`/api/rebalances/${rebalanceId}/portfolios/${portfolioId}/positions`);
+      const res = await withFetchTelemetry(
+        async () => fetch(`/api/rebalances/${rebalanceId}/portfolios/${portfolioId}/positions`),
+        'fetchRebalancePortfolioPositions',
+        'frontend-api'
+      )();
       if (!res.ok) throw new Error('Failed to fetch rebalance portfolio positions');
       return res.json();
     },
@@ -178,7 +195,11 @@ export function usePrefetchRebalanceData() {
     queryClient.prefetchQuery({
       queryKey: ['rebalance-portfolios', rebalanceId],
       queryFn: async () => {
-        const res = await fetch(`/api/rebalances/${rebalanceId}/portfolios`);
+        const res = await withFetchTelemetry(
+          async () => fetch(`/api/rebalances/${rebalanceId}/portfolios`),
+          'prefetchRebalancePortfolios',
+          'frontend-api'
+        )();
         if (!res.ok) throw new Error('Failed to fetch rebalance portfolios');
         return res.json();
       },
@@ -190,7 +211,11 @@ export function usePrefetchRebalanceData() {
     queryClient.prefetchQuery({
       queryKey: ['rebalance-portfolio-positions', rebalanceId, portfolioId],
       queryFn: async () => {
-        const res = await fetch(`/api/rebalances/${rebalanceId}/portfolios/${portfolioId}/positions`);
+        const res = await withFetchTelemetry(
+          async () => fetch(`/api/rebalances/${rebalanceId}/portfolios/${portfolioId}/positions`),
+          'prefetchPortfolioPositions',
+          'frontend-api'
+        )();
         if (!res.ok) throw new Error('Failed to fetch rebalance portfolio positions');
         return res.json();
       },

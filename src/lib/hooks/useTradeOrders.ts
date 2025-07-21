@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
 // import { TradeService } from '@/lib/api/tradeService'
+import { withFetchTelemetry } from '@/lib/telemetry-axios'
 import { 
   TradeOrderPageResponseDTO, 
   TradeOrderFilters, 
@@ -94,7 +95,11 @@ export const useTradeOrders = (options: UseTradeOrdersOptions = {}): UseTradeOrd
         ...Object.fromEntries(Object.entries(filters).filter(([_, v]) => v !== undefined && v !== null && v !== ''))
       });
       
-      const res = await fetch(`/api/trades?${params.toString()}`);
+      const res = await withFetchTelemetry(
+        async () => fetch(`/api/trades?${params.toString()}`),
+        'fetchTradeOrders',
+        'frontend-api'
+      )();
       if (!res.ok) {
         const errorText = await res.text();
         throw new Error(`Failed to fetch trade orders: ${res.status} ${res.statusText}`);
