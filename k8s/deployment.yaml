@@ -78,6 +78,11 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
+            # Data Cleanup
+            - name: DATA_CLEANUP_EMPTY_PORTFOLIOS
+              value: "false"
+            - name: DATA_CLEANUP_EMPTY_REBALANCES
+              value: "false"
           # Health checks that will generate telemetry data
           livenessProbe:
             httpGet:

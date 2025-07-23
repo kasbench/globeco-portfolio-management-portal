@@ -1,7 +1,7 @@
 // Data Cleanup Service for Successful Order Submissions
 // Handles position deletion, portfolio cleanup, and rebalance cleanup with atomic operations
 
-import { 
+import {
   RebalanceWithSubmission,
   RebalancePortfolioWithSubmission,
   RebalancePositionWithSubmission,
@@ -81,13 +81,13 @@ export interface CleanupConfig {
  * Default cleanup configuration
  */
 const DEFAULT_CLEANUP_CONFIG: CleanupConfig = {
-  enableTransactions: true,
-  preserveFailedPositions: true,
-  cleanupEmptyPortfolios: true,
-  cleanupEmptyRebalances: true,
-  batchSize: 100,
-  retainAuditTrail: true,
-  rollbackOnError: true
+  enableTransactions: process.env.DATA_CLEANUP_ENABLE_TRANSACTIONS !== 'false',
+  preserveFailedPositions: process.env.DATA_CLEANUP_PRESERVE_FAILED_POSITIONS !== 'false',
+  cleanupEmptyPortfolios: process.env.DATA_CLEANUP_EMPTY_PORTFOLIOS !== 'false',
+  cleanupEmptyRebalances: process.env.DATA_CLEANUP_EMPTY_REBALANCES !== 'false',
+  batchSize: parseInt(process.env.DATA_CLEANUP_BATCH_SIZE || '100'),
+  retainAuditTrail: process.env.DATA_CLEANUP_RETAIN_AUDIT_TRAIL !== 'false',
+  rollbackOnError: process.env.DATA_CLEANUP_ROLLBACK_ON_ERROR !== 'false'
 }
 
 /**
@@ -109,10 +109,10 @@ export class DataCleanupService {
     submissionResult: OrderSubmissionResult
   ): Promise<CleanupResult> {
     const transaction = this.createTransaction()
-    
+
     try {
       // Identify successfully submitted positions
-      const successfulPositionIds = new Set(submissionResult.submittedOrderIds.map(orderId => 
+      const successfulPositionIds = new Set(submissionResult.submittedOrderIds.map(orderId =>
         this.extractPositionIdFromOrderId(orderId)
       ))
 
@@ -127,8 +127,8 @@ export class DataCleanupService {
       for (const portfolio of rebalance.portfolios) {
         try {
           const cleanupResult = await this.cleanupPortfolio(
-            portfolio, 
-            successfulPositionIds, 
+            portfolio,
+            successfulPositionIds,
             transaction
           )
 
@@ -174,8 +174,8 @@ export class DataCleanupService {
 
       // Always preserve rebalance, just update it with remaining portfolios
       // Only delete rebalance if explicitly configured and no portfolios remain
-      const shouldDeleteRebalance = this.config.cleanupEmptyRebalances && 
-                                   updatedPortfolios.length === 0
+      const shouldDeleteRebalance = this.config.cleanupEmptyRebalances &&
+        updatedPortfolios.length === 0
 
       let updatedRebalance: RebalanceWithSubmission | undefined
 
@@ -258,7 +258,7 @@ export class DataCleanupService {
     // Process each position
     for (const position of portfolio.positions) {
       const positionKey = this.generatePositionKey(position)
-      
+
       if (successfulPositionIds.has(positionKey) || successfulPositionIds.has(position.security_id)) {
         // Position was successfully submitted - mark for deletion
         if (this.shouldDeletePosition(position)) {
@@ -313,15 +313,15 @@ export class DataCleanupService {
     if (position.transaction_type === 'HOLD') {
       return false
     }
-    
+
     // Never delete zero-quantity positions (they should be preserved)
     if (position.trade_quantity === 0) {
       return false
     }
-    
+
     // Delete positions that were successfully submitted and are eligible for submission
-    return position.isEligibleForSubmission && 
-           (position.transaction_type === 'BUY' || position.transaction_type === 'SELL')
+    return position.isEligibleForSubmission &&
+      (position.transaction_type === 'BUY' || position.transaction_type === 'SELL')
   }
 
   /**
@@ -419,7 +419,7 @@ export class DataCleanupService {
   private extractPositionIdFromOrderId(orderId: string | number): string {
     // Convert to string first in case orderId is a number
     const orderIdStr = String(orderId)
-    
+
     // For testing purposes, if the orderId looks like a security ID (starts with letters),
     // return it as-is. Otherwise, return the order ID itself.
     // In a real implementation, this would need to be mapped based on the order submission context
