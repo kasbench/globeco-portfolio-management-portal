@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { metrics, trace } from '@opentelemetry/api';
 
 export async function GET(req: NextRequest) {
-  console.log('🔍 DEBUG: Telemetry status check endpoint called');
+  console.log('🔍 DEBUG: Telemetry status check endpoint called (no traces will be generated)');
   
   try {
     // Check global providers

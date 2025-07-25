@@ -12,7 +12,7 @@ export function withTelemetry(handler: ApiHandler, operationName?: string) {
     const spanName = operationName || `${method} ${endpoint}`;
     let statusCode = 200;
 
-    console.log(`🔄 API: ${method} ${endpoint} - Recording metrics`);
+    console.log(`🔄 API: ${method} ${endpoint} - Recording metrics and traces`);
 
     return await customTracing.traceAsyncOperation(
       spanName,
@@ -35,7 +35,7 @@ export function withTelemetry(handler: ApiHandler, operationName?: string) {
         } finally {
           const duration = Date.now() - start;
           telemetryUtils.recordApiRequest(method, endpoint, statusCode, duration);
-          console.log(`✅ API: ${method} ${endpoint} - ${statusCode} (${duration}ms) - Metrics recorded`);
+          console.log(`✅ API: ${method} ${endpoint} - ${statusCode} (${duration}ms) - Metrics and traces recorded`);
         }
       },
       {

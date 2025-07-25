@@ -60,4 +60,5 @@ async function handler(req: NextRequest) {
   }
 }
 
-export const GET = withTelemetry(handler, 'test-metrics');
+// Export handler without telemetry wrapper to avoid traces
+export const GET = handler;

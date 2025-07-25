@@ -44,13 +44,14 @@ export const initializeSimpleTelemetry = (): boolean => {
     });
     console.log('✅ SIMPLE-TELEMETRY: Metric reader created');
     
-    // Create and start SDK
+    // Create and start SDK - trace export is disabled via OTEL_TRACES_EXPORTER=none
+    // Only our custom traces in withTelemetry will be sent (excluding health checks)
     console.log('🚀 SIMPLE-TELEMETRY: Creating NodeSDK...');
     sdk = new NodeSDK({
       instrumentations: [],
       metricReader,
     });
-    console.log('✅ SIMPLE-TELEMETRY: NodeSDK created');
+    console.log('✅ SIMPLE-TELEMETRY: NodeSDK created (automatic trace export disabled)');
     
     console.log('🚀 SIMPLE-TELEMETRY: Starting SDK...');
     sdk.start();

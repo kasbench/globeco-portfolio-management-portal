@@ -27,7 +27,7 @@ COPY --from=builder /app/next.config.js ./
 
 # Set environment variables for production
 ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED=1
+ENV NEXT_TELEMETRY_DISABLED=1np
 
 # Use a non-root user for security
 RUN addgroup -g 1001 -S appgroup && adduser -S appuser -u 1001 -G appgroup
