@@ -178,6 +178,20 @@ export const orderGenerationServiceApi = {
   },
 
   /**
+   * Delete a model by ID with optimistic locking
+   */
+  deleteModel: async (modelId: string, version: number): Promise<void> => {
+    try {
+      console.log('[orderGenerationServiceApi] Calling DELETE /api/v1/model', { modelId, version });
+      await apiClient.delete(`/api/v1/model/${modelId}`, { params: { version } });
+      console.log('[orderGenerationServiceApi] Successfully deleted model', { modelId, version });
+    } catch (error) {
+      console.error('[orderGenerationServiceApi] Error deleting model', { modelId, version, error });
+      throw error;
+    }
+  },
+
+  /**
    * Get portfolios for a specific rebalance
    */
   getRebalancePortfolios: async (rebalanceId: string): Promise<any[]> => {

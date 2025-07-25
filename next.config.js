@@ -14,9 +14,9 @@ const nextConfig = {
   },
   webpack: (config, { dev, isServer }) => {
     // Disable minification in webpack for client-side builds
-    if (!dev && !isServer) {
-      config.optimization.minimize = false
-    }
+    // if (!dev && !isServer) {
+    //   config.optimization.minimize = false
+    // }
     return config
   },
   // Enable experimental features if needed

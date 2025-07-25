@@ -217,7 +217,7 @@ class TradeService {
    * Create new trade order (v2)
    */
   async createTradeOrder(tradeOrder: CreateTradeOrderRequestDTO): Promise<TradeOrderEnhancedResponseDTO> {
-    const response = await this.api.post<TradeOrderEnhancedResponseDTO>('/api/v2/tradeOrders', tradeOrder);
+    const response = await this.api.post<TradeOrderEnhancedResponseDTO>('/api/v1/tradeOrders', tradeOrder);
     return response.data;
   }
 

@@ -26,7 +26,41 @@ export async function PUT(req: NextRequest, { params }: any) {
   }
 }
 
-// DELETE /api/models/[id] - Delete model (not implemented in orderGenerationApi, so return 501)
-export async function DELETE(req: NextRequest, { params }: any) {
-  return NextResponse.json({ error: 'Delete model not implemented' }, { status: 501 });
-} 
+// DELETE /api/models/[id] - Delete model
+export const DELETE = withTelemetry(async (req: NextRequest, { params }: any) => {
+  try {
+    const { searchParams } = new URL(req.url);
+    const version = searchParams.get('version');
+    
+    if (!version) {
+      return NextResponse.json({ error: 'Version parameter is required' }, { status: 400 });
+    }
+    
+    const versionNumber = parseInt(version, 10);
+    if (isNaN(versionNumber)) {
+      return NextResponse.json({ error: 'Version must be a valid integer' }, { status: 400 });
+    }
+    
+    await orderGenerationApi.deleteModel(params.id, versionNumber);
+    return new NextResponse(null, { status: 204 });
+  } catch (error: any) {
+    console.error(`Error deleting model ${params.id}:`, error);
+    
+    // Handle specific error cases based on the documentation
+    if (error.response?.status === 404) {
+      return NextResponse.json({ error: `Model ${params.id} not found` }, { status: 404 });
+    } else if (error.response?.status === 409) {
+      return NextResponse.json({ error: 'Model has been modified by another process' }, { status: 409 });
+    } else if (error.response?.status === 422) {
+      return NextResponse.json({ 
+        error: error.response?.data?.detail || 'Cannot delete model with associated portfolios. Remove all portfolios first.' 
+      }, { status: 422 });
+    } else if (error.response?.status === 400) {
+      return NextResponse.json({ 
+        error: error.response?.data?.detail || 'Invalid model ID format. Must be 24-character hexadecimal string.' 
+      }, { status: 400 });
+    }
+    
+    return NextResponse.json({ error: error.message || 'Failed to delete model' }, { status: 500 });
+  }
+}, 'delete_model'); 
