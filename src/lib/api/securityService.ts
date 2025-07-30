@@ -5,6 +5,7 @@ if (typeof window !== 'undefined') {
 
 import axios, { AxiosInstance, AxiosResponse, AxiosError } from 'axios';
 import { wrapAxiosWithTelemetry, withHttpTelemetry } from '../telemetry-axios';
+import { logger } from '../logger';
 
 export interface SecurityOut {
   securityId: string;
@@ -67,16 +68,21 @@ class SecurityService {
     // Request interceptor
     this.api.interceptors.request.use(
       (config) => {
-        const timestamp = new Date().toISOString();
-        console.log(`[${timestamp}] Security Service Request:`, {
+        logger.debug('Security Service Request', {
           method: config.method?.toUpperCase(),
           url: config.url,
           params: config.params,
-        });
+          service: 'security-service'
+        }, 'securityService:request:0');
         return config;
       },
       (error) => {
-        console.error('Security Service Request Error:', error);
+        logger.error('Security Service Request Error', {
+          service: 'security-service',
+          error: {
+            message: error instanceof Error ? error.message : String(error)
+          }
+        });
         return Promise.reject(error);
       }
     );
@@ -84,20 +90,23 @@ class SecurityService {
     // Response interceptor
     this.api.interceptors.response.use(
       (response: AxiosResponse) => {
-        const timestamp = new Date().toISOString();
-        console.log(`[${timestamp}] Security Service Response:`, {
+        logger.debug('Security Service Response', {
           status: response.status,
           url: response.config.url,
-          data: response.data,
-        });
+          service: 'security-service'
+        }, 'securityService:response:0');
         return response;
       },
       (error: AxiosError<SecurityServiceErrorResponse>) => {
-        const timestamp = new Date().toISOString();
-        console.error(`[${timestamp}] Security Service Error:`, {
+        logger.error('Security Service Error', {
           status: error.response?.status,
           url: error.config?.url,
-          message: error.response?.data?.detail?.[0]?.msg || error.message,
+          service: 'security-service',
+          error_detail: error.response?.data?.detail?.[0]?.msg || error.message,
+          error: {
+            message: error.message,
+            name: error.name
+          }
         });
         return Promise.reject(this.handleError(error));
       }
@@ -210,7 +219,14 @@ class SecurityService {
             result.set(securityId, security);
             return { securityId, security };
           } catch (error) {
-            console.warn(`Failed to fetch security ${securityId}:`, error);
+            logger.warn('Failed to fetch security', {
+              security_id: securityId,
+              service: 'security-service',
+              operation: 'get_security_by_id',
+              error: {
+                message: error instanceof Error ? error.message : String(error)
+              }
+            });
             return { securityId, security: null };
           }
         });
@@ -233,7 +249,14 @@ class SecurityService {
           const security = await this.getSecurity(securityId);
           return security.ticker;
         } catch (error) {
-          console.warn(`Failed to fetch ticker for security ${securityId}:`, error);
+          logger.warn('Failed to fetch ticker for security', {
+            security_id: securityId,
+            service: 'security-service',
+            operation: 'get_ticker',
+            error: {
+              message: error instanceof Error ? error.message : String(error)
+            }
+          });
           return null;
         }
       },

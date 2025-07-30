@@ -6,7 +6,7 @@ let tracer: ReturnType<typeof trace.getTracer> | null = null;
 let metricsInitialized = false;
 const customMetricsCache: any = {};
 
-console.log('🔧 METRICS: Starting metrics initialization...');
+// Metrics initialization will be logged through structured logging
 
 // Initialize metrics function
 const initializeMetrics = () => {
@@ -15,26 +15,23 @@ const initializeMetrics = () => {
   }
 
   try {
-    console.log('🚀 METRICS: Creating meter and tracer...');
-    
     // Create meter and tracer
     meter = metrics.getMeter('globeco-portfolio-management-portal', '0.1.0');
     tracer = trace.getTracer('globeco-portfolio-management-portal', '0.1.0');
     
     metricsInitialized = true;
-    console.log('✅ METRICS: Meter and tracer created successfully');
     
     // Test metric creation and immediate use
     const testCounter = meter.createCounter('metrics_initialization_test', {
       description: 'Test counter to verify metrics are working'
     });
     testCounter.add(1, { test: 'initialization', timestamp: Date.now().toString() });
-    console.log('✅ METRICS: Test counter created and incremented');
     
     return true;
     
   } catch (error) {
-    console.error('❌ METRICS: Initialization failed:', error);
+    // Use console.error here since logger might not be available during initialization
+    console.error('METRICS: Initialization failed:', error);
     metricsInitialized = false;
     return false;
   }
@@ -44,8 +41,7 @@ const initializeMetrics = () => {
 if (typeof window === 'undefined') {
   // Add a small delay to ensure telemetry SDK is ready
   setTimeout(() => {
-    const success = initializeMetrics();
-    console.log(`🔧 METRICS: Initialization result: ${success ? 'SUCCESS' : 'FAILED'}`);
+    initializeMetrics();
   }, 100);
 }
 
@@ -58,7 +54,6 @@ const createNoOpMetric = () => ({
 // Simple function to get or create a metric
 const getOrCreateMetric = (name: string, type: 'counter' | 'histogram' | 'updowncounter', description: string) => {
   if (!meter) {
-    console.log(`⚠️ METRICS: Meter not available for ${name}, returning no-op`);
     return createNoOpMetric();
   }
   
@@ -75,9 +70,9 @@ const getOrCreateMetric = (name: string, type: 'counter' | 'histogram' | 'updown
           customMetricsCache[name] = meter.createUpDownCounter(name, { description });
           break;
       }
-      console.log(`✅ METRICS: Created ${type} metric: ${name}`);
     } catch (error) {
-      console.error(`❌ METRICS: Failed to create ${name}:`, error);
+      // Use console.error here since this is a low-level metrics error
+      console.error(`METRICS: Failed to create ${name}:`, error);
       return createNoOpMetric();
     }
   }
@@ -136,7 +131,8 @@ export const customTracing = {
       }
       return span;
     } catch (error) {
-      console.error(`❌ Error creating span ${name}:`, error);
+      // Use console.error here since this is a low-level tracing error
+      console.error(`Error creating span ${name}:`, error);
       // Return a no-op span to prevent crashes
       return {
         setAttributes: () => {},
@@ -200,7 +196,7 @@ export const telemetryUtils = {
         status_code: statusCode.toString(),
       });
     } catch (error) {
-      console.error('❌ Error recording API request metrics:', error);
+      console.error('Error recording API request metrics:', error);
     }
   },
 
@@ -212,7 +208,7 @@ export const telemetryUtils = {
         user_id: userId || 'anonymous',
       });
     } catch (error) {
-      console.error('❌ Error recording page view metric:', error);
+      console.error('Error recording page view metric:', error);
     }
   },
 
@@ -225,7 +221,7 @@ export const telemetryUtils = {
         context: context || 'unknown',
       });
     } catch (error) {
-      console.error('❌ Error recording error metric:', error);
+      console.error('Error recording error metric:', error);
     }
   },
 
@@ -243,7 +239,7 @@ export const telemetryUtils = {
         table,
       });
     } catch (error) {
-      console.error('❌ Error recording DB operation metrics:', error);
+      console.error('Error recording DB operation metrics:', error);
     }
   },
 };

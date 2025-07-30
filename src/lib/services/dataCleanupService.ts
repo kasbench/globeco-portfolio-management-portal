@@ -515,7 +515,7 @@ export class DataCleanupService {
       // Execute rollback operations in reverse order
       for (const operation of transaction.rollbackOperations) {
         // In a real implementation, this would execute the actual rollback
-        console.log(`Rolling back operation: ${operation.type} for ${operation.entityId}`)
+        // Rollback operation would be logged through structured logging when implemented
       }
 
       transaction.isRolledBack = true

@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { telemetryUtils } from '@/lib/metrics';
+import { withStructuredLogging, logApiOperation, logServiceOperation, createSuccessResponse, createErrorResponse } from '@/lib/apiLogger';
 
-// Health check endpoint without telemetry wrapper to avoid traces
-export async function GET(req: NextRequest) {
-  console.log('🏥 Health check endpoint called');
+// Health check endpoint with structured logging
+export const GET = withStructuredLogging(async (req: NextRequest, context) => {
+  logApiOperation('Health check requested', context);
   
   try {
     // Record basic health check metrics (no traces)
     telemetryUtils.recordPageView('/api/health', 'system');
+    
+    logServiceOperation('Performing health checks', context, 'health_check');
     
     // Simulate some health checks
     const checks = [
@@ -40,12 +43,16 @@ export async function GET(req: NextRequest) {
       },
     };
     
-    console.log('✅ Health check completed successfully (no traces sent)');
-    return NextResponse.json(response);
+    logServiceOperation('Health checks completed successfully', context, 'health_check', {
+      checks_count: checks.length,
+      all_healthy: checks.every(c => c.status === 'healthy')
+    });
+    
+    logApiOperation('Health check completed successfully', context);
+    
+    return createSuccessResponse(response, context);
     
   } catch (error) {
-    console.error('❌ Health check failed:', error);
-    
     // Record error metrics only (no traces)
     telemetryUtils.recordError(
       'health_check_error',
@@ -53,10 +60,11 @@ export async function GET(req: NextRequest) {
       'health-endpoint'
     );
     
-    return NextResponse.json({
-      status: 'unhealthy',
-      timestamp: new Date().toISOString(),
-      error: error instanceof Error ? error.message : 'Unknown error',
-    }, { status: 500 });
+    return createErrorResponse(
+      error instanceof Error ? error.message : 'Unknown error',
+      500,
+      context,
+      { operation: 'health_check' }
+    );
   }
-}
+}, 'health_check');

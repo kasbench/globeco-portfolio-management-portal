@@ -18,14 +18,12 @@ export function wrapAxiosWithTelemetry(axiosInstance: AxiosInstance, serviceName
       const url = config.url || 'unknown';
       const spanName = `${method} ${url}`;
       
-      console.log(`🔍 Starting HTTP span: ${spanName} (${serviceName})`);
+      // Starting HTTP span for telemetry
       
       // Inject trace context headers for distributed tracing
       try {
         const activeSpan = trace.getActiveSpan();
         if (activeSpan) {
-          console.log(`📡 Active span found, injecting trace context headers for ${spanName}`);
-          
           // Ensure headers object exists
           if (!config.headers) {
             config.headers = {} as any;
@@ -37,20 +35,14 @@ export function wrapAxiosWithTelemetry(axiosInstance: AxiosInstance, serviceName
           
           // Add the injected headers to the request
           Object.assign(config.headers, headersCarrier);
-          
-          console.log(`✅ Trace context headers injected:`, headersCarrier);
-        } else {
-          console.log(`⚠️ No active span found for ${spanName} - trace context will not be propagated`);
         }
       } catch (error) {
-        console.error(`❌ Error injecting trace context for ${spanName}:`, error);
         // Don't fail the request if trace context injection fails
       }
       
       return config;
     },
     (error) => {
-      console.error(`❌ HTTP request error (${serviceName}):`, error);
       return Promise.reject(error);
     }
   );
@@ -70,7 +62,6 @@ export function wrapAxiosWithTelemetry(axiosInstance: AxiosInstance, serviceName
       return customTracing.traceAsyncOperation(
         spanName,
         async () => {
-          console.log(`✅ HTTP span completed: ${spanName} (${serviceName}) - ${response.status} in ${duration}ms`);
           return response;
         },
         {
@@ -98,7 +89,6 @@ export function wrapAxiosWithTelemetry(axiosInstance: AxiosInstance, serviceName
         return customTracing.traceAsyncOperation(
           spanName,
           async () => {
-            console.error(`❌ HTTP span failed: ${spanName} (${serviceName}) - ${statusCode} in ${duration}ms`);
             throw error;
           },
           {
@@ -117,7 +107,7 @@ export function wrapAxiosWithTelemetry(axiosInstance: AxiosInstance, serviceName
     }
   );
 
-  console.log(`🔧 Axios instance wrapped with telemetry for service: ${serviceName}`);
+  // Axios instance wrapped with telemetry
   return axiosInstance;
 }
 
@@ -134,9 +124,7 @@ export function withHttpTelemetry<T extends any[], R>(
     return await customTracing.traceAsyncOperation(
       operationName,
       async () => {
-        console.log(`🚀 Starting operation: ${operationName} (${serviceName})`);
         const result = await fn(...args);
-        console.log(`✅ Operation completed: ${operationName} (${serviceName})`);
         return result;
       },
       {
@@ -161,19 +149,8 @@ export function withFetchTelemetry<T extends any[], R>(
     return await customTracing.traceAsyncOperation(
       operationName,
       async () => {
-        const startTime = Date.now();
-        console.log(`🌐 Starting fetch operation: ${operationName} (${serviceName})`);
-        
-        try {
-          const result = await fn(...args);
-          const duration = Date.now() - startTime;
-          console.log(`✅ Fetch operation completed: ${operationName} (${serviceName}) in ${duration}ms`);
-          return result;
-        } catch (error) {
-          const duration = Date.now() - startTime;
-          console.error(`❌ Fetch operation failed: ${operationName} (${serviceName}) in ${duration}ms`, error);
-          throw error;
-        }
+        const result = await fn(...args);
+        return result;
       },
       {
         'operation.name': operationName,
@@ -205,8 +182,6 @@ export function tracedFetch(
         // Inject trace context headers
         const activeSpan = trace.getActiveSpan();
         if (activeSpan) {
-          console.log(`📡 Injecting trace context headers for fetch: ${input}`);
-          
           const headers = new Headers(requestInit.headers);
           
           // Inject trace context into headers
@@ -218,22 +193,13 @@ export function tracedFetch(
             headers.set(key, value);
           });
           
-          console.log(`✅ Trace context headers injected for fetch:`, headersCarrier);
-          
           // Update the request init with the new headers
           requestInit.headers = headers;
-        } else {
-          console.log(`⚠️ No active span found for fetch ${input} - trace context will not be propagated`);
         }
         
         const response = await fetch(input, requestInit);
-        const duration = Date.now() - startTime;
-        
-        console.log(`✅ Fetch completed: ${input} - ${response.status} in ${duration}ms`);
         return response;
       } catch (error) {
-        const duration = Date.now() - startTime;
-        console.error(`❌ Fetch failed: ${input} in ${duration}ms`, error);
         throw error;
       }
     },

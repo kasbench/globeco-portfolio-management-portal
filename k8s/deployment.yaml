@@ -38,9 +38,9 @@ spec:
               value: "service.name=globeco-portfolio-management-portal,service.version=0.1.0,deployment.environment=production,service.namespace=globeco"
             # Enable debug mode for better visibility
             - name: OTEL_DEBUG
-              value: "true"
+              value: "false"
             - name: OTEL_LOG_LEVEL
-              value: "debug"
+              value: "error"
             # Additional OTLP configuration
             - name: OTEL_EXPORTER_OTLP_INSECURE
               value: "true"

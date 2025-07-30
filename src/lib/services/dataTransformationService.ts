@@ -97,7 +97,7 @@ export class DataTransformationService {
           second: '2-digit'
         }).replace(' ', 'T') + 'Z'
       } catch (error) {
-        console.warn(`Invalid timezone ${timezone}, using UTC`)
+        // Invalid timezone, will use UTC as fallback
       }
     }
     
@@ -370,7 +370,7 @@ export class DataTransformationService {
     for (const position of positions) {
       const portfolioId = (position as any).portfolio_id
       if (!portfolioId) {
-        console.warn('Position missing portfolio_id:', position.security_id)
+        // Skip position missing portfolio_id
         continue
       }
       

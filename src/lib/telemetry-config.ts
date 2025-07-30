@@ -23,9 +23,7 @@ export const telemetryConfig = {
 };
 
 export const logTelemetryConfig = () => {
-  console.log('🔧 Telemetry Configuration:');
-  console.log(`   Service Name: ${telemetryConfig.serviceName}`);
-  console.log(`   Service Version: ${telemetryConfig.serviceVersion}`);
+  // Telemetry configuration logging disabled for cleaner output
   console.log(`   Collector URL: ${telemetryConfig.collectorBaseUrl}`);
   console.log(`   Debug Mode: ${telemetryConfig.debugMode}`);
   console.log(`   Log Level: ${telemetryConfig.logLevel}`);

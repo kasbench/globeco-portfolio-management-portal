@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
   // Simulate some work
   await new Promise(resolve => setTimeout(resolve, 100));
   
-  console.log('✅ Test telemetry data recorded (metrics only, no traces)');
+  // Test telemetry data recorded
   
   return NextResponse.json({
     message: 'Telemetry test completed (metrics only)',

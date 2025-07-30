@@ -1,26 +1,27 @@
 // Simple, straightforward telemetry setup
+// Import log filter first to suppress verbose OpenTelemetry output
+import './logFilter';
 
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
 import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-http';
+import { diag, DiagConsoleLogger, DiagLogLevel } from '@opentelemetry/api';
 import { telemetryConfig } from './telemetry-config';
 
 // Global state
 let isInitialized = false;
 
-console.log('🔧 TELEMETRY: Starting initialization process...');
+// Telemetry initialization
 
 // Simple initialization function
 export const initializeTelemetry = (): boolean => {
   if (isInitialized || typeof window !== 'undefined') {
-    console.log('🔧 TELEMETRY: Already initialized or running in browser, skipping');
     return isInitialized;
   }
 
   try {
-    console.log('🚀 TELEMETRY: Initializing OpenTelemetry SDK...');
-    console.log(`🔧 TELEMETRY: Collector URL: ${telemetryConfig.collectorBaseUrl}`);
-    console.log(`🔧 TELEMETRY: Service Name: ${telemetryConfig.serviceName}`);
+    // Set OpenTelemetry diagnostic logging to ERROR level only to suppress verbose output
+    diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.ERROR);
     
     // Create metric exporter
     const metricExporter = new OTLPMetricExporter({
@@ -44,10 +45,6 @@ export const initializeTelemetry = (): boolean => {
     // Start SDK synchronously
     sdk.start();
     isInitialized = true;
-    
-    console.log('✅ TELEMETRY: OpenTelemetry SDK initialized successfully');
-    console.log('✅ TELEMETRY: Metrics will be exported every 10 seconds');
-
     return true;
 
   } catch (error) {
@@ -58,7 +55,6 @@ export const initializeTelemetry = (): boolean => {
 };
 
 // Initialize immediately
-const success = initializeTelemetry();
-console.log(`🔧 TELEMETRY: Initialization result: ${success ? 'SUCCESS' : 'FAILED'}`);
+initializeTelemetry();
 
 export { isInitialized };

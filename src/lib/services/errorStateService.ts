@@ -171,7 +171,7 @@ export class ErrorStateService extends EventEmitter {
       this.isInitialized = true
       this.emit('initialized')
     } catch (error) {
-      console.error('Failed to initialize ErrorStateService:', error)
+      // Error will be handled by the error event emission
       this.emit('error', { type: 'initialization', error })
     }
   }
@@ -397,7 +397,7 @@ export class ErrorStateService extends EventEmitter {
         this.emit('errorRetried', { errorId, error })
       } catch (retryError) {
         errors.push(errorId)
-        console.error(`Failed to retry error ${errorId}:`, retryError)
+        // Retry error will be handled by the service's error handling
       }
     }
 
@@ -624,7 +624,7 @@ export class ErrorStateService extends EventEmitter {
         }
       }
     } catch (error) {
-      console.error('Failed to load persisted errors:', error)
+      // Failed to load persisted errors - will continue with empty state
     }
   }
 
@@ -634,7 +634,7 @@ export class ErrorStateService extends EventEmitter {
       currentData.errors[error.id] = this.serializeError(error)
       this.savePersistedData(currentData)
     } catch (error) {
-      console.error('Failed to persist error:', error)
+      // Failed to persist error - will continue without persistence
     }
   }
 
@@ -644,7 +644,7 @@ export class ErrorStateService extends EventEmitter {
       currentData.partialResults[result.id] = this.serializePartialResult(result)
       this.savePersistedData(currentData)
     } catch (error) {
-      console.error('Failed to persist partial result:', error)
+      // Failed to persist partial result - will continue without persistence
     }
   }
 
@@ -654,7 +654,7 @@ export class ErrorStateService extends EventEmitter {
       delete currentData.errors[errorId]
       this.savePersistedData(currentData)
     } catch (error) {
-      console.error('Failed to remove persisted error:', error)
+      // Failed to remove persisted error - will continue
     }
   }
 
@@ -664,7 +664,7 @@ export class ErrorStateService extends EventEmitter {
       delete currentData.partialResults[resultId]
       this.savePersistedData(currentData)
     } catch (error) {
-      console.error('Failed to remove persisted partial result:', error)
+      // Failed to remove persisted partial result - will continue
     }
   }
 
@@ -672,7 +672,7 @@ export class ErrorStateService extends EventEmitter {
     try {
       localStorage.removeItem('globeco_error_states')
     } catch (error) {
-      console.error('Failed to clear persisted data:', error)
+      // Failed to clear persisted data - will continue
     }
   }
 
@@ -689,7 +689,7 @@ export class ErrorStateService extends EventEmitter {
     try {
       localStorage.setItem('globeco_error_states', JSON.stringify(data))
     } catch (error) {
-      console.error('Failed to save persisted data:', error)
+      // Failed to save persisted data - will continue without persistence
     }
   }
 
