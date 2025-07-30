@@ -24,10 +24,11 @@ COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/next.config.js ./
+COPY --from=builder /app/start-quiet.js ./
 
 # Set environment variables for production
 ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED=1np
+ENV NEXT_TELEMETRY_DISABLED=1
 
 # Use a non-root user for security
 RUN addgroup -g 1001 -S appgroup && adduser -S appuser -u 1001 -G appgroup
@@ -39,4 +40,4 @@ USER appuser
 
 EXPOSE 3000
 
-CMD ["npm", "start"] 
+CMD ["npm", "start:quiet"] 

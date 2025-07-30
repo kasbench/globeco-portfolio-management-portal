@@ -47,6 +47,22 @@ const FILTERED_PATTERNS = [
   /traceparent:/,
   /b3:/,
   /Trace context headers/,
+  // Next.js startup and npm messages
+  /> globeco-portfolio-management-portal@/,
+  /> next start/,
+  /▲ Next\.js/,
+  /- Local:\s+http:\/\/localhost/,
+  /- Network:\s+http:\/\//,
+  /✓ Starting\.\.\./,
+  /✓ Ready in \d+ms/,
+  /npm start/,
+  /next dev/,
+  /next build/,
+  // Additional Next.js patterns
+  /Attention: Next\.js/,
+  /warn.*deprecated/i,
+  /info.*compiled/i,
+  /event.*compiled/i,
 ];
 
 // Function to check if a message should be filtered
