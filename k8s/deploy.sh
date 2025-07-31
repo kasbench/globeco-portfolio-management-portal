@@ -1,13 +1,63 @@
 #!/bin/bash
 set -e
 
-# echo "Creating namespace 'globeco' if it does not exist..."
-# kubectl get namespace globeco >/dev/null 2>&1 || kubectl create namespace globeco
+echo "🚀 Deploying Globeco Portfolio Management Portal..."
 
-echo "Applying Kubernetes manifests in ./k8s..."
-kubectl apply -n globeco -f ./k8s/deployment.yaml
-kubectl apply -n globeco -f ./k8s/service.yaml
-kubectl apply -n globeco -f ./k8s/service-nodeport.yaml
-kubectl apply -n globeco -f ./k8s/ingress.yaml
+# Create namespace if it doesn't exist
+echo "📦 Creating namespace 'globeco' if it does not exist..."
+kubectl get namespace globeco >/dev/null 2>&1 || kubectl create namespace globeco
 
-echo "Deployment complete." 
+# Apply application manifests
+echo "📦 Deploying application..."
+kubectl apply -f deployment.yaml
+kubectl apply -f service.yaml
+kubectl apply -f ingress.yaml
+
+# Apply NGINX Ingress Controller configuration
+echo "🔧 Configuring NGINX Ingress Controller metrics..."
+kubectl apply -f nginx-ingress-controller-config.yaml
+
+# Patch NGINX Ingress Controller to enable metrics (if not already done)
+echo "🔧 Enabling NGINX metrics..."
+kubectl patch deployment ingress-nginx-controller -n ingress-nginx --type='json' -p='[
+  {
+    "op": "add",
+    "path": "/spec/template/spec/containers/0/ports/-",
+    "value": {
+      "containerPort": 10254,
+      "name": "prometheus",
+      "protocol": "TCP"
+    }
+  }
+]' 2>/dev/null || echo "   Metrics port already exists"
+
+kubectl patch deployment ingress-nginx-controller -n ingress-nginx --type='json' -p='[
+  {
+    "op": "add",
+    "path": "/spec/template/spec/containers/0/args/-",
+    "value": "--enable-metrics=true"
+  },
+  {
+    "op": "add",
+    "path": "/spec/template/spec/containers/0/args/-",
+    "value": "--metrics-per-host=false"
+  }
+]' 2>/dev/null || echo "   Metrics arguments already exist"
+
+echo "✅ Application deployed!"
+
+# Wait for deployment to be ready
+echo "⏳ Waiting for deployment to be ready..."
+kubectl wait --for=condition=available --timeout=300s deployment/globeco-portfolio-management-portal -n globeco
+
+# Show status
+echo "📊 Deployment Status:"
+kubectl get pods -n globeco
+kubectl get services -n globeco
+kubectl get ingress -n globeco
+
+echo ""
+echo "🎉 Deployment complete!"
+echo "💡 Access the application at: http://globeco.local"
+echo "🔍 Check logs with: kubectl logs -n globeco deployment/globeco-portfolio-management-portal"
+echo "📊 Check NGINX metrics with: kubectl port-forward -n ingress-nginx deployment/ingress-nginx-controller 10254:10254" 

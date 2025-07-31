@@ -1,0 +1,34 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: globeco-portfolio-management-portal
+  namespace: globeco
+  annotations:
+    # NGINX Ingress Controller metrics configuration
+    nginx.ingress.kubernetes.io/enable-metrics: "true"
+    nginx.ingress.kubernetes.io/enable-access-log: "true"
+    # Prometheus annotations for controller metrics scraping
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "10254"
+    prometheus.io/path: "/metrics"
+    # Additional configuration for better metrics collection
+    nginx.ingress.kubernetes.io/upstream-vhost: "globeco-portfolio-management-portal.globeco.svc.cluster.local"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+    # Routing configuration
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: globeco.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: globeco-portfolio-management-portal
+                port:
+                  number: 3000 
