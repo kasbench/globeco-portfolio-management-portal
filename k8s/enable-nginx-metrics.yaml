@@ -1,0 +1,18 @@
+---
+# ConfigMap to enable NGINX metrics in the ingress controller
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ingress-nginx-controller
+  namespace: ingress-nginx
+  labels:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/component: controller
+data:
+  # Enable metrics collection - this is the key setting
+  enable-vts-status: "true"
+  vts-status-zone-size: "10m"
+  # Enable detailed request metrics
+  log-format-escape-json: "true"
+  # Additional metrics configuration
+  server-tokens: "false"

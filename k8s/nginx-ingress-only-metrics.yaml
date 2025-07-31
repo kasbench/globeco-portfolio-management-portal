@@ -1,0 +1,46 @@
+---
+# Service to expose NGINX Ingress Controller metrics directly
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-ingress-controller-metrics
+  namespace: globeco
+  labels:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/component: controller
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "10254"
+    prometheus.io/path: "/metrics"
+spec:
+  type: ClusterIP
+  ports:
+  - name: prometheus
+    port: 10254
+    targetPort: 10254
+    protocol: TCP
+  # This selector needs to match your actual ingress controller pods
+  # Check with: kubectl get pods -n ingress-nginx --show-labels
+  selector:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/component: controller
+
+---
+# Alternative: ExternalName service if controller is in different namespace
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-controller-external
+  namespace: globeco
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "10254"
+    prometheus.io/path: "/metrics"
+spec:
+  type: ExternalName
+  externalName: ingress-nginx-controller.ingress-nginx.svc.cluster.local
+  ports:
+  - name: prometheus
+    port: 10254
+    targetPort: 10254
+    protocol: TCP

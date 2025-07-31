@@ -1,0 +1,37 @@
+---
+# Service to proxy NGINX Ingress Controller metrics to globeco namespace
+# This creates a service in globeco namespace that points to the actual controller
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-ingress-metrics-proxy
+  namespace: globeco
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "10254"
+    prometheus.io/path: "/metrics"
+spec:
+  type: ClusterIP
+  ports:
+  - name: metrics
+    port: 10254
+    targetPort: 10254
+    protocol: TCP
+
+---
+# Endpoints to manually point to the actual ingress controller
+# Update the IP address to match your actual ingress controller pod IP
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: nginx-ingress-metrics-proxy
+  namespace: globeco
+subsets:
+- addresses:
+  # Replace this IP with the actual ingress controller pod IP
+  # Get it with: kubectl get pods -n ingress-nginx -o wide
+  - ip: "REPLACE_WITH_CONTROLLER_POD_IP"
+  ports:
+  - name: metrics
+    port: 10254
+    protocol: TCP

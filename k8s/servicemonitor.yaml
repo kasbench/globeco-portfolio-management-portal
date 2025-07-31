@@ -1,0 +1,35 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: globeco-portfolio-management-portal
+  namespace: globeco
+  labels:
+    app: globeco-portfolio-management-portal
+spec:
+  selector:
+    matchLabels:
+      app: globeco-portfolio-management-portal
+  endpoints:
+  - port: http
+    path: /api/metrics
+    interval: 30s
+    scrapeTimeout: 10s
+---
+# ServiceMonitor for NGINX Ingress Controller (if not already configured)
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: nginx-ingress-controller
+  namespace: ingress-nginx  # Adjust namespace as needed
+  labels:
+    app.kubernetes.io/name: ingress-nginx
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ingress-nginx
+      app.kubernetes.io/component: controller
+  endpoints:
+  - port: prometheus
+    path: /metrics
+    interval: 30s
+    scrapeTimeout: 10s

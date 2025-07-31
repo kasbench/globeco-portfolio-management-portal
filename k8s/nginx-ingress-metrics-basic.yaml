@@ -1,0 +1,42 @@
+---
+# ConfigMap for NGINX Ingress Controller enhanced metrics (if you have access to modify controller)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-ingress-controller-config
+  namespace: globeco
+  labels:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/component: controller
+data:
+  # Enable detailed metrics collection
+  enable-vts-status: "true"
+  vts-status-zone-size: "10m"
+  # Additional metrics configuration
+  log-format-escape-json: "true"
+  log-format-upstream: '{"time": "$time_iso8601", "remote_addr": "$proxy_protocol_addr", "x_forwarded_for": "$proxy_add_x_forwarded_for", "request_id": "$req_id", "remote_user": "$remote_user", "bytes_sent": $bytes_sent, "request_time": $request_time, "status": $status, "vhost": "$host", "request_proto": "$server_protocol", "path": "$uri", "request_query": "$args", "request_length": $request_length, "duration": $request_time,"method": "$request_method", "http_referrer": "$http_referer", "http_user_agent": "$http_user_agent", "upstream_addr": "$upstream_addr", "upstream_response_length": $upstream_response_length, "upstream_response_time": $upstream_response_time, "upstream_status": "$upstream_status"}'
+
+---
+# Service to expose NGINX Ingress Controller metrics (basic Prometheus scraping)
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-ingress-controller-metrics
+  namespace: globeco
+  labels:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/component: controller
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "10254"
+    prometheus.io/path: "/metrics"
+spec:
+  type: ClusterIP
+  ports:
+  - name: prometheus
+    port: 10254
+    targetPort: 10254
+    protocol: TCP
+  selector:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/component: controller

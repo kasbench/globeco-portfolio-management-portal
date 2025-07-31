@@ -1,0 +1,76 @@
+---
+# Service specifically for NGINX metrics collection (without ServiceMonitor)
+apiVersion: v1
+kind: Service
+metadata:
+  name: globeco-nginx-metrics
+  namespace: globeco
+  labels:
+    app: globeco-portfolio-management-portal
+    component: nginx-metrics
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "9113"
+    prometheus.io/path: "/metrics"
+spec:
+  type: ClusterIP
+  ports:
+  - name: nginx-metrics
+    port: 9113
+    targetPort: 9113
+    protocol: TCP
+  selector:
+    app: globeco-nginx-exporter
+
+---
+# Deployment for NGINX Prometheus Exporter
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: globeco-nginx-exporter
+  namespace: globeco
+  labels:
+    app: globeco-nginx-exporter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: globeco-nginx-exporter
+  template:
+    metadata:
+      labels:
+        app: globeco-nginx-exporter
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9113"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+      - name: nginx-prometheus-exporter
+        image: nginx/nginx-prometheus-exporter:0.11.0
+        ports:
+        - containerPort: 9113
+          name: metrics
+        args:
+        - -nginx.scrape-uri=http://ingress-nginx-controller.ingress-nginx.svc.cluster.local:10254/nginx_status
+        - -web.listen-address=:9113
+        - -web.telemetry-path=/metrics
+        resources:
+          requests:
+            memory: "32Mi"
+            cpu: "10m"
+          limits:
+            memory: "64Mi"
+            cpu: "50m"
+        livenessProbe:
+          httpGet:
+            path: /metrics
+            port: 9113
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /metrics
+            port: 9113
+          initialDelaySeconds: 5
+          periodSeconds: 5

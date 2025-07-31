@@ -1,0 +1,33 @@
+---
+# ConfigMap with basic NGINX metrics (without VTS)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ingress-nginx-controller
+  namespace: ingress-nginx
+  labels:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/component: controller
+data:
+  # Enable basic stub status
+  server-snippet: |
+    location /nginx_status {
+      stub_status on;
+      access_log off;
+      allow 127.0.0.1;
+      allow 10.0.0.0/8;
+      deny all;
+    }
+  # Enable access logging with JSON format
+  log-format-escape-json: "true"
+  log-format-upstream: |
+    {"time": "$time_iso8601", "remote_addr": "$proxy_protocol_addr", 
+     "x_forwarded_for": "$proxy_add_x_forwarded_for", "request_id": "$req_id",
+     "remote_user": "$remote_user", "bytes_sent": $bytes_sent, 
+     "request_time": $request_time, "status": $status, "vhost": "$host",
+     "request_proto": "$server_protocol", "path": "$uri", 
+     "request_query": "$args", "request_length": $request_length,
+     "duration": $request_time, "method": "$request_method", 
+     "http_referrer": "$http_referer", "http_user_agent": "$http_user_agent"}
+  # Disable server tokens
+  server-tokens: "false"

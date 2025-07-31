@@ -10,6 +10,7 @@ spec:
   selector:
     app: globeco-portfolio-management-portal
   ports:
-    - protocol: TCP
+    - name: http
+      protocol: TCP
       port: 3000
       targetPort: 3000 
