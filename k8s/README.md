@@ -11,14 +11,12 @@ This directory contains the essential Kubernetes manifests for deploying the Glo
 ## Quick Deployment
 
 ```bash
-# Create namespace
-kubectl create namespace globeco
+# For fresh installation (includes NGINX Ingress Controller)
+cd k8s
+./deploy.sh
 
-# Deploy the application
+# Or manually
 kubectl apply -f k8s/
-
-# Enable NGINX Ingress Controller metrics (one-time setup)
-kubectl apply -f k8s/nginx-ingress-controller-config.yaml
 ```
 
 ## Files Overview
@@ -28,8 +26,9 @@ kubectl apply -f k8s/nginx-ingress-controller-config.yaml
 - **`service.yaml`** - ClusterIP service exposing the application
 - **`ingress.yaml`** - Ingress configuration with metrics enabled
 
-### NGINX Metrics Configuration
-- **`nginx-ingress-controller-config.yaml`** - ConfigMap and deployment patch for NGINX Ingress Controller metrics
+### NGINX Ingress Controller
+- **`nginx-ingress-controller.yaml`** - Complete NGINX Ingress Controller deployment with metrics enabled (for fresh installations)
+- **`nginx-ingress-controller-config.yaml`** - ConfigMap for existing NGINX Ingress Controller installations
 
 ## Features Enabled
 
@@ -53,43 +52,31 @@ kubectl apply -f k8s/nginx-ingress-controller-config.yaml
 
 ## Deployment Steps
 
-### 1. Deploy Application
+### Option 1: Fresh Installation (Recommended)
 ```bash
+# Use the automated deployment script
+./deploy.sh
+```
+
+This will:
+1. Install complete NGINX Ingress Controller with metrics enabled (if not present)
+2. Deploy the application
+3. Configure everything automatically
+
+### Option 2: Manual Deployment
+```bash
+# For fresh installation
+kubectl apply -f nginx-ingress-controller.yaml  # Complete NGINX setup
 kubectl apply -f deployment.yaml
 kubectl apply -f service.yaml
 kubectl apply -f ingress.yaml
-```
 
-### 2. Enable NGINX Metrics (First Time Only)
-```bash
-# Apply ConfigMap
-kubectl apply -f nginx-ingress-controller-config.yaml
-
-# Patch the ingress controller to enable metrics
-kubectl patch deployment ingress-nginx-controller -n ingress-nginx --type='json' -p='[
-  {
-    "op": "add",
-    "path": "/spec/template/spec/containers/0/ports/-",
-    "value": {
-      "containerPort": 10254,
-      "name": "prometheus",
-      "protocol": "TCP"
-    }
-  }
-]'
-
-kubectl patch deployment ingress-nginx-controller -n ingress-nginx --type='json' -p='[
-  {
-    "op": "add",
-    "path": "/spec/template/spec/containers/0/args/-",
-    "value": "--enable-metrics=true"
-  },
-  {
-    "op": "add",
-    "path": "/spec/template/spec/containers/0/args/-",
-    "value": "--metrics-per-host=false"
-  }
-]'
+# For existing NGINX installation
+kubectl apply -f nginx-ingress-controller-config.yaml  # ConfigMap only
+kubectl apply -f deployment.yaml
+kubectl apply -f service.yaml
+kubectl apply -f ingress.yaml
+# Then apply patches as shown in deploy.sh
 ```
 
 ### 3. Verify Deployment

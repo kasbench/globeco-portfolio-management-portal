@@ -1,5 +1,5 @@
----
 # ConfigMap to enable NGINX Ingress Controller metrics
+# Use this if you have an existing NGINX Ingress Controller installation
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -9,48 +9,14 @@ metadata:
     app.kubernetes.io/name: ingress-nginx
     app.kubernetes.io/component: controller
 data:
-  # Enable metrics collection
+  # Enable metrics collection - VTS (Virtual Host Traffic Status) module
   enable-vts-status: "true"
   vts-status-zone-size: "10m"
-  # Enable detailed request metrics
+  # Enable detailed request metrics with JSON format
   log-format-escape-json: "true"
-  # Additional metrics configuration
+  # Additional security configuration
   server-tokens: "false"
 
----
-# Patch for NGINX Ingress Controller to enable Prometheus metrics
-# Apply with: kubectl patch deployment ingress-nginx-controller -n ingress-nginx --patch-file nginx-ingress-controller-patch.yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: ingress-nginx-controller
-  namespace: ingress-nginx
-spec:
-  template:
-    spec:
-      containers:
-      - name: controller
-        ports:
-        - containerPort: 80
-          name: http
-          protocol: TCP
-        - containerPort: 443
-          name: https
-          protocol: TCP
-        - containerPort: 8443
-          name: webhook
-          protocol: TCP
-        - containerPort: 10254
-          name: prometheus
-          protocol: TCP
-        args:
-        - /nginx-ingress-controller
-        - --election-id=ingress-nginx-leader
-        - --controller-class=k8s.io/ingress-nginx
-        - --ingress-class=nginx
-        - --configmap=$(POD_NAMESPACE)/ingress-nginx-controller
-        - --validating-webhook=:8443
-        - --validating-webhook-certificate=/usr/local/certificates/cert
-        - --validating-webhook-key=/usr/local/certificates/key
-        - --enable-metrics=true
-        - --metrics-per-host=false
+# Note: For existing installations, the deploy.sh script will also apply
+# kubectl patch commands to add port 10254 and --enable-metrics=true args.
+# For fresh installations, use nginx-ingress-controller.yaml instead.
