@@ -360,6 +360,26 @@ Delete an investment model.
 curl -X DELETE "http://globeco.local:31510/api/models/model-123"
 ```
 
+### POST /api/models/{id}/rebalance
+
+Trigger a rebalance for a specific investment model.
+
+**Parameters:**
+- `id` (path): Model ID
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Rebalance triggered successfully"
+}
+```
+
+**Sample cURL:**
+```bash
+curl -X POST "http://globeco.local:31510/api/models/model-123/rebalance"
+```
+
 ---
 
 ## Orders
@@ -660,6 +680,20 @@ Submit multiple orders in batch.
   "total": 3,
   "success_count": 2,
   "failure_count": 1
+}
+```
+
+**Error Response:** (400 Bad Request)
+```json
+{
+  "error": "Invalid request body. Expected { orderIds: number[] }"
+}
+```
+
+**Error Response:** (413 Payload Too Large)
+```json
+{
+  "error": "Batch too large"
 }
 ```
 
@@ -1184,11 +1218,11 @@ Delete a trade order.
 curl -X DELETE "http://globeco.local:31510/api/trades/123"
 ```
 
-## Trade Orders (Additional Endpoints)
+## Trade Orders
 
 ### PUT /api/trade-orders/{id}
 
-Update a trade order (alternative endpoint).
+Update a trade order.
 
 **Parameters:**
 - `id` (path): Trade order ID
@@ -1210,9 +1244,19 @@ Update a trade order (alternative endpoint).
 }
 ```
 
+**Sample cURL:**
+```bash
+curl -X PUT "http://globeco.local:31510/api/trade-orders/123" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "quantity": 150,
+    "price": 155.00
+  }'
+```
+
 ### DELETE /api/trade-orders/{id}
 
-Delete a trade order (alternative endpoint).
+Delete a trade order.
 
 **Parameters:**
 - `id` (path): Trade order ID
@@ -1468,15 +1512,455 @@ curl -X GET "http://globeco.local:31510/api/destinations"
 
 ---
 
+## Rebalances (Additional Endpoints)
+
+### GET /api/rebalances/{rebalanceId}/portfolios
+
+Get portfolios associated with a specific rebalance.
+
+**Parameters:**
+- `rebalanceId` (path): Rebalance ID
+
+**Response:**
+```json
+[
+  {
+    "portfolioId": "portfolio-123",
+    "name": "Growth Portfolio",
+    "status": "ACTIVE"
+  }
+]
+```
+
+**Sample cURL:**
+```bash
+curl -X GET "http://globeco.local:31510/api/rebalances/rebalance-123/portfolios"
+```
+
+### GET /api/rebalances/{rebalanceId}/portfolios/{portfolioId}
+
+Get a specific portfolio within a rebalance.
+
+**Parameters:**
+- `rebalanceId` (path): Rebalance ID
+- `portfolioId` (path): Portfolio ID
+
+**Response:**
+```json
+{
+  "portfolioId": "portfolio-123",
+  "name": "Growth Portfolio",
+  "status": "ACTIVE",
+  "rebalanceId": "rebalance-123"
+}
+```
+
+**Sample cURL:**
+```bash
+curl -X GET "http://globeco.local:31510/api/rebalances/rebalance-123/portfolios/portfolio-123"
+```
+
+### GET /api/rebalances/{rebalanceId}/portfolios/{portfolioId}/positions
+
+Get positions for a specific portfolio within a rebalance.
+
+**Parameters:**
+- `rebalanceId` (path): Rebalance ID
+- `portfolioId` (path): Portfolio ID
+
+**Response:**
+```json
+[
+  {
+    "security_id": "AAPL",
+    "current_quantity": 100,
+    "target_quantity": 150,
+    "transaction_type": "BUY",
+    "trade_quantity": 50,
+    "target_weight": 0.15
+  }
+]
+```
+
+**Sample cURL:**
+```bash
+curl -X GET "http://globeco.local:31510/api/rebalances/rebalance-123/portfolios/portfolio-123/positions"
+```
+
+---
+
+## Telemetry Endpoints
+
+### POST /api/telemetry/pageview
+
+Record a page view for telemetry purposes.
+
+**Request Body:**
+```json
+{
+  "page": "/dashboard",
+  "timestamp": 1642345678901
+}
+```
+
+**Response:**
+```json
+{
+  "success": true
+}
+```
+
+**Sample cURL:**
+```bash
+curl -X POST "http://globeco.local:31510/api/telemetry/pageview" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "page": "/dashboard",
+    "timestamp": 1642345678901
+  }'
+```
+
+### POST /api/telemetry/event
+
+Record a custom event for telemetry purposes.
+
+**Request Body:**
+```json
+{
+  "event": "button_click",
+  "properties": {
+    "button_id": "submit",
+    "page": "/orders"
+  },
+  "timestamp": 1642345678901,
+  "page": "/orders"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true
+}
+```
+
+**Sample cURL:**
+```bash
+curl -X POST "http://globeco.local:31510/api/telemetry/event" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "event": "button_click",
+    "properties": {
+      "button_id": "submit"
+    },
+    "timestamp": 1642345678901,
+    "page": "/orders"
+  }'
+```
+
+### POST /api/telemetry/error
+
+Record a client-side error for telemetry purposes.
+
+**Request Body:**
+```json
+{
+  "error": {
+    "name": "ValidationError",
+    "message": "Invalid input data",
+    "stack": "Error stack trace..."
+  },
+  "context": "form_submit",
+  "timestamp": 1642345678901,
+  "page": "/orders"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true
+}
+```
+
+**Sample cURL:**
+```bash
+curl -X POST "http://globeco.local:31510/api/telemetry/error" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "error": {
+      "name": "ValidationError",
+      "message": "Invalid input data"
+    },
+    "context": "form_submit",
+    "timestamp": 1642345678901,
+    "page": "/orders"
+  }'
+```
+
+### GET /api/telemetry/test
+
+Test telemetry functionality (metrics only, no traces).
+
+**Response:**
+```json
+{
+  "message": "Telemetry test completed (metrics only)",
+  "timestamp": "2024-01-21T20:40:23.379Z",
+  "service": "globeco-portfolio-management-portal",
+  "endpoint": "http://otel-collector-collector.monitoring.svc.cluster.local:4318",
+  "traces_disabled": "This endpoint does not generate traces"
+}
+```
+
+**Sample cURL:**
+```bash
+curl -X GET "http://globeco.local:31510/api/telemetry/test"
+```
+
+---
+
+## Debug Endpoints
+
+### GET /api/debug/metrics
+
+Test custom metrics recording.
+
+**Response:**
+```json
+{
+  "message": "Debug metrics test completed",
+  "timestamp": "2024-01-21T20:40:23.379Z",
+  "status": "success",
+  "telemetryCallsCompleted": true
+}
+```
+
+**Sample cURL:**
+```bash
+curl -X GET "http://globeco.local:31510/api/debug/metrics"
+```
+
+### GET /api/debug/telemetry-status
+
+Check telemetry system status.
+
+**Response:**
+```json
+{
+  "status": "success",
+  "timestamp": "2024-01-21T20:40:23.379Z",
+  "telemetry": {
+    "meterProvider": "MeterProvider",
+    "tracerProvider": "TracerProvider",
+    "meterType": "object",
+    "counterType": "object",
+    "globalProvidersWorking": true
+  },
+  "message": "Telemetry status check completed successfully"
+}
+```
+
+**Sample cURL:**
+```bash
+curl -X GET "http://globeco.local:31510/api/debug/telemetry-status"
+```
+
+### GET /api/debug/env
+
+Get OpenTelemetry environment variables.
+
+**Response:**
+```json
+{
+  "message": "Environment variables debug info",
+  "timestamp": "2024-01-21T20:40:23.379Z",
+  "nodeEnv": "production",
+  "otelVariables": {
+    "OTEL_SERVICE_NAME": "globeco-portfolio-management-portal",
+    "OTEL_EXPORTER_OTLP_ENDPOINT": "http://otel-collector-collector.monitoring.svc.cluster.local:4318"
+  },
+  "totalOtelVars": 15,
+  "keyMetricVars": {
+    "OTEL_METRICS_EXPORTER": "otlp",
+    "OTEL_EXPORTER_OTLP_METRICS_ENDPOINT": "http://otel-collector-collector.monitoring.svc.cluster.local:4318/v1/metrics"
+  }
+}
+```
+
+**Sample cURL:**
+```bash
+curl -X GET "http://globeco.local:31510/api/debug/env"
+```
+
+### GET /api/debug/collector
+
+Test connectivity to OpenTelemetry Collector endpoints.
+
+**Response:**
+```json
+{
+  "timestamp": "2024-01-21T20:40:23.379Z",
+  "environment": {
+    "NODE_ENV": "production",
+    "OTEL_SERVICE_NAME": "globeco-portfolio-management-portal",
+    "OTEL_EXPORTER_OTLP_ENDPOINT": "http://otel-collector-collector.monitoring.svc.cluster.local:4318"
+  },
+  "connectivity": [
+    {
+      "endpoint": "http://otel-collector-collector.monitoring.svc.cluster.local:4317",
+      "method": "GET",
+      "success": true,
+      "status": 200,
+      "statusText": "OK",
+      "responseTime": 45
+    }
+  ]
+}
+```
+
+**Sample cURL:**
+```bash
+curl -X GET "http://globeco.local:31510/api/debug/collector"
+```
+
+### GET /api/debug/direct-metrics
+
+Test direct metrics recording without telemetry wrappers.
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Direct metrics test completed",
+  "timestamp": "2024-01-21T20:40:23.379Z",
+  "metrics_tested": ["api_requests_total", "page_views_total", "errors_total"]
+}
+```
+
+**Sample cURL:**
+```bash
+curl -X GET "http://globeco.local:31510/api/debug/direct-metrics"
+```
+
+### GET /api/debug/telemetry-test
+
+Test telemetry functionality with detailed diagnostics.
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Telemetry test completed",
+  "timestamp": "2024-01-21T20:40:23.379Z",
+  "service": "globeco-portfolio-management-portal",
+  "endpoint": "http://otel-collector-collector.monitoring.svc.cluster.local:4318"
+}
+```
+
+**Sample cURL:**
+```bash
+curl -X GET "http://globeco.local:31510/api/debug/telemetry-test"
+```
+
+### GET /api/simple-test
+
+Test simple telemetry metrics recording.
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Simple telemetry test completed",
+  "timestamp": "2024-01-21T20:40:23.379Z",
+  "metrics_tested": ["api_requests_total", "page_views_total", "errors_total"]
+}
+```
+
+**Sample cURL:**
+```bash
+curl -X GET "http://globeco.local:31510/api/simple-test"
+```
+
+### GET /api/test-metrics
+
+Test all custom metrics and telemetry utilities.
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "All custom metrics tested successfully",
+  "timestamp": "2024-01-21T20:40:23.379Z",
+  "metrics_tested": [
+    "api_requests_total",
+    "page_views_total",
+    "errors_total",
+    "api_response_duration_ms",
+    "active_users",
+    "db_operations_total",
+    "db_operation_duration_ms"
+  ]
+}
+```
+
+**Sample cURL:**
+```bash
+curl -X GET "http://globeco.local:31510/api/test-metrics"
+```
+
+### GET /api/verify-metrics
+
+Comprehensive verification of all custom metrics with detailed results.
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "All metrics verified and recorded",
+  "timestamp": "2024-01-21T20:40:23.379Z",
+  "results": [
+    "✅ api_requests_total: Added 5 with labels",
+    "✅ page_views_total: Added 3 with labels",
+    "✅ errors_total: Added 2 with labels",
+    "✅ api_response_duration_ms: Recorded 150ms and 200ms",
+    "✅ active_users: Added 1 user",
+    "✅ db_operations_total: Added 1 select operation",
+    "✅ db_operation_duration_ms: Recorded 45ms",
+    "✅ Utility functions: All tested successfully"
+  ],
+  "prometheus_metrics_to_check": [
+    "api_requests_total{method=\"GET\",endpoint=\"/api/verify-metrics\",status_code=\"200\"}",
+    "page_views_total{page=\"verify-metrics\",user_id=\"test-user\"}",
+    "errors_total{error_type=\"validation_error\",context=\"verify-metrics\"}",
+    "api_response_duration_ms_bucket{method=\"GET\",endpoint=\"/api/verify-metrics\"}",
+    "active_users{session=\"test-session\"}",
+    "db_operations_total{operation=\"select\",table=\"users\",success=\"true\"}",
+    "db_operation_duration_ms_bucket{operation=\"select\",table=\"users\"}"
+  ]
+}
+```
+
+**Sample cURL:**
+```bash
+curl -X GET "http://globeco.local:31510/api/verify-metrics"
+```
+
+---
+
 ## Error Codes
 
 | HTTP Status | Description |
 |-------------|-------------|
 | 200 | Success |
 | 201 | Created |
+| 204 | No Content (successful deletion) |
 | 207 | Multi-Status (partial success in batch operations) |
 | 400 | Bad Request |
 | 404 | Not Found |
+| 409 | Conflict (version conflict) |
+| 413 | Payload Too Large |
+| 422 | Unprocessable Entity |
 | 500 | Internal Server Error |
 | 501 | Not Implemented |
 

@@ -2,10 +2,9 @@
 // Import log filter first to suppress verbose OpenTelemetry output
 import './logFilter';
 
-import { NodeSDK } from '@opentelemetry/sdk-node';
 import { PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
 import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-http';
-import { diag, DiagConsoleLogger, DiagLogLevel } from '@opentelemetry/api';
+import { metrics, diag, DiagConsoleLogger, DiagLogLevel } from '@opentelemetry/api';
 import { telemetryConfig } from './telemetry-config';
 
 // Global state
@@ -36,14 +35,11 @@ export const initializeTelemetry = (): boolean => {
       exportTimeoutMillis: 5000,
     });
     
-    // Initialize SDK
-    const sdk = new NodeSDK({
-      instrumentations: [],
-      metricReader,
-    });
+    // Just create a meter to test that the system works
+    const testMeter = metrics.getMeter('test', '1.0.0');
+    const testCounter = testMeter.createCounter('test_counter');
+    testCounter.add(1);
     
-    // Start SDK synchronously
-    sdk.start();
     isInitialized = true;
     return true;
 
