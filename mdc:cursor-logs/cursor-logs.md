@@ -93,3 +93,41 @@
 
 [2024-06-10T_build_error_resolved]
 Resolved Next.js build error in src/app/api/rebalances/[rebalanceId]/portfolios/route.ts by changing the GET handler's second argument type from a specific type to 'any', matching the working pattern in other dynamic API route handlers. Build now completes successfully. 
+
+## 2025-08-08 - Clarified Requirement 9 for POST /api/transactions Proxy
+
+**Prompt:** Please review and update @requirement-9.md for clarity and completeness.
+
+**Actions Taken:**
+- Updated `documentation/requirement-9.md` to specify pass-through behavior to `globeco-portfolio-accounting-service:8087/api/v1/transactions`, including exact status code propagation and unmodified response bodies.
+- Documented request/response schemas at a high level, referencing the upstream OpenAPI for canonical definitions.
+- Added header handling requirements (forward `X-API-Key` when present; JSON content type/accept).
+- Aligned error handling, resiliency, and observability with existing API route patterns in this codebase.
+- Added concrete acceptance criteria and implementation notes (server-only, endpoint location, no `localhost`).
+
+**File Modified:**
+- `documentation/requirement-9.md`
+
+## 2025-08-08 - Implemented POST /api/transactions Proxy
+
+**Prompt:** Please implement @requirement-9.md
+
+**Actions Taken:**
+- Created `src/app/api/transactions/route.ts` implementing `POST /api/transactions` as a transparent proxy to `http://globeco-portfolio-accounting-service:8087/api/v1/transactions`.
+- Forwards raw JSON body unchanged and returns upstream response body and status unmodified.
+- Forwards `X-API-Key` header when present; sets `Content-Type` and `Accept` to `application/json`.
+- Added tracing via `tracedFetch` and structured logging through the existing logger. Included a 30s timeout consistent with other service clients.
+- Ran linter on the file; no issues found.
+
+**Files Added:**
+- `src/app/api/transactions/route.ts`
+
+## 2025-08-08 - Updated API Guide with Transactions Endpoint
+
+**Prompt:** Please update @globeco-portfolio-management-portal-api-guide.md with this new endpoint.
+
+**Actions Taken:**
+- Added a new "Transactions" section documenting `POST /api/transactions` with request/response examples, statuses, notes on header forwarding, and sample cURL.
+
+**File Modified:**
+- `documentation/globeco-portfolio-management-portal-api-guide.md`

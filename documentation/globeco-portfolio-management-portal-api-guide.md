@@ -1948,6 +1948,80 @@ curl -X GET "http://globeco.local:31510/api/verify-metrics"
 
 ---
 
+## Transactions
+
+### POST /api/transactions
+
+Create and process multiple accounting transactions in a single request. This endpoint transparently proxies to the GlobeCo Portfolio Accounting Service and returns the upstream response body and status unchanged.
+
+**Request Body:** Array of transactions (proxied upstream)
+```json
+[
+  {
+    "portfolioId": "6875996f6ba8d303aac5f22b",
+    "price": 1,
+    "quantity": 2949185,
+    "sourceId": "6f69880c-cb8a-42d9-9fca-6644865bb0ae",
+    "transactionDate": "20250808",
+    "transactionType": "DEP"
+  }
+]
+```
+
+**Response:** 200 OK or 207 Multi-Status (proxied upstream `TransactionBatchResponse`)
+```json
+{
+  "successful": [
+    {
+      "id": 16567,
+      "portfolioId": "6875996f6ba8d303aac5f22b",
+      "sourceId": "6f69880c-cb8a-42d9-9fca-6644865bb0ae",
+      "status": "PROC",
+      "transactionType": "DEP",
+      "quantity": 2949185,
+      "price": 1,
+      "transactionDate": "20250808",
+      "reprocessingAttempts": 0,
+      "version": 2
+    }
+  ],
+  "failed": null,
+  "summary": {
+    "totalRequested": 1,
+    "successful": 1,
+    "failed": 0,
+    "successRate": 100
+  }
+}
+```
+
+**Possible Status Codes:**
+- 200 — Batch processed successfully
+- 207 — Partial success (some transactions failed)
+- 400 — Validation error
+- 413 — Payload too large
+- 500 — Upstream/internal error
+
+**Notes:**
+- If the request includes an `X-API-Key` header, it is forwarded to the upstream service.
+- Content type must be `application/json`.
+
+**Sample cURL:**
+```bash
+curl -X POST "http://globeco.local:31510/api/transactions" \
+  -H "Content-Type: application/json" \
+  -d '[
+    {
+      "portfolioId": "6875996f6ba8d303aac5f22b",
+      "price": 1,
+      "quantity": 2949185,
+      "sourceId": "6f69880c-cb8a-42d9-9fca-6644865bb0ae",
+      "transactionDate": "20250808",
+      "transactionType": "DEP"
+    }
+  ]'
+```
+
 ## Error Codes
 
 | HTTP Status | Description |

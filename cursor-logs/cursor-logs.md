@@ -2224,3 +2224,71 @@ This fix ensures that executions now display the proper ticker symbols (e.g., "A
 - **Notes**: Important considerations and constraints
 
 **Result**: The requirement is now clear, actionable, and provides specific guidance for implementation while maintaining backward compatibility and UI functionality.
+
+## 2024-12-19 21:45 - Implemented Requirement 8: Enhanced Rebalance DTO
+
+**User Query**: Please proceed with implementing @requirement-8.md. When you hit a point where integration testing is required, stop and ask me to do it.
+
+**Implementation Completed**:
+
+### Changes Made:
+1. **Enhanced API Route** (`src/app/api/models/[id]/rebalance/route.ts`):
+   - Modified the POST handler to extract `rebalance_ids` from Order Generation Service response
+   - Added logic to map over the response array and extract `rebalance_id` fields
+   - Implemented enhanced response format with `success`, `message`, and `rebalance_ids` fields
+   - Maintained backward compatibility for error cases (returns original error format)
+
+### Implementation Details:
+- **Data Extraction**: The Order Generation Service returns an array of `RebalanceDTO` objects, each containing a `rebalance_id` field
+- **Response Transformation**: Extracts all `rebalance_id` values and returns them in the `rebalance_ids` array
+- **Error Handling**: Maintains original error response format for backward compatibility
+- **UI Compatibility**: The Portal UI will continue to work as the additional `rebalance_ids` field is ignored
+
+### Code Changes:
+```typescript
+// Before: Direct return of Order Generation Service response
+return NextResponse.json(result);
+
+// After: Enhanced response with extracted rebalance_ids
+const rebalanceIds = Array.isArray(result) 
+  ? result.map((item: any) => item.rebalance_id).filter(Boolean)
+  : [];
+
+return NextResponse.json({
+  success: true,
+  message: "Rebalance triggered successfully",
+  rebalance_ids: rebalanceIds
+});
+```
+
+### Response Format:
+**Before:**
+```json
+{
+  "success": true,
+  "message": "Rebalance triggered successfully"
+}
+```
+
+**After:**
+```json
+{
+  "success": true,
+  "message": "Rebalance triggered successfully",
+  "rebalance_ids": ["rebalance-456", "rebalance-101"]
+}
+```
+
+### Testing Considerations:
+- No existing tests were found that specifically test the rebalance API endpoint
+- The implementation maintains backward compatibility for error scenarios
+- UI components will continue to work as they ignore the additional `rebalance_ids` field
+
+### Integration Testing Required:
+The implementation is complete and ready for integration testing. The enhanced API will:
+1. Call the Order Generation Service as before
+2. Extract rebalance IDs from the response
+3. Return the enhanced response format
+4. Maintain backward compatibility for errors
+
+**Next Step**: Integration testing in Kubernetes environment is required to verify the implementation works correctly with the actual Order Generation Service.
