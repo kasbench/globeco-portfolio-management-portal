@@ -131,3 +131,16 @@ Resolved Next.js build error in src/app/api/rebalances/[rebalanceId]/portfolios/
 
 **File Modified:**
 - `documentation/globeco-portfolio-management-portal-api-guide.md`
+
+## 2025-08-10 - Clarified Requirement 10 for GET /api/rebalances/{rebalanceId} Proxy
+
+**Prompt:** Please review and update @requirement-10.md for clarity and completeness.  I will review when complete.
+
+**Actions Taken:**
+- Updated `documentation/requirement-10.md` to define `GET /api/rebalances/{rebalanceId}` as a transparent proxy to `globeco-order-generation-service:8088/api/v1/rebalance/{rebalanceId}`.
+- Added upstream mapping, headers, timeout/retry conventions, and explicit status code propagation (200, 422, and others unchanged).
+- Documented observability requirements using existing telemetry/logging wrappers and axios trace propagation.
+- Added implementation notes (server-only, route location) and acceptance criteria.
+
+**File Modified:**
+- `documentation/requirement-10.md`
