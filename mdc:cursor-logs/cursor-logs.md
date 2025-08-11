@@ -144,3 +144,15 @@ Resolved Next.js build error in src/app/api/rebalances/[rebalanceId]/portfolios/
 
 **File Modified:**
 - `documentation/requirement-10.md`
+
+## 2025-08-10 - Implemented GET /api/rebalances/{rebalanceId} Proxy
+
+**Prompt:** Please implement @requirement-10.md
+
+**Actions Taken:**
+- Added GET handler to `src/app/api/rebalances/[rebalanceId]/route.ts` using `withTelemetry` and `orderGenerationServiceApi.getRebalanceById`.
+- Proxy returns upstream body and status; propagates upstream error status/body when available.
+- Verified no linter issues on the modified file.
+
+**File Modified:**
+- `src/app/api/rebalances/[rebalanceId]/route.ts`
