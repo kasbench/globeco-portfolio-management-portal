@@ -643,7 +643,7 @@ Delete an order.
 curl -X DELETE "http://globeco.local:31510/api/orders/123?version=1"
 ```
 
-### POST /api/orders/batch/submit
+### POST /api/orders/submit
 
 Submit multiple orders in batch.
 
