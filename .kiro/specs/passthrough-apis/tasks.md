@@ -14,7 +14,7 @@
   - Handle errors by passing through original status codes and response objects
   - _Requirements: 1.1, 1.2, 1.3, 3.3_
 
-- [ ] 3. Create AllocationService class
+- [x] 3. Create AllocationService class
   - Create new file `src/lib/api/allocationService.ts` following SecurityService patterns
   - Set up HTTP client with base URL using environment variables for host/port
   - Configure axios instance with telemetry wrapping using `wrapAxiosWithTelemetry`
