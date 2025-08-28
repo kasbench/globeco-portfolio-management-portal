@@ -6,7 +6,7 @@ Error handling is not required for these passthroughs, beyond passing through th
 
 ## GET /api/securities
 
-This will be a passthrough to GET /api/v1/securities on the globeco-security-service on port 8080.  Extend the existing securityService.ts implementation.  Return the response from the call to the security service (same status code, response object, etc.)
+This will be a passthrough to GET /api/v1/securities on the globeco-security-service on port 8000.  Extend the existing securityService.ts implementation.  Return the response from the call to the security service (same status code, response object, etc.)
 
 ### Sample JSON response
 

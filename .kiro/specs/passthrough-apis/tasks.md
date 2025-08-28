@@ -1,13 +1,13 @@
 # Implementation Plan
 
-- [ ] 1. Extend SecurityService with getAllSecurities method
+- [x] 1. Extend SecurityService with getAllSecurities method
   - Add `getAllSecurities()` method to existing `SecurityService` class
-  - Configure method to call `GET /api/v1/securities` endpoint on port 8080
+  - Configure method to call `GET /api/v1/securities` endpoint on port 8000
   - Implement proper TypeScript return type for securities array
   - Add telemetry wrapping using existing `withHttpTelemetry` pattern
   - _Requirements: 1.1, 1.2, 3.1, 3.3_
 
-- [ ] 2. Create securities API route handler
+- [x] 2. Create securities API route handler
   - Create new file `src/app/api/securities/route.ts`
   - Implement GET handler using `withTelemetry` wrapper following existing patterns
   - Call `securityService.getAllSecurities()` and return response

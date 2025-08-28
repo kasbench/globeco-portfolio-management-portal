@@ -296,6 +296,25 @@ class SecurityService {
   }
 
   /**
+   * Get all securities from the security service
+   */
+  async getAllSecurities(): Promise<SecurityOut[]> {
+    return withHttpTelemetry(
+      async () => {
+        try {
+          const response = await this.api.get('/api/v1/securities');
+          return response.data;
+        } catch (error) {
+          // Pass through the original error without modification
+          throw error;
+        }
+      },
+      'getAllSecurities',
+      'security-service'
+    )();
+  }
+
+  /**
    * Health check
    */
   async healthCheck(): Promise<{ status: string; timestamp: string }> {
