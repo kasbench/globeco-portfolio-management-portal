@@ -28,7 +28,7 @@
   - Implement proper TypeScript return type for allocation response
   - _Requirements: 2.1, 2.2, 2.3, 3.3_
 
-- [ ] 5. Create allocations API route handler
+- [x] 5. Create allocations API route handler
   - Create new file `src/app/api/allocations/executions/send/route.ts`
   - Implement POST handler using `withTelemetry` wrapper
   - Call `allocationService.sendExecutions()` and return response
