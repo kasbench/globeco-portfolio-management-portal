@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { securityService } from '@/lib/api/securityService';
+import { securityService, SecurityOut } from '@/lib/api/securityService';
 import { withTelemetry } from '@/lib/withTelemetry';
 
 export const GET = withTelemetry(async (req: NextRequest) => {
   try {
-    const securities = await securityService.getAllSecurities();
+    const securities: SecurityOut[] = await securityService.getAllSecurities();
     return NextResponse.json(securities);
   } catch (error: any) {
     // Pass through original status codes and response objects

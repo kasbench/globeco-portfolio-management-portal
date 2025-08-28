@@ -35,7 +35,7 @@
   - Handle errors by passing through original status codes and response objects
   - _Requirements: 2.1, 2.2, 2.3, 2.4, 3.3_
 
-- [ ] 6. Add TypeScript interfaces for response types
+- [x] 6. Add TypeScript interfaces for response types
   - Add `SecurityOut[]` array type for securities response
   - Add `AllocationExecutionResponse` interface for allocation response
   - Export interfaces from appropriate service files
