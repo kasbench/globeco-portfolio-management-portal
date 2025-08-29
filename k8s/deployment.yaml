@@ -83,6 +83,12 @@ spec:
               value: "false"
             - name: DATA_CLEANUP_EMPTY_REBALANCES
               value: "false"
+            # Allocation service
+            - name: ALLOCATION_SERVICE_HOST
+              value: "globeco-allocation-service"
+            - name: ALLOCATION_SERVICE_PORT
+              value: "8089"
+
           # Health checks that will generate telemetry data
           livenessProbe:
             httpGet:
