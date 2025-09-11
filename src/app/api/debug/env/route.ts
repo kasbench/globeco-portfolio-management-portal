@@ -1,25 +1,29 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET() {
-  // Get all OTEL environment variables
-  const otelVars = Object.keys(process.env)
-    .filter(key => key.startsWith('OTEL_'))
-    .reduce((acc, key) => {
-      acc[key] = process.env[key];
-      return acc;
-    }, {} as Record<string, string | undefined>);
-
-  return NextResponse.json({
-    message: 'Environment variables debug info',
-    timestamp: new Date().toISOString(),
-    nodeEnv: process.env.NODE_ENV,
-    otelVariables: otelVars,
-    totalOtelVars: Object.keys(otelVars).length,
-    keyMetricVars: {
-      OTEL_METRICS_EXPORTER: process.env.OTEL_METRICS_EXPORTER || 'NOT SET',
-      OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: process.env.OTEL_EXPORTER_OTLP_METRICS_ENDPOINT || 'NOT SET',
-      OTEL_METRIC_EXPORT_INTERVAL: process.env.OTEL_METRIC_EXPORT_INTERVAL || 'NOT SET',
-      OTEL_EXPORTER_OTLP_ENDPOINT: process.env.OTEL_EXPORTER_OTLP_ENDPOINT || 'NOT SET',
-    }
-  });
+export async function GET(request: NextRequest) {
+  try {
+    const envVars = {
+      NODE_IP: process.env.NODE_IP,
+      OTEL_EXPORTER_OTLP_ENDPOINT: process.env.OTEL_EXPORTER_OTLP_ENDPOINT,
+      OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: process.env.OTEL_EXPORTER_OTLP_METRICS_ENDPOINT,
+      OTEL_DEBUG: process.env.OTEL_DEBUG,
+      OTEL_LOG_LEVEL: process.env.OTEL_LOG_LEVEL,
+      OTEL_SERVICE_NAME: process.env.OTEL_SERVICE_NAME,
+      NEXT_RUNTIME: process.env.NEXT_RUNTIME,
+      NODE_ENV: process.env.NODE_ENV,
+    };
+    
+    return NextResponse.json({
+      success: true,
+      environment: envVars,
+      timestamp: new Date().toISOString()
+    });
+    
+  } catch (error) {
+    return NextResponse.json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      timestamp: new Date().toISOString()
+    }, { status: 500 });
+  }
 }

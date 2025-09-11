@@ -14,6 +14,7 @@ spec:
     metadata:
       labels:
         app: globeco-portfolio-management-portal
+        version: v0.1.0
     spec:
       containers:
         - name: globeco-portfolio-management-portal
@@ -27,13 +28,18 @@ spec:
               value: "globeco-portfolio-management-portal"
             - name: OTEL_SERVICE_VERSION
               value: "0.1.0"
+            # Inject the node IP from the Downward API
+            - name: NODE_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
             # Try HTTP endpoint first (port 4318)
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
-              value: "http://otel-collector-collector.monitoring.svc.cluster.local:4318"
+              value: "http://$(NODE_IP):4318"
             - name: OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
-              value: "http://otel-collector-collector.monitoring.svc.cluster.local:4318/v1/traces"
+              value: "http://$(NODE_IP):4318/v1/traces"
             - name: OTEL_EXPORTER_OTLP_METRICS_ENDPOINT
-              value: "http://otel-collector-collector.monitoring.svc.cluster.local:4318/v1/metrics"
+              value: "http://$(NODE_IP):4318/v1/metrics"
             - name: OTEL_RESOURCE_ATTRIBUTES
               value: "service.name=globeco-portfolio-management-portal,service.version=0.1.0,deployment.environment=production,service.namespace=globeco"
             # Enable debug mode for better visibility

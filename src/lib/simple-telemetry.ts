@@ -1,5 +1,8 @@
-// Simple telemetry setup that uses the existing telemetry system
+// Simple telemetry setup that initializes the full SDK
 import { metrics } from '@opentelemetry/api';
+
+// Import and initialize the main telemetry system
+import { initializeTelemetry } from './telemetry';
 
 // Configuration
 const SERVICE_NAME = 'globeco-portfolio-management-portal';
@@ -8,28 +11,41 @@ const SERVICE_NAME = 'globeco-portfolio-management-portal';
 let meter: ReturnType<typeof metrics.getMeter> | null = null;
 let isInitialized = false;
 
-// Simple telemetry initialization
+// Simple telemetry initialization that ensures main telemetry runs
 export const initializeSimpleTelemetry = (): boolean => {
   if (isInitialized || typeof window !== 'undefined') {
     return isInitialized;
   }
 
   try {
-    // Use the existing global meter provider
+    console.log('🔧 SIMPLE-TELEMETRY: Starting initialization...');
+    
+    // First, ensure the main telemetry SDK is initialized
+    const mainTelemetrySuccess = initializeTelemetry();
+    if (!mainTelemetrySuccess) {
+      console.error('❌ SIMPLE-TELEMETRY: Main telemetry initialization failed');
+      return false;
+    }
+    
+    // Now use the initialized meter provider
     meter = metrics.getMeter(SERVICE_NAME, '0.1.0');
     
     // Test metric creation
     const testCounter = meter.createCounter('simple_telemetry_test', {
       description: 'Test counter for simple telemetry'
     });
-    testCounter.add(1, { test: 'initialization', timestamp: Date.now().toString() });
+    testCounter.add(1, { 
+      test: 'initialization', 
+      component: 'simple-telemetry',
+      timestamp: Date.now().toString() 
+    });
     
+    console.log('✅ SIMPLE-TELEMETRY: Initialized successfully');
     isInitialized = true;
     return true;
 
   } catch (error) {
-    // Only log errors, not debug information
-    console.error('SIMPLE-TELEMETRY: Initialization failed:', error);
+    console.error('❌ SIMPLE-TELEMETRY: Initialization failed:', error);
     isInitialized = false;
     return false;
   }

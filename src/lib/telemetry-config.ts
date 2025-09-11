@@ -2,7 +2,7 @@
 export const telemetryConfig = {
   // Collector endpoints
   collectorBaseUrl: process.env.OTEL_EXPORTER_OTLP_ENDPOINT || 
-    'http://otel-collector-collector.monitoring.svc.cluster.local:4318',
+    'http://otel-collector-daemonset-collector.monitoring.svc.cluster.local:4318',
   
   // Service identification
   serviceName: process.env.OTEL_SERVICE_NAME || 'globeco-portfolio-management-portal',
@@ -10,7 +10,7 @@ export const telemetryConfig = {
   
   // Debug settings - only enable if explicitly set to true
   debugMode: process.env.OTEL_DEBUG === 'true',
-  logLevel: process.env.OTEL_LOG_LEVEL || 'info',
+  logLevel: process.env.OTEL_LOG_LEVEL || 'debug',
   
   // Export settings
   metricExportInterval: parseInt(process.env.OTEL_METRIC_EXPORT_INTERVAL || '2000'), // Reduced to 2 seconds for faster testing

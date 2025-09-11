@@ -1,67 +1,78 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { metrics } from '@opentelemetry/api';
+import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-http';
 
-export async function GET(req: NextRequest) {
-  console.log('🧪 DEBUG: Direct metrics test endpoint called');
-  
+export async function GET(request: NextRequest) {
   try {
-    console.log('🧪 DEBUG: Testing direct OpenTelemetry API...');
+    const collectorUrl = process.env.OTEL_EXPORTER_OTLP_ENDPOINT || 'http://localhost:4318';
+    const metricsUrl = `${collectorUrl}/v1/metrics`;
     
-    // Test direct OpenTelemetry API
-    const meterProvider = metrics.getMeterProvider();
-    console.log('📊 MeterProvider type:', meterProvider.constructor.name);
+    console.log(`🔍 DIRECT METRICS TEST: Testing direct export to ${metricsUrl}`);
     
-    const directMeter = metrics.getMeter('direct-test', '1.0.0');
-    console.log('📊 Direct meter created, type:', typeof directMeter);
-    
-    const directCounter = directMeter.createCounter('direct_test_counter', {
-      description: 'Direct test counter to verify OpenTelemetry API'
-    });
-    console.log('📊 Direct counter created, type:', typeof directCounter);
-    
-    // Record multiple values to make sure it shows up
-    for (let i = 0; i < 5; i++) {
-      directCounter.add(1, { 
-        test: 'direct_api',
-        iteration: i.toString(),
-        timestamp: Date.now().toString()
-      });
-    }
-    console.log('✅ Direct counter values recorded (5 increments)');
-    
-    // Also test histogram
-    const directHistogram = directMeter.createHistogram('direct_test_histogram', {
-      description: 'Direct test histogram'
+    // Create a direct exporter
+    const exporter = new OTLPMetricExporter({
+      url: metricsUrl,
+      headers: {},
     });
     
-    for (let i = 0; i < 3; i++) {
-      directHistogram.record(Math.random() * 1000, {
-        test: 'direct_histogram',
-        iteration: i.toString()
-      });
-    }
-    console.log('✅ Direct histogram values recorded (3 values)');
+    // Create a simple metric data structure
+    const testMetricData = {
+      resourceMetrics: [{
+        resource: {
+          attributes: [{
+            key: 'service.name',
+            value: { stringValue: 'globeco-portfolio-management-portal' }
+          }]
+        },
+        scopeMetrics: [{
+          scope: {
+            name: 'direct-test',
+            version: '1.0.0'
+          },
+          metrics: [{
+            name: 'direct_test_counter',
+            description: 'Direct test counter',
+            unit: '1',
+            sum: {
+              dataPoints: [{
+                attributes: [{
+                  key: 'test',
+                  value: { stringValue: 'direct' }
+                }],
+                value: 1,
+                timeUnixNano: Date.now() * 1000000
+              }],
+              aggregationTemporality: 2, // CUMULATIVE
+              isMonotonic: true
+            }
+          }]
+        }]
+      }]
+    };
     
-    return NextResponse.json({
-      message: 'Direct metrics test completed',
-      timestamp: new Date().toISOString(),
-      status: 'success',
-      meterProvider: meterProvider.constructor.name,
-      metricsRecorded: {
-        counter: 5,
-        histogram: 3
-      },
-      note: 'Check Prometheus for direct_test_counter_total and direct_test_histogram metrics'
+    // Try to export directly
+    return new Promise<NextResponse>((resolve) => {
+      exporter.export(testMetricData as any, (result) => {
+        console.log(`🔍 DIRECT METRICS TEST: Export result:`, result);
+        
+        resolve(NextResponse.json({
+          success: result.code === 0,
+          collectorUrl,
+          metricsUrl,
+          exportResult: {
+            code: result.code,
+            error: result.error
+          },
+          timestamp: new Date().toISOString()
+        }));
+      });
     });
     
   } catch (error) {
-    console.error('🧪 DEBUG: Error in direct metrics test:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('❌ DIRECT METRICS TEST: Error:', error);
     return NextResponse.json({
-      message: 'Direct metrics test failed',
-      error: errorMessage,
-      timestamp: new Date().toISOString(),
-      status: 'error'
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      timestamp: new Date().toISOString()
     }, { status: 500 });
   }
 }
