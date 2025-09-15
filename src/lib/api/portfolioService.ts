@@ -33,7 +33,7 @@ wrapAxiosWithTelemetry(apiClient, 'portfolio-service')
 apiClient.interceptors.request.use(
   (config) => {
     if (process.env.NODE_ENV === 'development') {
-      console.log(`Portfolio API Request: ${config.method?.toUpperCase()} ${config.url}`, config.data)
+      // console.log(`Portfolio API Request: ${config.method?.toUpperCase()} ${config.url}`, config.data)
     }
     return config
   },

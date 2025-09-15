@@ -11,22 +11,22 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
     }
 
-    console.log('[API] /api/rebalances/submit-positions: Submitting positions', {
-      portfolioId,
-      positionsCount: positions.length,
-      positions: positions.map((p: any) => ({
-        security_id: p.security_id,
-        transaction_type: p.transaction_type,
-        trade_quantity: p.trade_quantity
-      }))
-    });
+    // console.log('[API] /api/rebalances/submit-positions: Submitting positions', {
+    //   portfolioId,
+    //   positionsCount: positions.length,
+    //   positions: positions.map((p: any) => ({
+    //     security_id: p.security_id,
+    //     transaction_type: p.transaction_type,
+    //     trade_quantity: p.trade_quantity
+    //   }))
+    // });
 
     const result = await orderServiceApi.submitRebalancePositions(
       positions as RebalancePositionWithSubmission[],
       portfolioId
     );
 
-    console.log('[API] /api/rebalances/submit-positions: Order Service API response', result);
+    // console.log('[API] /api/rebalances/submit-positions: Order Service API response', result);
 
     return NextResponse.json(result);
   } catch (error) {

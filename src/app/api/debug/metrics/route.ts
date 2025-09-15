@@ -1,27 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(req: NextRequest) {
-  console.log('🐛 DEBUG: Simple metrics test endpoint called');
+  // // console.log('🐛 DEBUG: Simple metrics test endpoint called');
   
   try {
     // Import metrics here to avoid any initialization issues
-    console.log('🐛 DEBUG: Importing metrics module...');
+    // console.log('🐛 DEBUG: Importing metrics module...');
     const { telemetryUtils } = await import('@/lib/metrics');
-    console.log('🐛 DEBUG: Metrics module imported successfully');
+    // console.log('🐛 DEBUG: Metrics module imported successfully');
     
-    console.log('🐛 DEBUG: About to call recordPageView...');
+    // console.log('🐛 DEBUG: About to call recordPageView...');
     telemetryUtils.recordPageView('/debug/metrics', 'debug-user');
-    console.log('🐛 DEBUG: recordPageView completed');
+    // console.log('🐛 DEBUG: recordPageView completed');
     
-    console.log('🐛 DEBUG: About to call recordApiRequest...');
+    // console.log('🐛 DEBUG: About to call recordApiRequest...');
     telemetryUtils.recordApiRequest('GET', '/debug/metrics', 200, 100);
-    console.log('🐛 DEBUG: recordApiRequest completed');
+    // console.log('🐛 DEBUG: recordApiRequest completed');
     
-    console.log('🐛 DEBUG: About to call recordError...');
+    // console.log('🐛 DEBUG: About to call recordError...');
     telemetryUtils.recordError('debug_test', 'Debug test error', 'debug-endpoint');
-    console.log('🐛 DEBUG: recordError completed');
+    // console.log('🐛 DEBUG: recordError completed');
     
-    console.log('🐛 DEBUG: All telemetry calls completed successfully');
+    // console.log('🐛 DEBUG: All telemetry calls completed successfully');
     
     return NextResponse.json({
       message: 'Debug metrics test completed',

@@ -6,7 +6,7 @@ export async function GET(request: NextRequest) {
   try {
     // Ensure telemetry is initialized before creating metrics
     const telemetryInitialized = initializeTelemetry();
-    console.log(`🔧 TEST ENDPOINT: Telemetry initialized: ${telemetryInitialized}`);
+    // console.log(`🔧 TEST ENDPOINT: Telemetry initialized: ${telemetryInitialized}`);
     
     // Get meter and create test metrics
     const meter = metrics.getMeter('test-endpoint', '1.0.0');
@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
       method: 'GET'
     });
     
-    console.log('🧪 TELEMETRY TEST: Test metrics recorded');
+    // console.log('🧪 TELEMETRY TEST: Test metrics recorded');
     
     return NextResponse.json({
       success: true,

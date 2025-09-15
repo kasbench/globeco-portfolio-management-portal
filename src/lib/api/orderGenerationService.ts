@@ -27,12 +27,12 @@ apiClient.interceptors.request.use(
     const fullUrl = config.baseURL
       ? config.baseURL.replace(/\/$/, '') + (config.url || '')
       : config.url;
-    console.log(`[${new Date().toISOString()}] API Request:`, {
-      method: config.method?.toUpperCase(),
-      url: fullUrl,
-      params: config.params,
-      data: config.data ? JSON.stringify(config.data) : undefined,
-    });
+    // console.log(`[${new Date().toISOString()}] API Request:`, {
+    //   method: config.method?.toUpperCase(),
+    //   url: fullUrl,
+    //   params: config.params,
+    //   data: config.data ? JSON.stringify(config.data) : undefined,
+    // });
     return config;
   },
   (error) => {
@@ -46,11 +46,11 @@ apiClient.interceptors.response.use(
     const fullUrl = response.config.baseURL
       ? response.config.baseURL.replace(/\/$/, '') + (response.config.url || '')
       : response.config.url;
-    console.log(`[${new Date().toISOString()}] API Response:`, {
-      status: response.status,
-      url: fullUrl,
-      data: response.data,
-    });
+    // console.log(`[${new Date().toISOString()}] API Response:`, {
+    //   status: response.status,
+    //   url: fullUrl,
+    //   data: response.data,
+    // });
     return response;
   },
   (error) => {
@@ -103,9 +103,9 @@ export const orderGenerationServiceApi = {
    */
   deleteRebalance: async (rebalanceId: string, version: number): Promise<void> => {
     try {
-      console.log('[orderGenerationServiceApi] Calling DELETE /api/v1/rebalance', { rebalanceId, version });
+      // console.log('[orderGenerationServiceApi] Calling DELETE /api/v1/rebalance', { rebalanceId, version });
       await apiClient.delete(`/api/v1/rebalance/${rebalanceId}`, { params: { version } });
-      console.log('[orderGenerationServiceApi] Successfully deleted rebalance', { rebalanceId, version });
+      // console.log('[orderGenerationServiceApi] Successfully deleted rebalance', { rebalanceId, version });
     } catch (error) {
       console.error('[orderGenerationServiceApi] Error deleting rebalance', { rebalanceId, version, error });
       throw error;
@@ -182,9 +182,9 @@ export const orderGenerationServiceApi = {
    */
   deleteModel: async (modelId: string, version: number): Promise<void> => {
     try {
-      console.log('[orderGenerationServiceApi] Calling DELETE /api/v1/model', { modelId, version });
+      // console.log('[orderGenerationServiceApi] Calling DELETE /api/v1/model', { modelId, version });
       await apiClient.delete(`/api/v1/model/${modelId}`, { params: { version } });
-      console.log('[orderGenerationServiceApi] Successfully deleted model', { modelId, version });
+      // console.log('[orderGenerationServiceApi] Successfully deleted model', { modelId, version });
     } catch (error) {
       console.error('[orderGenerationServiceApi] Error deleting model', { modelId, version, error });
       throw error;

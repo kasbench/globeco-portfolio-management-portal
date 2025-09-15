@@ -3,37 +3,37 @@ import { withTelemetry } from '@/lib/withTelemetry';
 import { customMetrics, telemetryUtils } from '@/lib/metrics';
 
 async function handler(req: NextRequest) {
-  console.log('🧪 TEST-METRICS: Starting test endpoint');
+  // console.log('🧪 TEST-METRICS: Starting test endpoint');
   
   try {
     // Test all custom metrics
-    console.log('🧪 TEST-METRICS: Testing API request counter...');
+    // console.log('🧪 TEST-METRICS: Testing API request counter...');
     customMetrics.apiRequestCounter.add(1, { test: 'endpoint', type: 'api_test' });
     
-    console.log('🧪 TEST-METRICS: Testing page view counter...');
+    // console.log('🧪 TEST-METRICS: Testing page view counter...');
     customMetrics.pageViewCounter.add(1, { test: 'endpoint', page: 'test-metrics' });
     
-    console.log('🧪 TEST-METRICS: Testing error counter...');
+    // console.log('🧪 TEST-METRICS: Testing error counter...');
     customMetrics.errorCounter.add(1, { test: 'endpoint', error_type: 'test_error' });
     
-    console.log('🧪 TEST-METRICS: Testing response time histogram...');
+    // console.log('🧪 TEST-METRICS: Testing response time histogram...');
     customMetrics.apiResponseTime.record(123, { test: 'endpoint', method: 'GET' });
     
-    console.log('🧪 TEST-METRICS: Testing active users...');
+    // console.log('🧪 TEST-METRICS: Testing active users...');
     customMetrics.activeUsers.add(1, { test: 'endpoint' });
     
-    console.log('🧪 TEST-METRICS: Testing DB operation metrics...');
+    // console.log('🧪 TEST-METRICS: Testing DB operation metrics...');
     customMetrics.dbOperationCounter.add(1, { test: 'endpoint', operation: 'select' });
     customMetrics.dbOperationDuration.record(45, { test: 'endpoint', operation: 'select' });
     
     // Test utility functions
-    console.log('🧪 TEST-METRICS: Testing utility functions...');
+    // console.log('🧪 TEST-METRICS: Testing utility functions...');
     telemetryUtils.recordApiRequest('GET', '/api/test-metrics', 200, 150);
     telemetryUtils.recordPageView('/test-metrics', 'test-user');
     telemetryUtils.recordError('test_error', 'This is a test error', 'test-metrics');
     telemetryUtils.recordDbOperation('select', 'test_table', 30, true);
     
-    console.log('✅ TEST-METRICS: All metrics tested successfully');
+    // console.log('✅ TEST-METRICS: All metrics tested successfully');
     
     return NextResponse.json({
       success: true,

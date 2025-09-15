@@ -42,15 +42,15 @@ export function useBlotters(): UseBlottersResult {
         const cacheAge = now - blotterCache.timestamp
         
         if (cacheAge < blotterCache.ttl) {
-          console.log('Using cached blotters data')
+          // console.log('Using cached blotters data')
           setBlotters(blotterCache.data)
           return
         } else {
-          console.log('Blotter cache expired, fetching fresh data')
+          // console.log('Blotter cache expired, fetching fresh data')
         }
       }
 
-      console.log('Fetching blotters from /api/blotters API route')
+      // console.log('Fetching blotters from /api/blotters API route')
       const res = await withFetchTelemetry(
         async () => fetch('/api/blotters'),
         'fetchBlotters',
@@ -67,7 +67,7 @@ export function useBlotters(): UseBlottersResult {
       }
       
       setBlotters(data)
-      console.log(`Loaded ${data.length} blotters with cache TTL of ${CACHE_TTL / 1000}s`)
+      // console.log(`Loaded ${data.length} blotters with cache TTL of ${CACHE_TTL / 1000}s`)
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Failed to load blotters')
       console.error('Error fetching blotters:', error)
@@ -75,7 +75,7 @@ export function useBlotters(): UseBlottersResult {
       
       // If cache exists but is expired, use it as fallback
       if (blotterCache && blotterCache.data.length > 0) {
-        console.log('Using expired cache as fallback for blotters')
+        // console.log('Using expired cache as fallback for blotters')
         setBlotters(blotterCache.data)
       }
     } finally {
@@ -122,5 +122,5 @@ export function getCachedBlotters(): BlotterResponseDTO[] {
  */
 export function clearBlotterCache(): void {
   blotterCache = null
-  console.log('Blotter cache cleared')
+  // console.log('Blotter cache cleared')
 } 

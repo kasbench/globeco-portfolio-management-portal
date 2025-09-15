@@ -346,12 +346,12 @@ export function useVirtualizedRebalanceTable(
 
   const loadPortfolioChunk = useCallback(async (rebalanceId: string, chunkIndex: number): Promise<void> => {
     // Similar implementation for portfolio data
-    console.log(`Loading portfolio chunk ${chunkIndex} for rebalance ${rebalanceId}`)
+    // console.log(`Loading portfolio chunk ${chunkIndex} for rebalance ${rebalanceId}`)
   }, [])
 
   const loadPositionChunk = useCallback(async (portfolioId: string, chunkIndex: number): Promise<void> => {
     // Similar implementation for position data
-    console.log(`Loading position chunk ${chunkIndex} for portfolio ${portfolioId}`)
+    // console.log(`Loading position chunk ${chunkIndex} for portfolio ${portfolioId}`)
   }, [])
 
   // Performance monitoring
@@ -384,7 +384,7 @@ export function useVirtualizedRebalanceTable(
     
     if (memoryUsage.estimatedMB > config.memoryThreshold) {
       // Implement LRU cache logic to unload oldest chunks
-      console.log('Memory threshold exceeded, unloading unused chunks')
+      // console.log('Memory threshold exceeded, unloading unused chunks')
       
       // For now, just clear some data
       setPortfolioData(prev => ({

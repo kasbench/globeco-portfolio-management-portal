@@ -3,7 +3,7 @@
 // Simple test script to verify structured logging functionality
 const { logger } = require('./src/lib/logger.ts');
 
-console.log('Testing structured logging...\n');
+// console.log('Testing structured logging...\n');
 
 // Test basic logging
 logger.info('Test message', { test_field: 'test_value' });
@@ -20,4 +20,4 @@ logger.debug('Debug message', { debug_info: 'debug_value' });
 logger.warn('Warning message', { warning_type: 'test_warning' });
 logger.error('Error message', { error_type: 'test_error' });
 
-console.log('\nStructured logging test completed. Check the JSON output above.');
+// console.log('\nStructured logging test completed. Check the JSON output above.');

@@ -61,13 +61,13 @@ apiClient.interceptors.request.use(
       timestamp: new Date().toISOString()
     })
     
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`Order Service Request [${requestId}]: ${config.method?.toUpperCase()} ${config.url}`, {
-        data: config.data,
-        params: config.params,
-        headers: config.headers,
-      })
-    }
+    // if (process.env.NODE_ENV === 'development') {
+    //   console.log(`Order Service Request [${requestId}]: ${config.method?.toUpperCase()} ${config.url}`, {
+    //     data: config.data,
+    //     params: config.params,
+    //     headers: config.headers,
+    //   })
+    // }
     return config
   },
   (error) => {
@@ -90,12 +90,12 @@ apiClient.interceptors.response.use(
       timestamp: new Date().toISOString()
     })
     
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`Order Service Response [${requestId}]: ${response.status}`, {
-        url: response.config.url,
-        data: response.data,
-      })
-    }
+    // if (process.env.NODE_ENV === 'development') {
+    //   console.log(`Order Service Response [${requestId}]: ${response.status}`, {
+    //     url: response.config.url,
+    //     data: response.data,
+    //   })
+    // }
     return response
   },
   (error: AxiosError) => {

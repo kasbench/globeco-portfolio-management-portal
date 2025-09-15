@@ -386,7 +386,7 @@ export function useOrderSubmissionShortcuts(actions: {
     shortcuts,
     context: 'order-submission',
     onShortcutExecuted: (shortcut) => {
-      console.log(`Executed order submission shortcut: ${shortcut.description}`)
+      // console.log(`Executed order submission shortcut: ${shortcut.description}`)
     }
   })
 } 

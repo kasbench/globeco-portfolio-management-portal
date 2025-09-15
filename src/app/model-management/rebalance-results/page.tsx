@@ -61,7 +61,7 @@ export default function RebalanceResultsPage() {
   // Update local rebalances when fetched data changes or when local state is reset
   React.useEffect(() => {
     if (fetchedRebalances && !isLoading) {
-      console.log('Updating local rebalances with fresh data:', fetchedRebalances.length, 'rebalances')
+      // console.log('Updating local rebalances with fresh data:', fetchedRebalances.length, 'rebalances')
       setLocalRebalances(fetchedRebalances)
     }
   }, [fetchedRebalances, isLoading])
@@ -157,7 +157,7 @@ export default function RebalanceResultsPage() {
                 });
                 const deleteResult = await delRes.json();
                 if (deleteResult.success) {
-                  console.log(`Rebalance ${rebalance.rebalance_id} deleted from backend after successful submission`)
+                  // console.log(`Rebalance ${rebalance.rebalance_id} deleted from backend after successful submission`)
                 } else {
                   console.warn(`Backend deletion reported failure for ${rebalance.rebalance_id}, but continuing`)
                 }
@@ -167,11 +167,11 @@ export default function RebalanceResultsPage() {
               }
             }
             
-            console.log(`Processing complete for ${rebalance.rebalance_id}:`, {
-              successfulOrders: result.successfulOrders,
-              failedOrders: result.failedOrders,
-              deletedFromBackend: result.failedOrders === 0
-            })
+            // console.log(`Processing complete for ${rebalance.rebalance_id}:`, {
+            //   successfulOrders: result.successfulOrders,
+            //   failedOrders: result.failedOrders,
+            //   deletedFromBackend: result.failedOrders === 0
+            // })
           }
           
           if (result.failedOrders > 0) {
@@ -209,19 +209,19 @@ export default function RebalanceResultsPage() {
       }
       
       // Refresh data to reflect backend changes
-      console.log('Submit All complete - invalidating cache and refetching data')
+      // console.log('Submit All complete - invalidating cache and refetching data')
       
       // Increased delay to ensure all backend deletions are fully processed
       await new Promise(resolve => setTimeout(resolve, 2000))
       
       // Force cache invalidation to ensure fresh data
-      console.log('Invalidating rebalances cache to force fresh data fetch')
+      // console.log('Invalidating rebalances cache to force fresh data fetch')
       await queryClient.invalidateQueries({ queryKey: ['rebalances'] })
       
       await refetch()
       
       // Reset local state AFTER fresh data is fetched
-      console.log('Resetting local state to use fresh fetched data')
+      // console.log('Resetting local state to use fresh fetched data')
       setLocalRebalances(undefined)
       
     } catch (error) {
@@ -234,56 +234,56 @@ export default function RebalanceResultsPage() {
   }
 
   const handleBatchOperationComplete = async (results: any) => {
-    console.log('Batch operation completed:', results)
+    // console.log('Batch operation completed:', results)
     
     // Use the same comprehensive refresh logic as Submit All
-    console.log('Batch operation complete - invalidating cache and refetching data')
+    // console.log('Batch operation complete - invalidating cache and refetching data')
     
     // Add delay to ensure all backend changes are fully processed
     await new Promise(resolve => setTimeout(resolve, 2000))
     
     // Force cache invalidation to ensure fresh data
-    console.log('Invalidating rebalances cache to force fresh data fetch')
+    // console.log('Invalidating rebalances cache to force fresh data fetch')
     await queryClient.invalidateQueries({ queryKey: ['rebalances'] })
     
     await refetch()
     
     // Reset local state AFTER fresh data is fetched
-    console.log('Resetting local state to use fresh fetched data')
+    // console.log('Resetting local state to use fresh fetched data')
     setLocalRebalances(undefined)
   }
 
   const handleDataChange = useCallback(async () => {
-    console.log('Data change callback triggered - invalidating cache and refetching data')
+    // console.log('Data change callback triggered - invalidating cache and refetching data')
     
     // Add a small additional delay before refetch to ensure backend consistency
-    console.log('Waiting additional 1000ms before refetch to ensure backend consistency')
+    // console.log('Waiting additional 1000ms before refetch to ensure backend consistency')
     await new Promise(resolve => setTimeout(resolve, 1000))
     
     // Force cache invalidation to ensure fresh data BEFORE refetch
-    console.log('Invalidating rebalances cache to force fresh data fetch')
+    // console.log('Invalidating rebalances cache to force fresh data fetch')
     await queryClient.invalidateQueries({ queryKey: ['rebalances'] })
     
     // Now refetch with invalidated cache
-    console.log('Refetching data after cache invalidation')
+    // console.log('Refetching data after cache invalidation')
     await refetch()
     
     // Reset local state AFTER fresh data is fetched to use the new data
-    console.log('Resetting local state to use fresh fetched data')
+    // console.log('Resetting local state to use fresh fetched data')
     setLocalRebalances(undefined)
   }, [refetch, queryClient])
 
   const handleRetry = async () => {
-    console.log('Refresh button clicked - invalidating cache and refetching data')
+    // console.log('Refresh button clicked - invalidating cache and refetching data')
     
     // Force cache invalidation for manual refresh
-    console.log('Manual refresh - invalidating rebalances cache')
+    // console.log('Manual refresh - invalidating rebalances cache')
     await queryClient.invalidateQueries({ queryKey: ['rebalances'] })
     
     await refetch()
     
     // Reset local state AFTER fresh data is fetched
-    console.log('Resetting local state to use fresh fetched data')
+    // console.log('Resetting local state to use fresh fetched data')
     setLocalRebalances(undefined)
   }
 

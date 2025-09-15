@@ -243,8 +243,8 @@ const BatchOperationsPanel: React.FC<BatchOperationsPanelProps> = ({
 
         // Use the same submission logic as the main "Submit All" button
         // Import the necessary functions at the top of the file and implement here
-        console.log(`Submitting ${selectedRebalancesArray.length} selected rebalances:`, 
-          selectedRebalancesArray.map(r => r.rebalance_id))
+        // console.log(`Submitting ${selectedRebalancesArray.length} selected rebalances:`, 
+        //   selectedRebalancesArray.map(r => r.rebalance_id))
         
         // For now, let's use the OrderService API directly for each selected rebalance
         // import { orderServiceApi } from '@/lib/api/orderService'
@@ -277,7 +277,7 @@ const BatchOperationsPanel: React.FC<BatchOperationsPanelProps> = ({
                   });
                   const deleteResult = await delRes.json();
                   if (deleteResult.success) {
-                    console.log(`Rebalance ${rebalance.rebalance_id} deleted from backend after successful submission`)
+                    // console.log(`Rebalance ${rebalance.rebalance_id} deleted from backend after successful submission`)
                   } else {
                     console.warn(`Backend deletion reported failure for ${rebalance.rebalance_id}, but continuing`)
                   }
@@ -287,11 +287,11 @@ const BatchOperationsPanel: React.FC<BatchOperationsPanelProps> = ({
                 }
               }
               
-              console.log(`Processing complete for ${rebalance.rebalance_id}:`, {
-                successfulOrders: result.successfulOrders,
-                failedOrders: result.failedOrders,
-                deletedFromBackend: result.failedOrders === 0
-              })
+              // console.log(`Processing complete for ${rebalance.rebalance_id}:`, {
+              //   successfulOrders: result.successfulOrders,
+              //   failedOrders: result.failedOrders,
+              //   deletedFromBackend: result.failedOrders === 0
+              // })
             }
             if (result.failedOrders > 0) {
               failedSubmissions++
@@ -305,10 +305,10 @@ const BatchOperationsPanel: React.FC<BatchOperationsPanelProps> = ({
         // Show completion message
         if (successfulSubmissions > 0) {
           if (failedSubmissions === 0) {
-            console.log(`Successfully submitted ${successfulSubmissions} rebalances.`)
+            // console.log(`Successfully submitted ${successfulSubmissions} rebalances.`)
             toast.success(`Successfully submitted ${successfulSubmissions} rebalances.`)
           } else {
-            console.log(`Submitted ${successfulSubmissions} rebalances, ${failedSubmissions} failed.`)
+            // console.log(`Submitted ${successfulSubmissions} rebalances, ${failedSubmissions} failed.`)
             toast.warning(`Submitted ${successfulSubmissions} rebalances, ${failedSubmissions} failed.`)
           }
         } else {
@@ -349,8 +349,8 @@ const BatchOperationsPanel: React.FC<BatchOperationsPanelProps> = ({
           throw new Error('No rebalances selected for deletion')
         }
 
-        console.log(`Deleting ${selectedRebalancesArray.length} selected rebalances:`, 
-          selectedRebalancesArray.map(r => r.rebalance_id))
+        // console.log(`Deleting ${selectedRebalancesArray.length} selected rebalances:`, 
+        //   selectedRebalancesArray.map(r => r.rebalance_id))
         
         // Use the Order Generation API for deletion
         // import { orderGenerationApi } from '@/lib/api/orderGenerationService'
@@ -366,7 +366,7 @@ const BatchOperationsPanel: React.FC<BatchOperationsPanelProps> = ({
         });
         const deletionResult = await delRes.json();
         
-        console.log(`Deletion complete: ${deletionResult.totalDeleted} successful, ${deletionResult.totalFailed} failed`)
+        // console.log(`Deletion complete: ${deletionResult.totalDeleted} successful, ${deletionResult.totalFailed} failed`)
         
         // Show completion message
         if (deletionResult.totalDeleted > 0) {

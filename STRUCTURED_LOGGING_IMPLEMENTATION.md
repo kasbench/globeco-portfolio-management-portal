@@ -220,7 +220,7 @@ The implementation replaces previous console.log/console.error statements with s
 
 ### Before
 ```typescript
-console.log('Processing request for portfolio:', portfolioId);
+// console.log('Processing request for portfolio:', portfolioId);
 console.error('Failed to fetch portfolio:', error);
 ```
 

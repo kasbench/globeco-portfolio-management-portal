@@ -63,7 +63,7 @@ const ExpandedPortfolioContent = ({
     setIsSubmittingPositions(true)
     try {
       if (!positions) {
-        console.log('[UI] No positions found for portfolio', portfolio.portfolio_id)
+        // console.log('[UI] No positions found for portfolio', portfolio.portfolio_id)
         return
       }
       // Only submit eligible positions (BUY/SELL, non-zero quantity)
@@ -71,7 +71,7 @@ const ExpandedPortfolioContent = ({
         (p: import('@/types/rebalance').RebalancePositionWithSubmission) => (p.transaction_type === 'BUY' || p.transaction_type === 'SELL') && p.trade_quantity !== 0
       )
       if (eligiblePositions.length === 0) {
-        console.log('[UI] No eligible positions to submit for portfolio', portfolio.portfolio_id)
+        // console.log('[UI] No eligible positions to submit for portfolio', portfolio.portfolio_id)
         alert('No eligible positions to submit.')
         setIsSubmittingPositions(false)
         return
@@ -80,7 +80,7 @@ const ExpandedPortfolioContent = ({
         positions: eligiblePositions,
         portfolioId: portfolio.portfolio_id,
       }
-      console.log('[UI] Submitting eligible positions to /api/rebalances/submit-positions:', payload)
+      // console.log('[UI] Submitting eligible positions to /api/rebalances/submit-positions:', payload)
       const response = await fetch('/api/rebalances/submit-positions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -93,12 +93,12 @@ const ExpandedPortfolioContent = ({
         console.error('[UI] Failed to parse JSON response:', jsonErr)
         result = { error: 'Failed to parse response' }
       }
-      console.log('[UI] API response status:', response.status, 'body:', result)
+      // console.log('[UI] API response status:', response.status, 'body:', result)
       if (response.ok && result.successfulOrders > 0) {
         // alert(`Successfully submitted ${result.successfulOrders} orders for portfolio ${portfolio.portfolio_id}`)
         // After successful submission, check if all portfolios are now fully submitted
         try {
-          console.log('[UI] Checking if all portfolios in rebalance', rebalanceId, 'are fully submitted after portfolio', portfolio.portfolio_id)
+          // console.log('[UI] Checking if all portfolios in rebalance', rebalanceId, 'are fully submitted after portfolio', portfolio.portfolio_id)
           const portfoliosRes = await fetch(`/api/rebalances/${rebalanceId}/portfolios`)
           if (!portfoliosRes.ok) {
             console.error('[UI] Failed to refetch portfolios for rebalance', rebalanceId)
@@ -110,7 +110,7 @@ const ExpandedPortfolioContent = ({
               (pos.transaction_type === 'BUY' || pos.transaction_type === 'SELL') && pos.trade_quantity !== 0
             )
           )
-          console.log('[UI] All portfolios submitted:', allSubmitted)
+          // console.log('[UI] All portfolios submitted:', allSubmitted)
           if (allSubmitted) {
             // Need the rebalance version for DELETE
             const rebalanceMetaRes = await fetch(`/api/rebalances?rebalance_id=${rebalanceId}`)
@@ -123,11 +123,11 @@ const ExpandedPortfolioContent = ({
               version = rebalance?.version
             }
             if (version != null) {
-              console.log('[UI] Deleting rebalance', rebalanceId, 'with version', version)
+              // console.log('[UI] Deleting rebalance', rebalanceId, 'with version', version)
               const delRes = await fetch(`/api/rebalances/${rebalanceId}?version=${version}`, { method: 'DELETE' })
               const delResult = await delRes.json()
               if (delResult.success) {
-                console.log('[UI] Rebalance', rebalanceId, 'deleted after all portfolios submitted')
+                // console.log('[UI] Rebalance', rebalanceId, 'deleted after all portfolios submitted')
               } else {
                 console.warn('[UI] Failed to delete rebalance', rebalanceId, delResult)
               }
@@ -316,7 +316,7 @@ const PortfolioTable = React.memo(function PortfolioTable({
       }
       const positions = await res.json()
       if (!positions || !Array.isArray(positions)) {
-        console.log('[UI] No positions found for portfolio', portfolioId)
+        // console.log('[UI] No positions found for portfolio', portfolioId)
         alert('No positions found for this portfolio.')
         return
       }
@@ -325,7 +325,7 @@ const PortfolioTable = React.memo(function PortfolioTable({
         (p: import('@/types/rebalance').RebalancePositionWithSubmission) => (p.transaction_type === 'BUY' || p.transaction_type === 'SELL') && p.trade_quantity !== 0
       )
       if (eligiblePositions.length === 0) {
-        console.log('[UI] No eligible positions to submit for portfolio', portfolioId)
+        // console.log('[UI] No eligible positions to submit for portfolio', portfolioId)
         alert('No eligible positions to submit.')
         return
       }
@@ -333,7 +333,7 @@ const PortfolioTable = React.memo(function PortfolioTable({
         positions: eligiblePositions,
         portfolioId: portfolioId,
       }
-      console.log('[UI] Submitting eligible positions to /api/rebalances/submit-positions:', payload)
+      // console.log('[UI] Submitting eligible positions to /api/rebalances/submit-positions:', payload)
       const response = await fetch('/api/rebalances/submit-positions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -346,18 +346,18 @@ const PortfolioTable = React.memo(function PortfolioTable({
         console.error('[UI] Failed to parse JSON response:', jsonErr)
         result = { error: 'Failed to parse response' }
       }
-      console.log('[UI] API response status:', response.status, 'body:', result)
+      // console.log('[UI] API response status:', response.status, 'body:', result)
       if (response.ok && result.successfulOrders > 0) {
-        alert(`Successfully submitted ${result.successfulOrders} orders for portfolio ${portfolioId}`)
+        // alert(`Successfully submitted ${result.successfulOrders} orders for portfolio ${portfolioId}`)
         // Remove the submitted portfolio from local state
         setPortfolios(prev => {
           const updated = prev.filter(p => p.portfolio_id !== portfolioId)
-          console.log('[UI] Removed submitted portfolio from UI:', portfolioId, 'Remaining:', updated.map(p => p.portfolio_id))
+          // console.log('[UI] Removed submitted portfolio from UI:', portfolioId, 'Remaining:', updated.map(p => p.portfolio_id))
           return updated
         })
         // After successful submission, check if all portfolios are now fully submitted
         try {
-          console.log('[UI] Checking if all portfolios in rebalance', rebalanceId, 'are fully submitted after portfolio', portfolioId)
+          // console.log('[UI] Checking if all portfolios in rebalance', rebalanceId, 'are fully submitted after portfolio', portfolioId)
           const portfoliosRes = await fetch(`/api/rebalances/${rebalanceId}/portfolios`)
           if (!portfoliosRes.ok) {
             console.error('[UI] Failed to refetch portfolios for rebalance', rebalanceId)
@@ -369,7 +369,7 @@ const PortfolioTable = React.memo(function PortfolioTable({
               (pos.transaction_type === 'BUY' || pos.transaction_type === 'SELL') && pos.trade_quantity !== 0
             )
           )
-          console.log('[UI] All portfolios submitted:', allSubmitted)
+          // console.log('[UI] All portfolios submitted:', allSubmitted)
           if (allSubmitted) {
             // Need the rebalance version for DELETE
             const rebalanceMetaRes = await fetch(`/api/rebalances?rebalance_id=${rebalanceId}`)
@@ -382,11 +382,11 @@ const PortfolioTable = React.memo(function PortfolioTable({
               version = rebalance?.version
             }
             if (version != null) {
-              console.log('[UI] Deleting rebalance', rebalanceId, 'with version', version)
+              // console.log('[UI] Deleting rebalance', rebalanceId, 'with version', version)
               const delRes = await fetch(`/api/rebalances/${rebalanceId}?version=${version}`, { method: 'DELETE' })
               const delResult = await delRes.json()
               if (delResult.success) {
-                console.log('[UI] Rebalance', rebalanceId, 'deleted after all portfolios submitted')
+                // console.log('[UI] Rebalance', rebalanceId, 'deleted after all portfolios submitted')
               } else {
                 console.warn('[UI] Failed to delete rebalance', rebalanceId, delResult)
               }

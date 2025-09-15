@@ -148,7 +148,7 @@ class StructuredLogger {
 
     // Output the log entry
     if (this.config.enableConsole) {
-      console.log(JSON.stringify(logEntry));
+      // console.log(JSON.stringify(logEntry));
     }
   }
 

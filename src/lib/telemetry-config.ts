@@ -24,11 +24,11 @@ export const telemetryConfig = {
 
 export const logTelemetryConfig = () => {
   // Telemetry configuration logging disabled for cleaner output
-  console.log(`   Collector URL: ${telemetryConfig.collectorBaseUrl}`);
-  console.log(`   Debug Mode: ${telemetryConfig.debugMode}`);
-  console.log(`   Log Level: ${telemetryConfig.logLevel}`);
-  console.log(`   Metric Export Interval: ${telemetryConfig.metricExportInterval}ms`);
-  console.log(`   Auto Instrumentation: ${telemetryConfig.enableAutoInstrumentation}`);
-  console.log(`   Custom Metrics: ${telemetryConfig.enableCustomMetrics}`);
-  console.log(`   Custom Tracing: ${telemetryConfig.enableCustomTracing}`);
+  // console.log(`   Collector URL: ${telemetryConfig.collectorBaseUrl}`);
+  // console.log(`   Debug Mode: ${telemetryConfig.debugMode}`);
+  // console.log(`   Log Level: ${telemetryConfig.logLevel}`);
+  // console.log(`   Metric Export Interval: ${telemetryConfig.metricExportInterval}ms`);
+  // console.log(`   Auto Instrumentation: ${telemetryConfig.enableAutoInstrumentation}`);
+  // console.log(`   Custom Metrics: ${telemetryConfig.enableCustomMetrics}`);
+  // console.log(`   Custom Tracing: ${telemetryConfig.enableCustomTracing}`);
 };

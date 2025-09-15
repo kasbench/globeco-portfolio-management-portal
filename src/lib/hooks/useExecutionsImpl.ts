@@ -114,7 +114,7 @@ export const useExecutions = (options: UseExecutionsOptions = {}): UseExecutions
         ...convertFiltersToQueryParams(filters)
       }
 
-      console.log('Fetching executions with params:', params)
+      // console.log('Fetching executions with params:', params)
       // Build query string
       const queryString = new URLSearchParams(params as any).toString()
       const res = await withFetchTelemetry(

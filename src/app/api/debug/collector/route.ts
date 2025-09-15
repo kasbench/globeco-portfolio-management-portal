@@ -5,7 +5,7 @@ export async function GET(request: NextRequest) {
     const collectorUrl = process.env.OTEL_EXPORTER_OTLP_ENDPOINT || 'http://localhost:4318';
     const metricsUrl = `${collectorUrl}/v1/metrics`;
     
-    console.log(`🔍 COLLECTOR TEST: Testing connectivity to ${metricsUrl}`);
+    // console.log(`🔍 COLLECTOR TEST: Testing connectivity to ${metricsUrl}`);
     
     // Test basic connectivity
     const controller = new AbortController();

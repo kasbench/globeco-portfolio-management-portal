@@ -455,7 +455,7 @@ export function useOrderSubmission(): UseOrderSubmissionReturn {
       
       // In a real implementation, this would call a deletion API
       // For now, we'll simulate the deletion and update local state
-      console.log('Deleting rebalances:', rebalanceIds)
+      // console.log('Deleting rebalances:', rebalanceIds)
       
       // Remove from selections
       setState(prev => {
@@ -485,7 +485,7 @@ export function useOrderSubmission(): UseOrderSubmissionReturn {
     try {
       updateState({ isDeleting: true, lastSubmissionError: null })
       
-      console.log('Deleting portfolios:', portfolioIds)
+      // console.log('Deleting portfolios:', portfolioIds)
       
       // Remove from selections
       setState(prev => {

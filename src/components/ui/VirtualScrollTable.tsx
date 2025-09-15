@@ -306,12 +306,12 @@ export function VirtualScrollTable<T>({
 
   // Add debugging logs to track selectedItems and cacheKey
   useEffect(() => {
-    console.log('selectedItems changed:', selectedItems);
+    // console.log('selectedItems changed:', selectedItems);
     setSelectedIndices(selectedItems);
   }, [selectedItems]);
 
   useEffect(() => {
-    console.log('cacheKey changed:', cacheKey);
+    // console.log('cacheKey changed:', cacheKey);
     if (cacheKey && listRef.current) {
       // Force re-render when cache key changes
       listRef.current.scrollTo(0);

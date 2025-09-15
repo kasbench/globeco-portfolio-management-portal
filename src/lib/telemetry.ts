@@ -19,10 +19,10 @@ export const initializeTelemetry = (): boolean => {
   }
 
   try {
-    console.log('🚀 TELEMETRY: Starting OpenTelemetry initialization...');
-    console.log(`🔧 TELEMETRY: Service Name: ${telemetryConfig.serviceName}`);
-    console.log(`🔧 TELEMETRY: Collector URL: ${telemetryConfig.collectorBaseUrl}`);
-    console.log(`🔧 TELEMETRY: Export Interval: ${telemetryConfig.metricExportInterval}ms`);
+    // console.log('🚀 TELEMETRY: Starting OpenTelemetry initialization...');
+    // console.log(`🔧 TELEMETRY: Service Name: ${telemetryConfig.serviceName}`);
+    // console.log(`🔧 TELEMETRY: Collector URL: ${telemetryConfig.collectorBaseUrl}`);
+    // console.log(`🔧 TELEMETRY: Export Interval: ${telemetryConfig.metricExportInterval}ms`);
     
     // Set OpenTelemetry diagnostic logging to ERROR level for production
     diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.ERROR);
@@ -33,7 +33,7 @@ export const initializeTelemetry = (): boolean => {
       headers: {},
     });
     
-    console.log(`🔧 TELEMETRY: Metric exporter configured for: ${telemetryConfig.collectorBaseUrl}/v1/metrics`);
+    // console.log(`🔧 TELEMETRY: Metric exporter configured for: ${telemetryConfig.collectorBaseUrl}/v1/metrics`);
     
     // Create metric reader
     const metricReader = new PeriodicExportingMetricReader({
@@ -50,7 +50,7 @@ export const initializeTelemetry = (): boolean => {
     
     // Start the SDK
     sdk.start();
-    console.log('✅ TELEMETRY: OpenTelemetry SDK started successfully!');
+    // console.log('✅ TELEMETRY: OpenTelemetry SDK started successfully!');
     
     // Create test metrics to verify the system works
     const testMeter = metrics.getMeter('test', '1.0.0');
@@ -61,14 +61,14 @@ export const initializeTelemetry = (): boolean => {
       component: 'telemetry-init',
       timestamp: Date.now().toString()
     });
-    console.log('🧪 TELEMETRY: Test metric recorded');
+    // console.log('🧪 TELEMETRY: Test metric recorded');
     
     // Force an immediate export to test connectivity
     setTimeout(async () => {
       try {
-        console.log('🔄 TELEMETRY: Forcing metric export...');
+        // console.log('🔄 TELEMETRY: Forcing metric export...');
         await metricReader.forceFlush();
-        console.log('✅ TELEMETRY: Forced metric export completed');
+        // console.log('✅ TELEMETRY: Forced metric export completed');
       } catch (error) {
         console.error('❌ TELEMETRY: Forced export failed:', error);
       }

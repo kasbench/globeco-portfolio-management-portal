@@ -6,7 +6,7 @@ export async function GET(request: NextRequest) {
     const collectorUrl = process.env.OTEL_EXPORTER_OTLP_ENDPOINT || 'http://localhost:4318';
     const metricsUrl = `${collectorUrl}/v1/metrics`;
     
-    console.log(`🔍 DIRECT METRICS TEST: Testing direct export to ${metricsUrl}`);
+    // console.log(`🔍 DIRECT METRICS TEST: Testing direct export to ${metricsUrl}`);
     
     // Create a direct exporter
     const exporter = new OTLPMetricExporter({
@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
     // Try to export directly
     return new Promise<NextResponse>((resolve) => {
       exporter.export(testMetricData as any, (result) => {
-        console.log(`🔍 DIRECT METRICS TEST: Export result:`, result);
+        // console.log(`🔍 DIRECT METRICS TEST: Export result:`, result);
         
         resolve(NextResponse.json({
           success: result.code === 0,

@@ -59,12 +59,12 @@ class ExecutionService {
     this.api.interceptors.request.use(
       (config) => {
         const timestamp = new Date().toISOString();
-        console.log(`[${timestamp}] Execution Service Request:`, {
-          method: config.method?.toUpperCase(),
-          url: config.url,
-          params: config.params,
-          data: config.data ? JSON.stringify(config.data) : undefined,
-        });
+        // console.log(`[${timestamp}] Execution Service Request:`, {
+        //   method: config.method?.toUpperCase(),
+        //   url: config.url,
+        //   params: config.params,
+        //   data: config.data ? JSON.stringify(config.data) : undefined,
+        // });
         return config;
       },
       (error) => {
@@ -77,20 +77,20 @@ class ExecutionService {
     this.api.interceptors.response.use(
       (response: AxiosResponse) => {
         const timestamp = new Date().toISOString();
-        console.log(`[${timestamp}] Execution Service Response:`, {
-          status: response.status,
-          url: response.config.url,
-          data: response.data,
-        });
+        // console.log(`[${timestamp}] Execution Service Response:`, {
+        //   status: response.status,
+        //   url: response.config.url,
+        //   data: response.data,
+        // });
         return response;
       },
       (error: AxiosError<ExecutionServiceErrorResponse>) => {
         const timestamp = new Date().toISOString();
-        console.error(`[${timestamp}] Execution Service Error:`, {
-          status: error.response?.status,
-          url: error.config?.url,
-          message: error.response?.data?.message || error.message,
-        });
+        // console.error(`[${timestamp}] Execution Service Error:`, {
+        //   status: error.response?.status,
+        //   url: error.config?.url,
+        //   message: error.response?.data?.message || error.message,
+        // });
         return Promise.reject(this.handleError(error));
       }
     );

@@ -2,25 +2,25 @@ import { NextRequest, NextResponse } from 'next/server';
 import { telemetryUtils } from '@/lib/metrics';
 
 export async function GET(req: NextRequest) {
-  console.log('🧪 DEBUG: Telemetry test endpoint called');
+  // console.log('🧪 DEBUG: Telemetry test endpoint called');
   
   try {
-    console.log('🧪 DEBUG: Testing telemetry utilities...');
+    // console.log('🧪 DEBUG: Testing telemetry utilities...');
     
     // Test each telemetry function
-    console.log('🧪 DEBUG: Testing recordPageView...');
+    // console.log('🧪 DEBUG: Testing recordPageView...');
     telemetryUtils.recordPageView('/debug/telemetry-test', 'debug-user');
     
-    console.log('🧪 DEBUG: Testing recordApiRequest...');
+    // console.log('🧪 DEBUG: Testing recordApiRequest...');
     telemetryUtils.recordApiRequest('GET', '/debug/telemetry-test', 200, 150);
     
-    console.log('🧪 DEBUG: Testing recordError...');
+    // console.log('🧪 DEBUG: Testing recordError...');
     telemetryUtils.recordError('debug_test', 'Debug test error', 'telemetry-test');
     
-    console.log('🧪 DEBUG: Testing recordDbOperation...');
+    // console.log('🧪 DEBUG: Testing recordDbOperation...');
     telemetryUtils.recordDbOperation('SELECT', 'debug_table', 100, true);
     
-    console.log('🧪 DEBUG: All telemetry functions called successfully');
+    // console.log('🧪 DEBUG: All telemetry functions called successfully');
     
     return NextResponse.json({
       message: 'Telemetry test completed',

@@ -18,7 +18,7 @@ export const initializeSimpleTelemetry = (): boolean => {
   }
 
   try {
-    console.log('🔧 SIMPLE-TELEMETRY: Starting initialization...');
+    // console.log('🔧 SIMPLE-TELEMETRY: Starting initialization...');
     
     // First, ensure the main telemetry SDK is initialized
     const mainTelemetrySuccess = initializeTelemetry();
@@ -40,7 +40,7 @@ export const initializeSimpleTelemetry = (): boolean => {
       timestamp: Date.now().toString() 
     });
     
-    console.log('✅ SIMPLE-TELEMETRY: Initialized successfully');
+    // console.log('✅ SIMPLE-TELEMETRY: Initialized successfully');
     isInitialized = true;
     return true;
 

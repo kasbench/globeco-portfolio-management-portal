@@ -65,12 +65,12 @@ class TradeService {
     this.api.interceptors.request.use(
       (config) => {
         const timestamp = new Date().toISOString();
-        console.log(`[${timestamp}] Trade Service Request:`, {
-          method: config.method?.toUpperCase(),
-          url: config.url,
-          params: config.params,
-          data: config.data ? JSON.stringify(config.data) : undefined,
-        });
+        // console.log(`[${timestamp}] Trade Service Request:`, {
+        //   method: config.method?.toUpperCase(),
+        //   url: config.url,
+        //   params: config.params,
+        //   data: config.data ? JSON.stringify(config.data) : undefined,
+        // });
         return config;
       },
       (error) => {
@@ -83,11 +83,11 @@ class TradeService {
     this.api.interceptors.response.use(
       (response: AxiosResponse) => {
         const timestamp = new Date().toISOString();
-        console.log(`[${timestamp}] Trade Service Response:`, {
-          status: response.status,
-          url: response.config.url,
-          data: response.data,
-        });
+        // console.log(`[${timestamp}] Trade Service Response:`, {
+        //   status: response.status,
+        //   url: response.config.url,
+        //   data: response.data,
+        // });
         return response;
       },
       (error: AxiosError<TradeServiceErrorResponse>) => {
@@ -226,14 +226,14 @@ class TradeService {
    */
   async updateTradeOrder(id: number, tradeOrder: UpdateTradeOrderRequestDTO): Promise<TradeOrderResponseDTO> {
     // Debug: Log the parameters being passed to the API
-    console.log('🔍 DEBUG - TradeService.updateTradeOrder called with:', {
-      id,
-      tradeOrder,
-      url: `/api/v1/tradeOrders/${id}`,
-      portfolioId: tradeOrder.portfolioId,
-      portfolioIdType: typeof tradeOrder.portfolioId,
-      portfolioIdLength: tradeOrder.portfolioId?.length
-    })
+    // console.log('🔍 DEBUG - TradeService.updateTradeOrder called with:', {
+    //   id,
+    //   tradeOrder,
+    //   url: `/api/v1/tradeOrders/${id}`,
+    //   portfolioId: tradeOrder.portfolioId,
+    //   portfolioIdType: typeof tradeOrder.portfolioId,
+    //   portfolioIdLength: tradeOrder.portfolioId?.length
+    // })
     
     const response = await this.api.put<TradeOrderResponseDTO>(`/api/v1/tradeOrders/${id}`, tradeOrder);
     return response.data;
