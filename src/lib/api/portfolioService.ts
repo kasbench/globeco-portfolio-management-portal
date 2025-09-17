@@ -21,7 +21,7 @@ const BASE_URL = `http://${PORTFOLIO_SERVICE_HOST}:${PORTFOLIO_SERVICE_PORT}`
 // Create axios instance with base configuration
 const apiClient = axios.create({
   baseURL: BASE_URL,
-  timeout: 30000, // 30 seconds timeout
+  timeout: 10000, // 10 seconds timeout for faster failure detection
   headers: {
     'Content-Type': 'application/json',
   },
@@ -29,6 +29,48 @@ const apiClient = axios.create({
 
 // Wrap the axios instance with telemetry
 wrapAxiosWithTelemetry(apiClient, 'portfolio-service')
+
+// Smart retry utility with exponential backoff
+const withSmartRetry = async <T>(
+  operation: () => Promise<T>,
+  maxRetries: number = 3,
+  initialDelay: number = 500
+): Promise<T> => {
+  let lastError: any
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await operation()
+    } catch (error: any) {
+      lastError = error
+
+      // Don't retry on 4xx client errors
+      if (error.response?.status >= 400 && error.response?.status < 500) {
+        throw error
+      }
+
+      // Don't retry on the last attempt
+      if (attempt === maxRetries) {
+        break
+      }
+
+      // Calculate exponential backoff delay: 500ms, 1s, 2s
+      const delay = initialDelay * Math.pow(2, attempt)
+      
+      // Only log once per operation, not per retry
+      if (attempt === 0) {
+        console.warn(`[portfolioService] Request failed, retrying with backoff (${maxRetries} attempts)`, {
+          error: error.message,
+          code: error.code,
+        })
+      }
+
+      await new Promise(resolve => setTimeout(resolve, delay))
+    }
+  }
+
+  throw lastError
+}
 
 // Add request interceptor to log requests in development
 apiClient.interceptors.request.use(
@@ -86,8 +128,10 @@ export const portfolioApi = {
   // Get all portfolios
   getPortfolios: withHttpTelemetry(
     async (): Promise<Portfolio[]> => {
-      const response: AxiosResponse<PortfolioResponseDTO[]> = await apiClient.get('/api/v1/portfolios')
-      return response.data.map(transformPortfolioDTO)
+      return withSmartRetry(async () => {
+        const response: AxiosResponse<PortfolioResponseDTO[]> = await apiClient.get('/api/v1/portfolios')
+        return response.data.map(transformPortfolioDTO)
+      })
     },
     'getPortfolios',
     'portfolio-service'
@@ -96,8 +140,10 @@ export const portfolioApi = {
   // Get portfolio by ID
   getPortfolio: withHttpTelemetry(
     async (portfolioId: string): Promise<Portfolio> => {
-      const response: AxiosResponse<PortfolioResponseDTO> = await apiClient.get(`/api/v1/portfolio/${portfolioId}`)
-      return transformPortfolioDTO(response.data)
+      return withSmartRetry(async () => {
+        const response: AxiosResponse<PortfolioResponseDTO> = await apiClient.get(`/api/v1/portfolio/${portfolioId}`)
+        return transformPortfolioDTO(response.data)
+      })
     },
     'getPortfolio',
     'portfolio-service'
@@ -106,8 +152,10 @@ export const portfolioApi = {
   // Create new portfolio
   createPortfolio: withHttpTelemetry(
     async (portfolio: PortfolioPostDTO): Promise<Portfolio> => {
-      const response: AxiosResponse<PortfolioResponseDTO> = await apiClient.post('/api/v1/portfolios', portfolio)
-      return transformPortfolioDTO(response.data)
+      return withSmartRetry(async () => {
+        const response: AxiosResponse<PortfolioResponseDTO> = await apiClient.post('/api/v1/portfolios', portfolio)
+        return transformPortfolioDTO(response.data)
+      })
     },
     'createPortfolio',
     'portfolio-service'
@@ -116,8 +164,10 @@ export const portfolioApi = {
   // Update existing portfolio
   updatePortfolio: withHttpTelemetry(
     async (portfolioId: string, portfolio: PortfolioPutDTO): Promise<Portfolio> => {
-      const response: AxiosResponse<PortfolioResponseDTO> = await apiClient.put(`/api/v1/portfolio/${portfolioId}`, portfolio)
-      return transformPortfolioDTO(response.data)
+      return withSmartRetry(async () => {
+        const response: AxiosResponse<PortfolioResponseDTO> = await apiClient.put(`/api/v1/portfolio/${portfolioId}`, portfolio)
+        return transformPortfolioDTO(response.data)
+      })
     },
     'updatePortfolio',
     'portfolio-service'
@@ -126,8 +176,10 @@ export const portfolioApi = {
   // Delete portfolio
   deletePortfolio: withHttpTelemetry(
     async (portfolioId: string, version: number): Promise<void> => {
-      await apiClient.delete(`/api/v1/portfolio/${portfolioId}`, {
-        params: { version }
+      return withSmartRetry(async () => {
+        await apiClient.delete(`/api/v1/portfolio/${portfolioId}`, {
+          params: { version }
+        })
       })
     },
     'deletePortfolio',
