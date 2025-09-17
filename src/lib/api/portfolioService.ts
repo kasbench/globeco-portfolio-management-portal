@@ -4,6 +4,7 @@ if (typeof window !== 'undefined') {
 }
 
 import axios, { AxiosResponse } from 'axios'
+import { Agent } from 'http'
 import { wrapAxiosWithTelemetry, withHttpTelemetry } from '../telemetry-axios'
 import { 
   PortfolioResponseDTO, 
@@ -20,7 +21,7 @@ const BASE_URL = `http://${PORTFOLIO_SERVICE_HOST}:${PORTFOLIO_SERVICE_PORT}`
 // Create axios instance with base configuration
 const apiClient = axios.create({
   baseURL: BASE_URL,
-  timeout: 30000,
+  timeout: 30000, // 30 seconds timeout
   headers: {
     'Content-Type': 'application/json',
   },
