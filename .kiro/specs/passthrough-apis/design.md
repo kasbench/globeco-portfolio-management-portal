@@ -2,7 +2,7 @@
 
 ## Overview
 
-This design implements two new passthrough APIs that act as simple proxies to downstream services. The implementation follows existing patterns in the codebase, extending the current `securityService.ts` for securities data and creating a new allocation service for execution processing. Both APIs maintain minimal error handling complexity while providing reliable access to downstream services.
+This design implements passthrough APIs that act as simple proxies to downstream services. The implementation follows existing patterns in the codebase, extending the current `securityService.ts` for securities data, creating a new allocation service for execution processing, and extending `portfolioService.ts` for bulk portfolio creation. All APIs maintain minimal error handling complexity while providing reliable access to downstream services.
 
 ## Architecture
 
@@ -14,7 +14,8 @@ Client Request → Portal API Route → Service Layer → Downstream Service →
 ### Service Integration Points
 - **Securities API**: Extends existing `securityService.ts` with new `getAllSecurities()` method
 - **Allocations API**: Creates new `allocationService.ts` following established service patterns
-- **API Routes**: Creates two new Next.js API routes following existing route patterns
+- **Bulk Portfolio API**: Extends existing `portfolioService.ts` with new `createBulkPortfolios()` method
+- **API Routes**: Creates new Next.js API routes following existing route patterns
 
 ## Components and Interfaces
 
@@ -43,11 +44,26 @@ Client Request → Portal API Route → Service Layer → Downstream Service →
 - Uses `withTelemetry` wrapper
 - Calls `allocationService.sendExecutions()` and returns response
 
-### 3. Service Configuration
+### 3. Bulk Portfolio API Implementation
 
-Both services use environment variables for host/port configuration:
+**File**: `src/lib/api/portfolioService.ts`
+- Extend existing service with new `createBulkPortfolios()` method
+- Method calls `POST /api/v2/portfolios` on the portfolio service
+- Accepts array of portfolio objects and passes through request body
+- Returns raw response from downstream service without modification
+
+**File**: `src/app/api/portfolios/bulk/route.ts`
+- New Next.js API route handler for bulk portfolio creation
+- Uses `withTelemetry` wrapper following existing patterns
+- Calls `portfolioService.createBulkPortfolios()` and returns response
+- Handles both success (201) and validation error (400) responses
+
+### 4. Service Configuration
+
+Services use environment variables for host/port configuration:
 - `SECURITY_SERVICE_HOST` / `SECURITY_SERVICE_PORT` (existing)
 - `ALLOCATION_SERVICE_HOST` / `ALLOCATION_SERVICE_PORT` (new)
+- Portfolio service uses existing configuration from `portfolioService.ts`
 
 ## Data Models
 
@@ -78,6 +94,25 @@ interface AllocationExecutionResponse {
   jobStatus: string;
   executionMode: string;
 }
+```
+
+### Bulk Portfolio Request/Response Types
+```typescript
+interface PortfolioPostDTO {
+  name: string;
+  dateCreated?: string; // ISO 8601 datetime
+  version?: number;
+}
+
+interface PortfolioResponseDTO {
+  portfolioId: string;
+  name: string;
+  dateCreated: string; // ISO 8601 datetime
+  version: number;
+}
+
+// Request: PortfolioPostDTO[]
+// Response: PortfolioResponseDTO[]
 ```
 
 ## Error Handling

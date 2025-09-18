@@ -63,9 +63,48 @@
   - Test telemetry wrapper integration in route handlers
   - _Requirements: 1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 4.1, 4.2, 4.3_
 
-- [ ] 10. Update environment configuration documentation
+- [ ] 10. Extend PortfolioService with createBulkPortfolios method
+  - Add `createBulkPortfolios()` method to existing `PortfolioService` class
+  - Configure method to call `POST /api/v2/portfolios` endpoint on portfolio service
+  - Accept array of `PortfolioPostDTO` objects and pass through request body
+  - Implement proper TypeScript return type for `PortfolioResponseDTO[]` array
+  - Add telemetry wrapping using existing patterns
+  - _Requirements: 3.1, 3.2, 3.3, 4.3, 4.5_
+
+- [ ] 11. Create bulk portfolios API route handler
+  - Create new file `src/app/api/portfolios/bulk/route.ts`
+  - Implement POST handler using `withTelemetry` wrapper following existing patterns
+  - Call `portfolioService.createBulkPortfolios()` and return response
+  - Handle errors by passing through original status codes (400, 500) and response objects
+  - Ensure proper handling of validation errors from downstream service
+  - _Requirements: 3.1, 3.3, 3.4, 3.5, 3.6, 4.5_
+
+- [ ] 12. Add TypeScript interfaces for bulk portfolio types
+  - Add `PortfolioPostDTO` interface for request objects
+  - Add `PortfolioResponseDTO` interface for response objects
+  - Export interfaces from portfolioService.ts
+  - Ensure proper typing throughout the bulk portfolio implementation
+  - _Requirements: 4.3, 4.5_
+
+- [ ] 13. Write unit tests for PortfolioService extension
+  - Create test for `createBulkPortfolios()` method success scenario
+  - Test error handling and passthrough behavior for 400 validation errors
+  - Test error handling for 500 server errors
+  - Mock HTTP responses and verify proper telemetry integration
+  - Test request body passthrough without modification
+  - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 5.1, 5.2, 5.3_
+
+- [ ] 14. Write bulk portfolio API route integration tests
+  - Test `/api/portfolios/bulk` POST endpoint with success scenario (201)
+  - Test validation error scenarios (400) with proper passthrough
+  - Test server error scenarios (500) with proper passthrough
+  - Verify proper HTTP status code and response body passthrough
+  - Test telemetry wrapper integration in route handler
+  - _Requirements: 3.1, 3.3, 3.4, 3.5, 3.6, 5.1, 5.2, 5.3_
+
+- [ ] 15. Update environment configuration documentation
   - Document new `ALLOCATION_SERVICE_HOST` and `ALLOCATION_SERVICE_PORT` variables
   - Add configuration examples to existing environment setup
   - Ensure proper defaults are documented for development
   - Update any relevant configuration files or examples
-  - _Requirements: 3.2, 3.4_
+  - _Requirements: 4.2, 4.5_
