@@ -63,7 +63,7 @@
   - Test telemetry wrapper integration in route handlers
   - _Requirements: 1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 4.1, 4.2, 4.3_
 
-- [ ] 10. Extend PortfolioService with createBulkPortfolios method
+- [x] 10. Extend PortfolioService with createBulkPortfolios method
   - Add `createBulkPortfolios()` method to existing `PortfolioService` class
   - Configure method to call `POST /api/v2/portfolios` endpoint on portfolio service
   - Accept array of `PortfolioPostDTO` objects and pass through request body
@@ -71,7 +71,7 @@
   - Add telemetry wrapping using existing patterns
   - _Requirements: 3.1, 3.2, 3.3, 4.3, 4.5_
 
-- [ ] 11. Create bulk portfolios API route handler
+- [x] 11. Create bulk portfolios API route handler
   - Create new file `src/app/api/portfolios/bulk/route.ts`
   - Implement POST handler using `withTelemetry` wrapper following existing patterns
   - Call `portfolioService.createBulkPortfolios()` and return response
