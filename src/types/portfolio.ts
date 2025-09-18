@@ -4,13 +4,13 @@
 export interface PortfolioResponseDTO {
   portfolioId: string
   name: string
-  dateCreated?: string | null
+  dateCreated?: string | null // ISO 8601 datetime format
   version: number
 }
 
 export interface PortfolioPostDTO {
   name: string
-  dateCreated?: string | null
+  dateCreated?: string | null // ISO 8601 datetime format
   version?: number | null
 }
 

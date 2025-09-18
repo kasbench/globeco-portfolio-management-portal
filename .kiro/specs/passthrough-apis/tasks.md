@@ -79,7 +79,7 @@
   - Ensure proper handling of validation errors from downstream service
   - _Requirements: 3.1, 3.3, 3.4, 3.5, 3.6, 4.5_
 
-- [ ] 12. Add TypeScript interfaces for bulk portfolio types
+- [x] 12. Add TypeScript interfaces for bulk portfolio types
   - Add `PortfolioPostDTO` interface for request objects
   - Add `PortfolioResponseDTO` interface for response objects
   - Export interfaces from portfolioService.ts

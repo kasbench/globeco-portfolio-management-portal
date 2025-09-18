@@ -13,6 +13,9 @@ import {
   Portfolio 
 } from '@/types/portfolio'
 
+// Re-export interfaces for bulk portfolio operations
+export type { PortfolioPostDTO, PortfolioResponseDTO }
+
 // Portfolio Service configuration (server-side only)
 const PORTFOLIO_SERVICE_HOST = process.env.PORTFOLIO_SERVICE_HOST || 'globeco-portfolio-service'
 const PORTFOLIO_SERVICE_PORT = process.env.PORTFOLIO_SERVICE_PORT || '8000'
