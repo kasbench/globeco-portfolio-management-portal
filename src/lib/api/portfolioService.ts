@@ -185,6 +185,18 @@ export const portfolioApi = {
     'deletePortfolio',
     'portfolio-service'
   ),
+
+  // Create multiple portfolios in bulk
+  createBulkPortfolios: withHttpTelemetry(
+    async (portfolios: PortfolioPostDTO[]): Promise<PortfolioResponseDTO[]> => {
+      return withSmartRetry(async () => {
+        const response: AxiosResponse<PortfolioResponseDTO[]> = await apiClient.post('/api/v2/portfolios', portfolios)
+        return response.data
+      })
+    },
+    'createBulkPortfolios',
+    'portfolio-service'
+  ),
 }
 
 export default portfolioApi 
