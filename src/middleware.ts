@@ -8,6 +8,11 @@ export function middleware(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
   const method = request.method;
   
+  // Special logging for bulk portfolio API
+  if (pathname === '/api/portfolios/bulk') {
+    console.log(`[MIDDLEWARE_TIMING] ${method} ${pathname} - Middleware started at ${new Date().toISOString()}`);
+  }
+  
   // Generate or extract correlation ID
   const correlationId = request.headers.get('x-correlation-id') || uuidv4();
   
@@ -36,6 +41,11 @@ export function middleware(request: NextRequest) {
     // Add response time header
     const duration = Date.now() - start;
     response.headers.set('x-response-time', `${duration}ms`);
+    
+    // Special logging for bulk portfolio API
+    if (pathname === '/api/portfolios/bulk') {
+      console.log(`[MIDDLEWARE_TIMING] ${method} ${pathname} - Middleware completed in ${duration}ms`);
+    }
   }
   
   return response;

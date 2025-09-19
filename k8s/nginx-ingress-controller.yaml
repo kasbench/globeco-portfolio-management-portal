@@ -41,6 +41,20 @@ data:
   # Additional metrics configuration
   server-tokens: "false"
   allow-snippet-annotations: "false"
+  # CRITICAL: Disable buffering to prevent 5-second delays
+  proxy-buffering: "off"
+  proxy-request-buffering: "off"
+  proxy-max-temp-file-size: "0"
+  # Reduce timeouts for faster responses
+  proxy-connect-timeout: "10"
+  proxy-send-timeout: "60"
+  proxy-read-timeout: "60"
+  # Disable upstream buffering
+  proxy-buffer-size: "4k"
+  proxy-buffers: "8 4k"
+  # Additional performance optimizations
+  keepalive-timeout: "75"
+  keepalive-requests: "100"
 
 ---
 # ClusterRole for NGINX Ingress Controller
@@ -260,7 +274,7 @@ metadata:
     prometheus.io/port: "10254"
     prometheus.io/path: "/metrics"
 spec:
-  type: LoadBalancer
+  type: NodePort
   externalTrafficPolicy: Local
   ipFamilyPolicy: SingleStack
   ipFamilies:
@@ -337,6 +351,10 @@ spec:
         - --validating-webhook-key=/usr/local/certificates/key
         - --enable-metrics=true
         - --metrics-per-host=false
+        - --update-status=true
+        - --update-status-on-shutdown=false
+        - --sync-rate-limit=10
+        - --disable-catch-all=true
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:
@@ -367,9 +385,9 @@ spec:
             port: 10254
             scheme: HTTP
           initialDelaySeconds: 10
-          periodSeconds: 10
+          periodSeconds: 30
           successThreshold: 1
-          timeoutSeconds: 1
+          timeoutSeconds: 5
         readinessProbe:
           failureThreshold: 3
           httpGet:
@@ -377,9 +395,9 @@ spec:
             port: 10254
             scheme: HTTP
           initialDelaySeconds: 10
-          periodSeconds: 10
+          periodSeconds: 30
           successThreshold: 1
-          timeoutSeconds: 1
+          timeoutSeconds: 5
         ports:
         - containerPort: 80
           name: http
@@ -395,8 +413,11 @@ spec:
           protocol: TCP
         resources:
           requests:
-            cpu: 100m
-            memory: 90Mi
+            cpu: 200m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
         volumeMounts:
         - mountPath: /usr/local/certificates/
           name: webhook-cert

@@ -1,0 +1,19 @@
+---
+# Direct NodePort service to bypass ingress entirely
+apiVersion: v1
+kind: Service
+metadata:
+  name: globeco-portfolio-management-portal-direct
+  namespace: globeco
+  labels:
+    app: globeco-portfolio-management-portal
+spec:
+  type: NodePort
+  selector:
+    app: globeco-portfolio-management-portal
+  ports:
+    - name: http
+      protocol: TCP
+      port: 3000
+      targetPort: 3000
+      nodePort: 32090  # Use a different port to avoid conflicts

@@ -63,16 +63,16 @@ export const initializeTelemetry = (): boolean => {
     });
     // console.log('🧪 TELEMETRY: Test metric recorded');
     
-    // Force an immediate export to test connectivity
-    setTimeout(async () => {
-      try {
-        // console.log('🔄 TELEMETRY: Forcing metric export...');
-        await metricReader.forceFlush();
-        // console.log('✅ TELEMETRY: Forced metric export completed');
-      } catch (error) {
-        console.error('❌ TELEMETRY: Forced export failed:', error);
-      }
-    }, 1000);
+    // Force an immediate export to test connectivity (disabled to prevent blocking)
+    // setTimeout(async () => {
+    //   try {
+    //     // console.log('🔄 TELEMETRY: Forcing metric export...');
+    //     await metricReader.forceFlush();
+    //     // console.log('✅ TELEMETRY: Forced metric export completed');
+    //   } catch (error) {
+    //     console.error('❌ TELEMETRY: Forced export failed:', error);
+    //   }
+    // }, 1000);
     
     isInitialized = true;
     return true;

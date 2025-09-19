@@ -16,6 +16,20 @@ spec:
         app: globeco-portfolio-management-portal
         version: v0.1.0
     spec:
+      # Force pod to run on the node that globeco.local points to
+      # You'll need to determine which node globeco.local resolves to
+      nodeSelector:
+        kubernetes.io/hostname: node-0  # Change this to the correct node
+      # Alternative: Use node affinity for more flexibility
+      # affinity:
+      #   nodeAffinity:
+      #     requiredDuringSchedulingIgnoredDuringExecution:
+      #       nodeSelectorTerms:
+      #       - matchExpressions:
+      #         - key: kubernetes.io/hostname
+      #           operator: In
+      #           values:
+      #           - node-0  # The node globeco.local points to
       containers:
         - name: globeco-portfolio-management-portal
           image: kasbench/globeco-portfolio-management-portal:latest
@@ -23,17 +37,15 @@ spec:
           ports:
             - containerPort: 3000
           env:
-            # OpenTelemetry Configuration
+            # [Keep all your existing environment variables from the original deployment]
             - name: OTEL_SERVICE_NAME
               value: "globeco-portfolio-management-portal"
             - name: OTEL_SERVICE_VERSION
               value: "0.1.0"
-            # Inject the node IP from the Downward API
             - name: NODE_IP
               valueFrom:
                 fieldRef:
                   fieldPath: status.hostIP
-            # Try HTTP endpoint first (port 4318)
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
               value: "http://$(NODE_IP):4318"
             - name: OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
@@ -42,54 +54,42 @@ spec:
               value: "http://$(NODE_IP):4318/v1/metrics"
             - name: OTEL_RESOURCE_ATTRIBUTES
               value: "service.name=globeco-portfolio-management-portal,service.version=0.1.0,deployment.environment=production,service.namespace=globeco"
-            # Enable debug mode for better visibility
             - name: OTEL_DEBUG
               value: "false"
             - name: OTEL_LOG_LEVEL
               value: "error"
-            # Additional OTLP configuration
             - name: OTEL_EXPORTER_OTLP_INSECURE
               value: "true"
             - name: OTEL_EXPORTER_OTLP_PROTOCOL
               value: "http/protobuf"
-            # Metric export configuration
-            # - name: OTEL_METRIC_EXPORT_INTERVAL
-            #   value: "5000"
             - name: OTEL_METRIC_EXPORT_TIMEOUT
               value: "30000"
             - name: OTEL_TRACE_EXPORT_TIMEOUT
               value: "30000"
-            # Feature flags
             - name: OTEL_ENABLE_AUTO_INSTRUMENTATION
               value: "true"
             - name: OTEL_ENABLE_CUSTOM_METRICS
               value: "true"
             - name: OTEL_ENABLE_CUSTOM_TRACING
               value: "true"
-            # Additional debugging
             - name: OTEL_TRACES_EXPORTER
               value: "otlp"
             - name: OTEL_METRICS_EXPORTER
               value: "otlp"
-            # Trace context propagation configuration
             - name: OTEL_PROPAGATORS
               value: "tracecontext,baggage,b3"
-            # Next.js configuration
             - name: NODE_ENV
               value: "production"
             - name: NEXT_RUNTIME
               value: "nodejs"
-            # Hostname for service instance identification
             - name: HOSTNAME
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
-            # Data Cleanup
             - name: DATA_CLEANUP_EMPTY_PORTFOLIOS
               value: "false"
             - name: DATA_CLEANUP_EMPTY_REBALANCES
               value: "false"
-            # Backend services configuration
             - name: ALLOCATION_SERVICE_HOST
               value: "globeco-allocation-service"
             - name: ALLOCATION_SERVICE_PORT
@@ -102,8 +102,6 @@ spec:
               value: "globeco-order-generation-service"
             - name: ORDER_GENERATION_SERVICE_PORT
               value: "8088"
-
-          # Health checks that will generate telemetry data
           livenessProbe:
             httpGet:
               path: /api/health
@@ -126,4 +124,4 @@ spec:
               memory: "128Mi"
             limits:
               cpu: "500m"
-              memory: "512Mi" 
+              memory: "512Mi"

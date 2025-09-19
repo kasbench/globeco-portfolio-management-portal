@@ -3,26 +3,68 @@ import { portfolioApi } from '@/lib/api/portfolioService';
 import { PortfolioPostDTO, PortfolioResponseDTO } from '@/types/portfolio';
 import { withTelemetry } from '@/lib/withTelemetry';
 
-export const POST = withTelemetry(async (req: NextRequest) => {
+// Bypass telemetry wrapper to isolate the delay
+export const POST = async (req: NextRequest) => {
+  const requestStart = Date.now();
+  console.log(`[BULK_PORTFOLIO_TIMING] Request started at ${new Date().toISOString()}`);
+
   try {
+    // Measure JSON parsing time
+    const parseStart = Date.now();
+    console.log(`[BULK_PORTFOLIO_TIMING] Starting JSON parse at +${parseStart - requestStart}ms`);
     const body: PortfolioPostDTO[] = await req.json();
+    const parseTime = Date.now() - parseStart;
+    console.log(`[BULK_PORTFOLIO_TIMING] JSON parse completed at +${Date.now() - requestStart}ms (took ${parseTime}ms)`);
+
+    // Measure service call time
+    const serviceStart = Date.now();
+    console.log(`[BULK_PORTFOLIO_TIMING] Starting service call at +${serviceStart - requestStart}ms`);
     const result: PortfolioResponseDTO[] = await portfolioApi.createBulkPortfolios(body);
-    return NextResponse.json(result, { status: 201 });
+    const serviceTime = Date.now() - serviceStart;
+    console.log(`[BULK_PORTFOLIO_TIMING] Service call completed at +${Date.now() - requestStart}ms (took ${serviceTime}ms)`);
+
+    // Measure response creation time
+    const responseStart = Date.now();
+    console.log(`[BULK_PORTFOLIO_TIMING] Creating NextResponse at +${responseStart - requestStart}ms`);
+    const response = NextResponse.json(result, { status: 201 });
+    const responseTime = Date.now() - responseStart;
+    console.log(`[BULK_PORTFOLIO_TIMING] NextResponse created at +${Date.now() - requestStart}ms (took ${responseTime}ms)`);
+
+    // Measure header setting time
+    const headerStart = Date.now();
+    console.log(`[BULK_PORTFOLIO_TIMING] Setting headers at +${headerStart - requestStart}ms`);
+    response.headers.set('X-Performance-Total', (Date.now() - requestStart).toString());
+    response.headers.set('X-Performance-Parse', parseTime.toString());
+    response.headers.set('X-Performance-Service', serviceTime.toString());
+    response.headers.set('X-Performance-Response', responseTime.toString());
+    response.headers.set('X-Performance-Mode', 'detailed-timing');
+    response.headers.set('X-Response-Size', JSON.stringify(result).length.toString());
+    const headerTime = Date.now() - headerStart;
+    console.log(`[BULK_PORTFOLIO_TIMING] Headers set at +${Date.now() - requestStart}ms (took ${headerTime}ms)`);
+
+    const totalTime = Date.now() - requestStart;
+    console.log(`[BULK_PORTFOLIO_TIMING] Handler completed at +${totalTime}ms - RETURNING RESPONSE`);
+    console.log(`[BULK_PORTFOLIO_TIMING] Breakdown: Parse=${parseTime}ms, Service=${serviceTime}ms, Response=${responseTime}ms, Headers=${headerTime}ms, Total=${totalTime}ms`);
+
+    return response;
   } catch (error: any) {
-    // Pass through original status codes (400, 500) and response objects
-    // Handle validation errors from downstream service
+    const totalTime = Date.now() - requestStart;
+    console.log(`[BULK_PORTFOLIO_TIMING] ERROR at +${totalTime}ms: ${error.message}`);
+
     const statusCode = error.response?.status || error.status || 500;
-    
-    // For axios errors, try to get the response data first, then fallback to error message
     let errorResponse;
     if (error.response?.data) {
-      // Pass through the exact error response from downstream service
       errorResponse = error.response.data;
     } else {
-      // Fallback for network errors or other issues
       errorResponse = { error: error.message || 'Failed to create bulk portfolios' };
     }
-    
-    return NextResponse.json(errorResponse, { status: statusCode });
+
+    const response = NextResponse.json(errorResponse, { status: statusCode });
+    response.headers.set('X-Performance-Total', totalTime.toString());
+    response.headers.set('X-Performance-Error', 'true');
+    response.headers.set('X-Performance-Mode', 'detailed-timing');
+
+    console.log(`[BULK_PORTFOLIO_TIMING] Error response created and returning`);
+    return response;
   }
-}, 'create_bulk_portfolios');
+};

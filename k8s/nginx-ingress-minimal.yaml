@@ -1,0 +1,91 @@
+---
+# Minimal ConfigMap focused on eliminating 5-second delay
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/instance: ingress-nginx
+    app.kubernetes.io/name: ingress-nginx
+  name: ingress-nginx-controller
+  namespace: ingress-nginx
+data:
+  # CRITICAL: Disable all buffering
+  proxy-buffering: "off"
+  proxy-request-buffering: "off"
+  proxy-max-temp-file-size: "0"
+  
+  # Minimal timeouts
+  proxy-connect-timeout: "5"
+  proxy-send-timeout: "30"
+  proxy-read-timeout: "30"
+  
+  # Disable unnecessary features that might cause delays
+  enable-vts-status: "false"
+  server-tokens: "false"
+  allow-snippet-annotations: "false"
+  
+  # Performance optimizations
+  worker-processes: "auto"
+  worker-connections: "1024"
+  keepalive-timeout: "30"
+  keepalive-requests: "100"
+  
+  # Disable access logs temporarily for testing
+  access-log-off: "true"
+  error-log-level: "error"
+
+---
+# Patch the existing deployment to use minimal config
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ingress-nginx-controller
+  namespace: ingress-nginx
+spec:
+  template:
+    spec:
+      containers:
+      - name: controller
+        args:
+        - /nginx-ingress-controller
+        - --publish-service=$(POD_NAMESPACE)/ingress-nginx-controller
+        - --election-id=ingress-nginx-leader
+        - --controller-class=k8s.io/ingress-nginx
+        - --ingress-class=nginx
+        - --configmap=$(POD_NAMESPACE)/ingress-nginx-controller
+        - --validating-webhook=:8443
+        - --validating-webhook-certificate=/usr/local/certificates/cert
+        - --validating-webhook-key=/usr/local/certificates/key
+        # Disable metrics temporarily for testing
+        - --enable-metrics=false
+        - --disable-catch-all=true
+        - --sync-rate-limit=10
+        resources:
+          requests:
+            cpu: 200m
+            memory: 256Mi
+          limits:
+            cpu: 1000m
+            memory: 512Mi
+        # Reduce health check frequency
+        livenessProbe:
+          failureThreshold: 5
+          httpGet:
+            path: /healthz
+            port: 10254
+            scheme: HTTP
+          initialDelaySeconds: 10
+          periodSeconds: 60
+          successThreshold: 1
+          timeoutSeconds: 10
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /healthz
+            port: 10254
+            scheme: HTTP
+          initialDelaySeconds: 10
+          periodSeconds: 60
+          successThreshold: 1
+          timeoutSeconds: 10

@@ -7,9 +7,8 @@ metadata:
     app: globeco-portfolio-management-portal
 spec:
   type: NodePort
-  # CRITICAL: Use Local traffic policy to avoid extra network hops
-  externalTrafficPolicy: Local
-  # Disable session affinity that might cause delays
+  # Revert to Cluster policy - Local broke connectivity
+  externalTrafficPolicy: Cluster
   sessionAffinity: None
   selector:
     app: globeco-portfolio-management-portal
@@ -17,4 +16,4 @@ spec:
     - protocol: TCP
       port: 3000
       targetPort: 3000
-      nodePort: 32080 
+      nodePort: 32080

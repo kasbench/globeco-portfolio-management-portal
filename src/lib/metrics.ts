@@ -39,10 +39,8 @@ const initializeMetrics = () => {
 
 // Initialize immediately on server side
 if (typeof window === 'undefined') {
-  // Add a small delay to ensure telemetry SDK is ready
-  setTimeout(() => {
-    initializeMetrics();
-  }, 100);
+  // Initialize immediately without delay to prevent blocking
+  initializeMetrics();
 }
 
 // No-op metric that does nothing if telemetry is not available

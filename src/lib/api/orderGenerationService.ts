@@ -149,10 +149,9 @@ export const orderGenerationServiceApi = {
    * Rebalance a model's portfolios
    */
   rebalanceModel: async (modelId: string): Promise<Rebalance[]> => {
-    return withSmartRetry(async () => {
-      const response: AxiosResponse<Rebalance[]> = await apiClient.post(`/api/v1/model/${modelId}/rebalance`);
-      return response.data;
-    });
+    // Fail fast - no retries to prevent delays when service is unreachable
+    const response: AxiosResponse<Rebalance[]> = await apiClient.post(`/api/v1/model/${modelId}/rebalance`);
+    return response.data;
   },
 
   /**

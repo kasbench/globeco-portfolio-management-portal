@@ -1,0 +1,39 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: globeco-portfolio-management-portal-optimized
+  namespace: globeco
+  annotations:
+    # Aggressive anti-buffering configuration
+    nginx.ingress.kubernetes.io/proxy-buffering: "off"
+    nginx.ingress.kubernetes.io/proxy-request-buffering: "off"
+    nginx.ingress.kubernetes.io/proxy-max-temp-file-size: "0"
+    
+    # Minimal timeouts
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "5"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "30"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "30"
+    
+    # Disable features that might cause delays
+    nginx.ingress.kubernetes.io/enable-access-log: "false"
+    nginx.ingress.kubernetes.io/proxy-body-size: "1m"
+    
+    # Force HTTP/1.1 to avoid HTTP/2 buffering issues
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+    nginx.ingress.kubernetes.io/upstream-vhost: "globeco-portfolio-management-portal-optimized.globeco.svc.cluster.local"
+    
+    # Additional performance settings (snippets disabled by admin)
+    nginx.ingress.kubernetes.io/server-snippet: ""
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: globeco-optimized.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: globeco-portfolio-management-portal-optimized
+                port:
+                  number: 3000

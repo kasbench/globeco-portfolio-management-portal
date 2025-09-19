@@ -1,0 +1,76 @@
+---
+# Debug ConfigMap with aggressive anti-buffering settings
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/instance: ingress-nginx
+    app.kubernetes.io/name: ingress-nginx
+  name: ingress-nginx-controller
+  namespace: ingress-nginx
+data:
+  # AGGRESSIVE: Disable ALL forms of buffering and caching
+  proxy-buffering: "off"
+  proxy-request-buffering: "off"
+  proxy-max-temp-file-size: "0"
+  proxy-buffer-size: "4k"
+  proxy-buffers: "1 4k"
+  proxy-busy-buffers-size: "4k"
+  
+  # Minimal timeouts
+  proxy-connect-timeout: "1"
+  proxy-send-timeout: "10"
+  proxy-read-timeout: "10"
+  client-header-timeout: "10"
+  client-body-timeout: "10"
+  
+  # Disable keepalive that might cause delays
+  upstream-keepalive-connections: "0"
+  upstream-keepalive-timeout: "1"
+  upstream-keepalive-requests: "1"
+  
+  # Disable all caching
+  proxy-cache: "off"
+  proxy-no-cache: "$cookie_nocache $arg_nocache"
+  proxy-cache-bypass: "$cookie_nocache $arg_nocache"
+  
+  # Disable compression that might buffer
+  gzip: "off"
+  gzip-types: ""
+  
+  # Minimal worker settings
+  worker-processes: "1"
+  worker-connections: "1024"
+  worker-rlimit-nofile: "2048"
+  
+  # Disable access logs and reduce error logging
+  access-log-off: "true"
+  error-log-level: "crit"
+  
+  # Disable features that might cause delays
+  enable-vts-status: "false"
+  server-tokens: "false"
+  allow-snippet-annotations: "false"
+  
+  # Force HTTP/1.1 (HTTP/2 might have buffering issues)
+  use-http2: "false"
+  
+  # Additional anti-delay settings
+  proxy-intercept-errors: "off"
+  proxy-ignore-client-abort: "off"
+  
+  # Custom NGINX config snippet to force immediate response
+  http-snippet: |
+    sendfile off;
+    tcp_nopush off;
+    tcp_nodelay on;
+    
+  server-snippet: |
+    location ~* /api/ {
+      proxy_buffering off;
+      proxy_request_buffering off;
+      proxy_cache off;
+      proxy_max_temp_file_size 0;
+      add_header X-Debug-Config "anti-buffer" always;
+    }
