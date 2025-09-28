@@ -18,8 +18,8 @@ spec:
     spec:
       # Force pod to run on the node that globeco.local points to
       # You'll need to determine which node globeco.local resolves to
-      nodeSelector:
-        kubernetes.io/hostname: node-0  # Change this to the correct node
+      # nodeSelector:
+      #   kubernetes.io/hostname: node-0  # Change this to the correct node
       # Alternative: Use node affinity for more flexibility
       # affinity:
       #   nodeAffinity:
