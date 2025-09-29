@@ -102,6 +102,8 @@ spec:
               value: "globeco-order-generation-service"
             - name: ORDER_GENERATION_SERVICE_PORT
               value: "8088"
+            - name: ORDER_BATCH_SIZE
+              value: "25"
 
           # Health checks that will generate telemetry data
           livenessProbe:
