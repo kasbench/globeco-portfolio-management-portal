@@ -1,3 +1,6 @@
+docker buildx build --platform linux/amd64,linux/arm64 \
+-t kasbench/globeco-portfolio-management-portal:latest \
+-t kasbench/globeco-portfolio-management-portal:1.0.0 \
+--push .
 kubectl delete -f k8s/deployment.yaml
-docker buildx build --platform linux/amd64,linux/arm64 -t kasbench/globeco-portfolio-management-portal:latest --push .
 kubectl apply -f k8s/deployment.yaml
