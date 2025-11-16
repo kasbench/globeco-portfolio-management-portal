@@ -20,11 +20,12 @@ export type { PortfolioPostDTO, PortfolioResponseDTO }
 const PORTFOLIO_SERVICE_HOST = process.env.PORTFOLIO_SERVICE_HOST || 'globeco-portfolio-service'
 const PORTFOLIO_SERVICE_PORT = process.env.PORTFOLIO_SERVICE_PORT || '8000'
 const BASE_URL = `http://${PORTFOLIO_SERVICE_HOST}:${PORTFOLIO_SERVICE_PORT}`
+const API_TIMEOUT = parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '10000', 10)
 
 // Create axios instance with base configuration
 const apiClient = axios.create({
   baseURL: BASE_URL,
-  timeout: 10000, // 10 seconds timeout for faster failure detection
+  timeout: API_TIMEOUT,
   headers: {
     'Content-Type': 'application/json',
   },

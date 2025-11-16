@@ -39,10 +39,11 @@ class AllocationService {
     const ALLOCATION_SERVICE_HOST = process.env.ALLOCATION_SERVICE_HOST || 'globeco-allocation-service';
     const ALLOCATION_SERVICE_PORT = process.env.ALLOCATION_SERVICE_PORT || '8089';
     this.baseURL = `http://${ALLOCATION_SERVICE_HOST}:${ALLOCATION_SERVICE_PORT}`;
+    const API_TIMEOUT = parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '10000', 10);
 
     this.api = axios.create({
       baseURL: this.baseURL,
-      timeout: 10000,
+      timeout: API_TIMEOUT,
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',

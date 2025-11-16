@@ -45,10 +45,11 @@ class SecurityService {
     const SECURITY_SERVICE_HOST = process.env.SECURITY_SERVICE_HOST || 'globeco-security-service';
     const SECURITY_SERVICE_PORT = process.env.SECURITY_SERVICE_PORT || '8000';
     this.baseURL = `http://${SECURITY_SERVICE_HOST}:${SECURITY_SERVICE_PORT}`;
+    const API_TIMEOUT = parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '10000', 10);
 
     this.api = axios.create({
       baseURL: this.baseURL,
-      timeout: 10000,
+      timeout: API_TIMEOUT,
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',

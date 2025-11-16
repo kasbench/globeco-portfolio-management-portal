@@ -11,10 +11,11 @@ import { wrapAxiosWithTelemetry, withHttpTelemetry } from '../telemetry-axios';
 const ORDER_GENERATION_SERVICE_HOST = process.env.ORDER_GENERATION_SERVICE_HOST || 'globeco-order-generation-service';
 const ORDER_GENERATION_SERVICE_PORT = process.env.ORDER_GENERATION_SERVICE_PORT || '8088';
 const BASE_URL = `http://${ORDER_GENERATION_SERVICE_HOST}:${ORDER_GENERATION_SERVICE_PORT}`;
+const API_TIMEOUT = parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '10000', 10);
 
 const apiClient = axios.create({
   baseURL: BASE_URL,
-  timeout: 10000, // 10 seconds timeout for faster failure detection
+  timeout: API_TIMEOUT,
   headers: {
     'Content-Type': 'application/json',
   },

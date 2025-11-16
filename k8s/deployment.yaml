@@ -104,6 +104,9 @@ spec:
               value: "8088"
             - name: ORDER_BATCH_SIZE
               value: "25"
+            # API timeout configuration
+            - name: NEXT_PUBLIC_API_TIMEOUT
+              value: "15000"
 
           # Health checks that will generate telemetry data
           livenessProbe:
