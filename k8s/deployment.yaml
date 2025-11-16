@@ -14,11 +14,11 @@ spec:
     metadata:
       labels:
         app: globeco-portfolio-management-portal
-        version: v0.1.0
+        version: v1.0.1
     spec:
       containers:
         - name: globeco-portfolio-management-portal
-          image: kasbench/globeco-portfolio-management-portal:1.0.0
+          image: kasbench/globeco-portfolio-management-portal:1.0.1
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 3000

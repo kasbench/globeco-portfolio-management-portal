@@ -3,13 +3,16 @@ import { telemetryUtils } from './lib/metrics';
 import { logger } from './lib/logger';
 import { v4 as uuidv4 } from 'uuid';
 
+// Check if debug logging is enabled
+const isDebugEnabled = process.env.LOG_LEVEL === 'debug';
+
 export function middleware(request: NextRequest) {
   const start = Date.now();
   const { pathname, searchParams } = request.nextUrl;
   const method = request.method;
   
   // Special logging for bulk portfolio API
-  if (pathname === '/api/portfolios/bulk') {
+  if (isDebugEnabled && pathname === '/api/portfolios/bulk') {
     console.log(`[MIDDLEWARE_TIMING] ${method} ${pathname} - Middleware started at ${new Date().toISOString()}`);
   }
   
@@ -43,7 +46,7 @@ export function middleware(request: NextRequest) {
     response.headers.set('x-response-time', `${duration}ms`);
     
     // Special logging for bulk portfolio API
-    if (pathname === '/api/portfolios/bulk') {
+    if (isDebugEnabled && pathname === '/api/portfolios/bulk') {
       console.log(`[MIDDLEWARE_TIMING] ${method} ${pathname} - Middleware completed in ${duration}ms`);
     }
   }
