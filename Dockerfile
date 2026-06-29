@@ -40,4 +40,5 @@ USER appuser
 
 EXPOSE 3000
 
-CMD ["npm", "run", "start:quiet"] 
+# CMD ["npm", "run", "start:quiet"] 
+CMD ["npm", "run", "start"] 
