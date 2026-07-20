@@ -1,3 +1,4 @@
 deployment.yaml
 service.yaml
 nodeport.yaml
+hpa.yaml
