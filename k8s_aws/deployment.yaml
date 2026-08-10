@@ -133,6 +133,11 @@ spec:
             periodSeconds: 5
             timeoutSeconds: 5
             failureThreshold: 30
+          resizePolicy:
+            - resourceName: cpu
+              restartPolicy: NotRequired
+            - resourceName: memory
+              restartPolicy: RestartContainer
           resources:
             requests:
               cpu: "587m"
