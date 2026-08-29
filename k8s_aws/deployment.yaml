@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
         - name: globeco-portfolio-management-portal
-          image: kasbench/globeco-portfolio-management-portal:1.0.4
+          image: kasbench/globeco-portfolio-management-portal:1.0.5
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 3000

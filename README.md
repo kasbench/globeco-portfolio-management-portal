@@ -141,6 +141,202 @@ The application uses:
 
 API clients are located in `src/lib/api/`. Each microservice has its own client module based on the OpenAPI specifications.
 
+## API Reference
+
+This application exposes a Next.js API layer (under `/api/`) that acts as a Backend-for-Frontend (BFF), proxying requests to the underlying GlobeCo microservices. All endpoints return JSON.
+
+### Health
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/health` | Returns `{ status: "healthy" }` |
+
+---
+
+### Portfolios
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/portfolios` | List all portfolios |
+| POST | `/api/portfolios` | Create a new portfolio |
+| GET | `/api/portfolios/[id]` | Get portfolio by ID |
+| PUT | `/api/portfolios/[id]` | Update portfolio (returns 400 on ID mismatch, 409 on version conflict) |
+| DELETE | `/api/portfolios/[id]?version={n}` | Delete portfolio (version query param required) |
+| POST | `/api/portfolios/bulk` | Create multiple portfolios in a single request. Body: `PortfolioPostDTO[]` |
+
+---
+
+### Orders
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/orders` | List orders (supports query params for pagination/filtering) |
+| POST | `/api/orders` | Create a new order |
+| GET | `/api/orders/[id]` | Get order by ID |
+| PUT | `/api/orders/[id]` | Update order |
+| DELETE | `/api/orders/[id]?version={n}` | Delete order (version query param required) |
+| POST | `/api/orders/[id]/submit` | Submit an individual order for execution |
+| POST | `/api/orders/batch/submit` | Submit multiple orders. Body: `{ orderIds: number[] }` (max 100). Returns 207 on partial success. |
+
+---
+
+### Trades
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/trades` | List trade orders (supports query params for filtering/sorting/pagination) |
+| POST | `/api/trades` | Create a new trade order |
+| GET | `/api/trades/[id]` | Get trade order by ID |
+| PUT | `/api/trades/[id]` | Update trade order |
+| DELETE | `/api/trades/[id]` | Not implemented (returns 501) |
+
+---
+
+### Trade Orders
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| PUT | `/api/trade-orders/[id]` | Update a trade order |
+| DELETE | `/api/trade-orders/[id]?version={n}` | Delete a trade order (version query param required) |
+| POST | `/api/trade-orders/[id]/submit` | Submit individual trade order |
+| POST | `/api/trade-orders/batch/submit` | Submit a batch of trade orders |
+
+---
+
+### Executions
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/executions` | List executions (supports query params for filtering) |
+| POST | `/api/executions` | Create a new execution |
+| GET | `/api/executions/[id]` | Get execution by ID (enhanced view) |
+| PUT | `/api/executions/[id]` | Update execution |
+| DELETE | `/api/executions/[id]?version={n}` | Cancel execution (version query param required) |
+| POST | `/api/executions/batch` | Create multiple executions in batch |
+| DELETE | `/api/executions/batch` | Cancel multiple executions in batch |
+| GET | `/api/executions/summary` | Get execution summary statistics (supports filter query params) |
+| GET | `/api/executions/filter-options` | Get available filter option values for the executions UI |
+
+---
+
+### Models (Order Generation)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/models` | List all models (supports pagination/sorting query params) |
+| POST | `/api/models` | Create a new model |
+| GET | `/api/models/[id]` | Get model by ID |
+| PUT | `/api/models/[id]` | Update model |
+| DELETE | `/api/models/[id]?version={n}` | Delete model (version required; returns 409 on conflict, 422 if model has portfolios) |
+| POST | `/api/models/[id]/rebalance` | Trigger rebalance for a model. Returns `{ success, message, rebalance_ids }` |
+
+---
+
+### Rebalances
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/rebalances` | List rebalances. Query params: `offset`, `limit`, `sort_by` (default `-rebalance_date`) |
+| GET | `/api/rebalances/[rebalanceId]` | Get a single rebalance by ID |
+| DELETE | `/api/rebalances/[rebalanceId]?version={n}` | Delete a rebalance (version query param required) |
+| GET | `/api/rebalances/[rebalanceId]/portfolios` | List portfolios in a rebalance |
+| GET | `/api/rebalances/[rebalanceId]/portfolios/[portfolioId]` | Get specific portfolio positions within a rebalance |
+| GET | `/api/rebalances/[rebalanceId]/portfolios/[portfolioId]/positions` | Get positions for a portfolio in a rebalance |
+| POST | `/api/rebalances/submit-positions` | Submit rebalance positions as orders. Body: `{ positions: RebalancePositionWithSubmission[], portfolioId: string }` |
+
+---
+
+### Securities
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/securities` | List all available securities |
+
+---
+
+### Blotters
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/blotters` | List trade blotters |
+
+---
+
+### Destinations
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/destinations` | List trade destinations |
+
+---
+
+### Transactions
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/transactions` | List transactions (supports query params for pagination/filtering) |
+| GET | `/api/transactions/[id]` | Get transaction by ID |
+| POST | `/api/transactions` | Proxy to Portfolio Accounting Service (`POST /api/v1/transactions`). Forwards body and `X-API-Key` header. |
+
+---
+
+### Balances
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/balances` | List balances (supports query params for pagination/filtering) |
+
+---
+
+### Allocations
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/allocations/executions/send` | Send executions for allocation processing |
+
+---
+
+### Telemetry
+
+These endpoints collect client-side observability data. They always return 200 (even on internal errors) to avoid impacting the user experience.
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/telemetry/event` | Record a custom user interaction event. Body: `{ event, properties, timestamp, page }` |
+| POST | `/api/telemetry/pageview` | Record a page view. Body: `{ page, timestamp }` |
+| POST | `/api/telemetry/error` | Record a client-side error. Body: `{ error, context, timestamp, page }` |
+| GET | `/api/telemetry/test` | Test endpoint that records sample metrics and confirms telemetry is operational |
+
+---
+
+### Debug Endpoints
+
+These endpoints are available for development and troubleshooting only.
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/debug/env` | Inspect environment configuration |
+| GET | `/api/debug/metrics` | View raw metrics |
+| GET | `/api/debug/direct-metrics` | View metrics bypassing aggregation |
+| GET | `/api/debug/collector` | Check collector connectivity |
+| GET | `/api/debug/telemetry-status` | Check telemetry pipeline status |
+| GET | `/api/debug/telemetry-test` | Run telemetry test sequence |
+
+---
+
+### Common Patterns
+
+**Optimistic Concurrency Control:** Most mutation endpoints (PUT/DELETE) require a `version` query parameter or field. This prevents lost updates when multiple users modify the same resource. A `409 Conflict` response indicates the resource was modified by another process.
+
+**Error Responses:** All endpoints return errors in the format:
+```json
+{ "error": "Human-readable error message" }
+```
+
+**Batch Operations:** Batch endpoints may return HTTP `207 Multi-Status` when some items succeed and others fail. The response includes per-item status information.
+
+---
+
 ## Testing
 
 Run tests with:

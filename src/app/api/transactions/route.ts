@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
 import { tracedFetch } from '@/lib/telemetry-axios';
+import { withTelemetry } from '@/lib/withTelemetry';
 
 const ACCOUNTING_SERVICE_HOST = process.env.ACCOUNTING_SERVICE_HOST || 'globeco-portfolio-accounting-service';
 const ACCOUNTING_SERVICE_PORT = process.env.ACCOUNTING_SERVICE_PORT || '8087';
@@ -87,3 +88,37 @@ export async function POST(req: NextRequest) {
 }
 
 
+
+// GET /api/transactions — proxy list transactions from Portfolio Accounting Service
+export const GET = withTelemetry(async (req: NextRequest) => {
+  const url = new URL(req.url);
+  const queryString = url.search;
+
+  const upstreamUrl = `${ACCOUNTING_BASE_URL}/api/v1/transactions${queryString}`;
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30000);
+
+  try {
+    const upstreamResponse = await tracedFetch(
+      upstreamUrl,
+      { method: 'GET', signal: controller.signal },
+      'get_transactions_upstream'
+    );
+    clearTimeout(timeout);
+
+    const responseText = await upstreamResponse.text();
+    const contentType = upstreamResponse.headers.get('content-type') || 'application/json';
+
+    return new NextResponse(responseText, {
+      status: upstreamResponse.status,
+      headers: { 'Content-Type': contentType },
+    });
+  } catch (error: any) {
+    clearTimeout(timeout);
+    return NextResponse.json(
+      { error: 'Failed to fetch transactions' },
+      { status: 500 }
+    );
+  }
+}, 'get_transactions');
