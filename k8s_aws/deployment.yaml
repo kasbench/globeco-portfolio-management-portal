@@ -8,6 +8,16 @@ metadata:
 spec:
   {{- if eq .Values.autoscaler "vpa" }}
   replicas: 2
+  {{- else if eq .Values.autoscaler "horizontal-2" }}
+  replicas: 2
+  {{- else if eq .Values.autoscaler "horizontal-3" }}
+  replicas: 3
+  {{- else if eq .Values.autoscaler "horizontal-4" }}
+  replicas: 4
+  {{- else if eq .Values.autoscaler "horizontal-5" }}
+  replicas: 5
+  {{- else if eq .Values.autoscaler "horizontal-6" }}
+  replicas: 6
   {{- else }}
   replicas: 1
   {{- end }}
@@ -155,11 +165,22 @@ spec:
               restartPolicy: RestartContainer
           resources:
             requests:
-              cpu: "587m"
               memory: "200Mi"
+              {{- if eq .Values.autoscaler "vertical-2" }}
+              cpu: "558.0m"
+              {{- else if eq .Values.autoscaler "vertical-3" }}
+              cpu: "744.0m"
+              {{- else if eq .Values.autoscaler "vertical-4" }}
+              cpu: "930.0m"
+              {{- else if eq .Values.autoscaler "vertical-5" }}
+              cpu: "1116.0m"
+              {{- else if eq .Values.autoscaler "vertical-6" }}
+              cpu: "1302.0m"
+              {{- else }}
+              cpu: "372m"
+              {{- end }}
             limits:
-              cpu: "587m"
-              memory: "200Mi" 
+              memory: "6000Mi"
 
 {{- if eq .Values.autoscaler "vpa" }}
 ---
